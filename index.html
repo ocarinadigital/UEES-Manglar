@@ -901,7 +901,7 @@
       // box.min.y hacia abajo y empuja visualmente todo el modelo hacia arriba.
       // Valor positivo = baja el modelo. Ajustar a ojo hasta que la base pise
       // exactamente sobre el anillo/sombra.
-      const MODEL_VERTICAL_NUDGE = 0.14; // fracción del alto visible del visor
+      const MODEL_VERTICAL_NUDGE = 0.32; // fracción del alto visible del visor
 
       model.position.y = -box.min.y * scale - MODEL_VERTICAL_NUDGE * visibleHeightAtDistance;
       const footprint = computeBaseFootprintCenter(model, box);
