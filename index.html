@@ -128,9 +128,9 @@
   #screen-display .rotate-hint-text{ position:absolute; bottom:6%; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:1.8vw; color:var(--gold); font-size:2.6vw; white-space:nowrap; z-index:4; }
   #screen-display .hand-icon-wrap{ width:7vw; max-width:30px; height:7vw; max-height:30px; flex-shrink:0; background-color:var(--gold); opacity:0.85; -webkit-mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png'); mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
 
-  #screen-display .cta-detail{ margin:0 6vw 1.2vh 6vw; background:var(--card); border:1px solid var(--gold-soft); border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center; justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0; font-family:'Inter',sans-serif; position:relative; overflow:hidden; }
-  #screen-display .cta-title{ text-align:center; font-size:4.4vw; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--gold); }
-  #screen-display .cta-arrow{ color:var(--gold-soft); font-size:4.5vw; flex-shrink:0; }
+  #screen-display .cta-detail{ margin:0 6vw 1.2vh 6vw; background:var(--gold); border:1px solid var(--gold); border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center; justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0; font-family:'Inter',sans-serif; position:relative; overflow:hidden; }
+  #screen-display .cta-title{ text-align:center; font-size:4.4vw; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--card); }
+  #screen-display .cta-arrow{ color:var(--card); opacity:0.8; font-size:4.5vw; flex-shrink:0; }
   #screen-display .cta-shine{ position:absolute; top:0; left:-40%; width:26%; height:100%; background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%); transform:skewX(-20deg); pointer-events:none; animation:ctaShineSweep 5s ease-in-out infinite; }
   @keyframes ctaShineSweep{ 0%{ left:-40%; } 18%{ left:140%; } 100%{ left:140%; } }
   @media (prefers-reduced-motion: reduce){ #screen-display .cta-shine{ animation:none; display:none; } }
@@ -267,7 +267,6 @@
             <span class="badge-main-text">Casi amenazado</span>
             <span class="badge-info-icon">i</span>
           </div>
-          <span class="badge-code">NT – Near Threatened</span>
         </button>
         <h1>Mangle rojo</h1>
         <div class="sci-name">Rhizophora samoensis</div>
@@ -284,7 +283,6 @@
         <div class="info-box">
           <button class="info-close" id="infoClose" type="button">&times;</button>
           <div class="info-box-badge">Casi amenazado</div>
-          <span class="info-box-code">Código UICN: NT – Near Threatened</span>
           <p style="font-style:italic; opacity:0.6;">Texto de justificación pendiente — a completar con el criterio de conservación provisto por UEES.</p>
         </div>
       </div>
@@ -638,8 +636,8 @@
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
-  // Pendiente — el cliente debe proveer assets/mangle_model.glb (BT: checklist de assets)
-  const MODEL_URL = '';
+  // Ruta esperada del .glb real de esta pieza — subir a displays/mangle-rojo/assets/mangle_model.glb
+  const MODEL_URL = 'assets/mangle_model.glb';
 
   if (!MODEL_URL) {
     document.getElementById('loadingMsg').className = 'error-msg';
