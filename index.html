@@ -633,6 +633,8 @@
 <script type="module">
   import * as THREE from 'three';
   import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+  import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
@@ -707,6 +709,19 @@
   }
 
   const loader = new GLTFLoader();
+
+  // Sketchfab suele exportar/optimizar con compresión de malla (Draco) y/o de
+  // texturas (KTX2/Basis) — un visor GLB genérico trae ambos decodificadores
+  // incluidos por default, GLTFLoader solo no. Se registran acá los dos, sin
+  // costo si el .glb en cuestión no los usa.
+  const dracoLoader = new DRACOLoader();
+  dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
+  loader.setDRACOLoader(dracoLoader);
+
+  const ktx2Loader = new KTX2Loader();
+  ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/');
+  ktx2Loader.detectSupport(renderer);
+  loader.setKTX2Loader(ktx2Loader);
   let loadResolved = false;
   const timeoutId = setTimeout(() => {
     if (!loadResolved) {
