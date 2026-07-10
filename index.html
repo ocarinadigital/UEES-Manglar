@@ -895,7 +895,15 @@
       const scale = (visibleWidthAtDistance * TARGET_WIDTH_FRACTION) / horizontalExtent;
       model.scale.setScalar(scale);
 
-      model.position.y = -box.min.y * scale;
+      // Ajuste manual de altura — este .glb (descargado de Sketchfab) trae geometría
+      // extra por debajo de la base visual real del árbol (ver BT Nota 9: raíces
+      // sin base plana convencional), lo que corre el cálculo automático de
+      // box.min.y hacia abajo y empuja visualmente todo el modelo hacia arriba.
+      // Valor positivo = baja el modelo. Ajustar a ojo hasta que la base pise
+      // exactamente sobre el anillo/sombra.
+      const MODEL_VERTICAL_NUDGE = 0.14; // fracción del alto visible del visor
+
+      model.position.y = -box.min.y * scale - MODEL_VERTICAL_NUDGE * visibleHeightAtDistance;
       const footprint = computeBaseFootprintCenter(model, box);
       model.position.x = -footprint.x * scale;
       model.position.z = -footprint.z * scale;
