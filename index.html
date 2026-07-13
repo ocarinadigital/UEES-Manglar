@@ -45,13 +45,26 @@
   /* LEY 1 */
   .app-root{ position:fixed; inset:0; overflow:hidden; background-color:#FFFFFF; }
 
+  /* Capa de fondo del D — imagen distinta por pieza (viene en el BT).
+     Vive FUERA de #screen-display a propósito: un position:fixed dentro de
+     un elemento con transform (como .app-screen, que lo usa para la
+     transición D↔DT) deja de comportarse como fixed real y queda atado a
+     ese ancestro en vez del viewport. Puesta acá, como hermana de ambas
+     pantallas y sin transform de por medio, sí cubre el viewport completo
+     real — incluso el área que queda detrás de las barras de Safari. */
+  .d-bg-layer{
+    position:fixed; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center;
+    z-index:0; pointer-events:none;
+  }
+
   /* Arquitectura de Archivo Único: ambas pantallas son .app-screen absolutas,
      transicionadas por transform, nunca por cambio de URL. */
   .app-screen{
     position:absolute; inset:0; overflow:hidden;
     transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
   }
-  #screen-display{ transform:translateX(0%); background-color:#FFFFFF; }
+  #screen-display{ transform:translateX(0%); background-color:transparent; }
   #screen-detalle{ transform:translateX(100%); background-color:#FFFFFF; }
   #screen-display.slide-out{ transform:translateX(-30%); }
   #screen-detalle.slide-in{ transform:translateX(0%); }
@@ -69,7 +82,7 @@
     --gold-soft:#D9C7C2;
     --card:#FAFAFA;
   }
-  #screen-display .screen{ max-width:480px; margin:0 auto; height:100%; display:flex; flex-direction:column; position:relative; overflow:hidden; background:var(--bg); color:var(--ink); }
+  #screen-display .screen{ max-width:480px; margin:0 auto; height:100%; display:flex; flex-direction:column; position:relative; overflow:hidden; background:transparent; color:var(--ink); z-index:1; }
 
   #screen-display header{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
   #screen-display .logo{ display:flex; align-items:center; }
@@ -244,6 +257,11 @@
 <body>
 
 <div class="app-root">
+
+  <!-- Fondo del D — distinto por pieza (BT). Fuera de ambas pantallas a
+       propósito (ver comentario CSS de .d-bg-layer). Si el asset todavía no
+       fue subido, se oculta solo y queda el blanco sólido de siempre. -->
+  <img class="d-bg-layer" src="assets/bg-display.png" alt="" onerror="this.style.display='none'">
 
   <!-- ============================================================
        #screen-display — EL D
@@ -592,11 +610,11 @@
 <script>
   // ---------- Hotspots: popups dinámicos (D) ----------
   const HOTSPOTS_3D = [
-    { id:'hotspot-1', azimuthDeg:200, heightFraction:0.06, label:'Raíces fúlcreas',
+    { id:'hotspot-1', azimuthDeg:35, heightFraction:0.20, label:'Raíces fúlcreas',
       popupTitle:'Raíces fúlcreas', popupText:'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.', popupImage:'assets/hotspot-1.jpg' },
-    { id:'hotspot-2', azimuthDeg:40, heightFraction:0.92, label:'Hojas opuestas',
+    { id:'hotspot-2', azimuthDeg:315, heightFraction:0.70, label:'Hojas opuestas',
       popupTitle:'Hojas opuestas', popupText:'[ Contenido pendiente — a completar según BT ]', popupImage:'assets/hotspot-2.jpg' },
-    { id:'hotspot-3', azimuthDeg:320, heightFraction:0.62, label:'Flor y propágulo',
+    { id:'hotspot-3', azimuthDeg:100, heightFraction:0.69, label:'Flor y propágulo',
       popupTitle:'Flor y propágulo', popupText:'[ Contenido pendiente — a completar según BT ]', popupImage:'assets/hotspot-3.jpg' },
   ];
 
@@ -901,7 +919,7 @@
       // box.min.y hacia abajo y empuja visualmente todo el modelo hacia arriba.
       // Valor positivo = baja el modelo. Ajustar a ojo hasta que la base pise
       // exactamente sobre el anillo/sombra.
-      const MODEL_VERTICAL_NUDGE = 0.4; // fracción del alto visible del visor
+      const MODEL_VERTICAL_NUDGE = 0; // fracción del alto visible del visor — modelo limpio, ya no hace falta
 
       model.position.y = -box.min.y * scale - MODEL_VERTICAL_NUDGE * visibleHeightAtDistance;
       const footprint = computeBaseFootprintCenter(model, box);
