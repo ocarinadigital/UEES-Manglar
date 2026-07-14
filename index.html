@@ -18,7 +18,15 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- Tinte de barras del navegador (por BT, distinto por pieza — colores placeholder
+     hasta tener bg-display.png real):
+     - Android/Chrome y Safari <26: leen este meta, tiñen SOLO la barra de arriba
+       (la barra de sistema de abajo en Android no es controlable desde la web).
+     - Safari 26+ ("Liquid Glass"): ignora este meta — lee en cambio el
+       background-color de los divs .chrome-tint-top/.chrome-tint-bottom más
+       abajo en el body, y sí puede teñir arriba y abajo por separado. -->
+<meta name="theme-color" content="#EDE7DD">
 <title>Mangle rojo — UEES | Ocarina Digital AR</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="importmap">
@@ -44,6 +52,15 @@
 
   /* LEY 1 */
   .app-root{ position:fixed; inset:0; overflow:hidden; background-color:#FFFFFF; }
+
+  /* Tinte de barras (solo Safari 26+ "Liquid Glass") — Safari lee el
+     background-color de elementos fixed pegados al borde de arriba/abajo del
+     viewport y tiñe la barra de direcciones / barra inferior con ese color.
+     Deben ser sólidos (no transparentes) y no quedar tapados por otro
+     elemento fixed distinto en ese mismo borde. Colores placeholder —
+     actualizar con el tono real de los bordes de bg-display.png. */
+  .chrome-tint-top{ position:fixed; top:0; left:0; right:0; height:1px; background-color:#EDE7DD; z-index:1000; pointer-events:none; }
+  .chrome-tint-bottom{ position:fixed; bottom:0; left:0; right:0; height:1px; background-color:#D9C7C2; z-index:1000; pointer-events:none; }
 
   /* Capa de fondo del D — imagen distinta por pieza (viene en el BT).
      Vive FUERA de #screen-display a propósito: un position:fixed dentro de
@@ -255,6 +272,9 @@
 </style>
 </head>
 <body>
+
+<div class="chrome-tint-top"></div>
+<div class="chrome-tint-bottom"></div>
 
 <div class="app-root">
 
@@ -610,11 +630,11 @@
 <script>
   // ---------- Hotspots: popups dinámicos (D) ----------
   const HOTSPOTS_3D = [
-    { id:'hotspot-1', azimuthDeg:35, heightFraction:0.20, label:'Raíces fúlcreas',
+    { id:'hotspot-1', azimuthDeg:165, heightFraction:0.215, label:'Raíces fúlcreas',
       popupTitle:'Raíces fúlcreas', popupText:'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.', popupImage:'assets/hotspot-1.jpg' },
-    { id:'hotspot-2', azimuthDeg:315, heightFraction:0.70, label:'Hojas opuestas',
+    { id:'hotspot-2', azimuthDeg:315, heightFraction:0.66, label:'Hojas opuestas',
       popupTitle:'Hojas opuestas', popupText:'[ Contenido pendiente — a completar según BT ]', popupImage:'assets/hotspot-2.jpg' },
-    { id:'hotspot-3', azimuthDeg:100, heightFraction:0.69, label:'Flor y propágulo',
+    { id:'hotspot-3', azimuthDeg:100, heightFraction:0.64, label:'Flor y propágulo',
       popupTitle:'Flor y propágulo', popupText:'[ Contenido pendiente — a completar según BT ]', popupImage:'assets/hotspot-3.jpg' },
   ];
 
@@ -657,7 +677,9 @@
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
   // Ruta esperada del .glb real de esta pieza — subir a displays/mangle-rojo/assets/mangle_model.glb
-  const MODEL_URL = 'assets/mangle_model.glb';
+  // ?v=N al final evita que el navegador/CDN sirvan una versión vieja del .glb
+  // en caché — subir este número cada vez que reemplaces el archivo.
+  const MODEL_URL = 'assets/mangle_model.glb?v=3';
 
   if (!MODEL_URL) {
     document.getElementById('loadingMsg').className = 'error-msg';
