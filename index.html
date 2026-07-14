@@ -923,6 +923,14 @@
       clearTimeout(timeoutId);
       loadingMsg.remove();
       const model = gltf.scene;
+      // CRÍTICO: forzar la actualización de matrices de mundo ANTES de medir
+      // el bounding box. Three.js no actualiza matrixWorld automáticamente
+      // hasta el próximo render — si se mide el box antes de este llamado,
+      // no se tiene en cuenta ninguna rotación de los nodos (por ejemplo la
+      // rotación de -90° en X que Blender/Sketchfab hornea en la exportación
+      // para convertir de Z-up a Y-up), dando una caja completamente
+      // incorrecta y una posición/escala mal calculada como consecuencia.
+      model.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
 
@@ -949,6 +957,7 @@
       model.position.z = -footprint.z * scale;
 
       modelGroup.add(model);
+      modelGroup.updateMatrixWorld(true);
 
       modelBoxForHotspots = new THREE.Box3().setFromObject(model);
       modelCenterForHotspots = modelBoxForHotspots.getCenter(new THREE.Vector3());
