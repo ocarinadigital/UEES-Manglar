@@ -1,105 +1,115 @@
 <!DOCTYPE html>
 <!--
-  displays/mangle-rojo/index.html — Ocarina Digital, Tipo 2 (Display AR)
-  Pieza: Mangle rojo (Rhizophora samoensis) — Cliente: UEES
-  Archivo único: #screen-display (D) + #screen-detalle (DT), navegados con JS
-  puro (showDetalle()/showDisplay()), sin cambio de URL real entre ambos.
-  Generado a partir de display-base.html (D verbatim en estructura/motor 3D)
-  + BT_Mangle_Rojo.pdf (paleta, textos, hotspots, tabs del DT).
+  DISPLAYS/MANGLE-ROJO/INDEX.HTML — Tipo 2 (Display AR), Ocarina Digital
+  Cliente: UEES · Pieza: Mangle rojo (Rhizophora samoensis)
 
-  Pendientes marcados explícitamente en el BT (NO inventados):
-  - assets/logo.png, assets/mangle_model.glb (a subir por el cliente)
-  - Texto de justificación del badge (NT — Near Threatened)
-  - Popups de Hotspot 2 y 3 (solo label, sin texto de BT)
-  - Descripciones de las variantes "Flor", "Dispersión" y "Enraizamiento"
-    del widget de Adaptaciones
-  - Todas las imágenes de assets/ (placeholders grises con nombre esperado)
+  Este archivo combina el D (#screen-display) y el Detalle (#screen-detalle)
+  en un único archivo, según Arquitectura_de_Archivo_Unico.pdf. Parte
+  verbatim de display-base.html para #screen-display (Ley de Encuadre E1-E5,
+  sistema de capas del visor, popups, manejo de errores) y de
+  Pantalla_Detalle_Instrucciones.pdf para #screen-detalle.
+
+  DECISIONES DE ESTA SESIÓN (confirmadas por Lucas):
+  - Badge SIN segunda línea "NT – Near Threatened" (se mantiene el patrón
+    de badge de una sola línea, como en sesiones anteriores).
+  - CTA con fondo bordó sólido (var(--gold)) y texto blanco.
+  - Ícono del badge: se mantiene el "i" info default del STD (no se usa
+    ícono de hoja ni de huella).
+
+  PENDIENTES SEÑALADOS EXPLÍCITAMENTE (no inventados):
+  - MODEL_URL vacío: falta el .glb real (lo provee el cliente).
+  - Textos de popup de Hotspot 2, Hotspot 3, variantes "Flor", "Dispersión"
+    y "Enraizamiento" del widget de Adaptaciones, y texto de justificación
+    del badge: todos marcados con "[PENDIENTE]" dentro del contenido.
+  - Posiciones de hotspots (azimuthDeg/heightFraction): estimadas de forma
+    preliminar (mismo criterio de la sesión anterior: raíces=base,
+    hojas=copa opuesta, flor/propágulo=zona alta) — A REVERIFICAR con
+    análisis real de vértices una vez que el GLB del cliente esté cargado
+    en Blender.
+  - Íconos nuevos propuestos al set STD (no estaban en el set inicial):
+    ic-anillos-concentricos, ic-flechas-circulares, ic-propagulo, ic-ondas,
+    ic-mangle-olas, ic-pez-cangrejo, ic-nube-co2. Se agregan acá al sprite
+    del archivo, siguiendo la especificación de dibujo (grilla 24x24, trazo
+    1.5px, sin relleno, currentColor) — quedan propuestos para el set STD.
+  - Ruta de "volver al escáner": este BT indica carpeta destino
+    "displays/mangle-rojo/", por lo que se usa el default STD
+    "../../index.html?volver=1". OJO: la memoria de proyecto indica que el
+    repo UEES-Manglar tiene estructura PLANA (sin subcarpeta displays/) —
+    revisar y ajustar esta ruta antes de deployar si el archivo termina
+    viviendo en otra profundidad real dentro del repo.
 -->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<!-- Tinte de barras del navegador (por BT, distinto por pieza — colores placeholder
-     hasta tener bg-display.png real):
-     - Android/Chrome y Safari <26: leen este meta, tiñen SOLO la barra de arriba
-       (la barra de sistema de abajo en Android no es controlable desde la web).
-     - Safari 26+ ("Liquid Glass"): ignora este meta — lee en cambio el
-       background-color de los divs .chrome-tint-top/.chrome-tint-bottom más
-       abajo en el body, y sí puede teñir arriba y abajo por separado. -->
-<meta name="theme-color" content="#EDE7DD">
-<title>Mangle rojo — UEES | Ocarina Digital AR</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mangle rojo — UEES — Ocarina Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ============================================================
-     RESET + LEYES DE LAYOUT (Leyes_de_Layout.pdf)
-     LEY 1: root fijo al viewport real — fixed; inset:0; nunca vh/dvh.
-     LEY 3: <body> y el root fijo declaran background-color sólido literal
-     (el hex resuelto de --bg de esta pieza), ya que dentro del archivo
-     único body no tiene acceso a las variables de paleta (ver
-     Arquitectura_De_Archivo_Unico.pdf, "Alcance de las variables de paleta").
-     ============================================================ */
-  *{ box-sizing:border-box; margin:0; padding:0; touch-action:manipulation; }
-  html, body{ height:100%; overflow:hidden; background-color:#FFFFFF; }
-  body{ color:#1C1B1A; font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
-
-  /* LEY 1 */
-  .app-root{ position:fixed; inset:0; overflow:hidden; background-color:#FFFFFF; }
-
-  /* Tinte de barras (solo Safari 26+ "Liquid Glass") — Safari lee el
-     background-color de elementos fixed pegados al borde de arriba/abajo del
-     viewport y tiñe la barra de direcciones / barra inferior con ese color.
-     Deben ser sólidos (no transparentes) y no quedar tapados por otro
-     elemento fixed distinto en ese mismo borde. Colores placeholder —
-     actualizar con el tono real de los bordes de bg-display.png. */
-  .chrome-tint-top{ position:fixed; top:0; left:0; right:0; height:1px; background-color:#EDE7DD; z-index:1000; pointer-events:none; }
-  .chrome-tint-bottom{ position:fixed; bottom:0; left:0; right:0; height:1px; background-color:#D9C7C2; z-index:1000; pointer-events:none; }
-
-  /* Capa de fondo del D — imagen distinta por pieza (viene en el BT).
-     Vive FUERA de #screen-display a propósito: un position:fixed dentro de
-     un elemento con transform (como .app-screen, que lo usa para la
-     transición D↔DT) deja de comportarse como fixed real y queda atado a
-     ese ancestro en vez del viewport. Puesta acá, como hermana de ambas
-     pantallas y sin transform de por medio, sí cubre el viewport completo
-     real — incluso el área que queda detrás de las barras de Safari. */
-  .d-bg-layer{
-    position:fixed; inset:0; width:100%; height:100%;
-    object-fit:cover; object-position:center;
-    z-index:0; pointer-events:none;
+  /* ===== TOKENS COMPARTIDOS (LEY 8) — únicos para D y DT ===== */
+  :root{
+    --motion-fast:150ms;
+    --motion-base:240ms;
+    --motion-slow:320ms;
+    --motion-ease:cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Arquitectura de Archivo Único: ambas pantallas son .app-screen absolutas,
-     transicionadas por transform, nunca por cambio de URL. */
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html, body{ height:100%; }
+  /* LEY 3: color sólido explícito y LITERAL en <body> (no var(), body no
+     tiene acceso a las variables declaradas dentro de #screen-display /
+     #screen-detalle — ver Arquitectura_de_Archivo_Unico.pdf). */
+  body{
+    background-color:#FFFFFF;
+    color:#1C1B1A;
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    touch-action:manipulation;
+    overflow:hidden;
+  }
+  *{ touch-action:manipulation; }
+
+  /* LEY 1: contenedor raíz fijo al viewport real. LEY 3: también lleva
+     background-color literal (respaldo detrás de las dos pantallas). */
+  .app-root{
+    position:fixed; inset:0;
+    background-color:#FFFFFF;
+    overflow:hidden;
+  }
+
+  /* Arquitectura de Archivo Único — reglas de las dos pantallas */
   .app-screen{
     position:absolute; inset:0; overflow:hidden;
-    transition:transform 0.32s cubic-bezier(0.4,0,0.2,1);
+    transition:transform var(--motion-slow) var(--motion-ease);
   }
-  #screen-display{ transform:translateX(0%); background-color:transparent; }
-  #screen-detalle{ transform:translateX(100%); background-color:#FFFFFF; }
+  #screen-display{ transform:translateX(0%); }
+  #screen-detalle{ transform:translateX(100%); }
   #screen-display.slide-out{ transform:translateX(-30%); }
   #screen-detalle.slide-in{ transform:translateX(0%); }
 
-  /* ============================================================
-     #screen-display — EL D
-     Paleta de esta pieza (Mangle rojo / UEES):
-       --bg:#FFFFFF  --ink:#1C1B1A  --gold:#7A1E39 (bordó institucional)
-       --gold-soft:#D9C7C2  --card:#FAFAFA
-     ============================================================ */
+  /* Sprite de íconos STD: oculto, vive una sola vez al inicio del body. */
+  #std-icon-sprite{ display:none; }
+
+  /* ======================================================================
+     #screen-display — EL D (paleta UEES / Mangle rojo)
+     ====================================================================== */
   #screen-display{
     --bg:#FFFFFF;
+    --bg-transparent:transparent;
     --ink:#1C1B1A;
-    --gold:#7A1E39;
+    --gold:#7A1E39;       /* bordó institucional UEES — ocupa el slot de acento */
     --gold-soft:#D9C7C2;
     --card:#FAFAFA;
+    /* LEY 9 — tonos derivados, con fallback literal precedente (iOS < 16.2) */
   }
-  #screen-display .screen{ max-width:480px; margin:0 auto; height:100%; display:flex; flex-direction:column; position:relative; overflow:hidden; background:transparent; color:var(--ink); z-index:1; }
+
+  /* LEY 2: el hijo estructural que ocupa "toda la pantalla" hereda con
+     height:100% (nunca vh/dvh) — el fixed+inset real ya lo resuelve el
+     .app-root de nivel superior. max-width + margin conservan el centrado
+     horizontal en pantallas anchas. */
+  #screen-display .screen{
+    position:relative; height:100%; max-width:480px; margin:0 auto;
+    background:var(--bg); display:flex; flex-direction:column; overflow:hidden;
+  }
 
   #screen-display header{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
   #screen-display .logo{ display:flex; align-items:center; }
@@ -110,188 +120,354 @@
   #screen-display .title-block{ padding:0.8vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
 
   #screen-display .badge{
-    display:inline-flex; flex-direction:column; align-items:center; gap:0.1vh;
+    display:inline-flex; align-items:center; gap:1.2vw;
     border:1px solid var(--gold-soft); background:transparent; color:var(--gold);
-    font-family:'Inter', sans-serif; padding:0.6vh 4vw; border-radius:100px;
-    margin-bottom:1vh; cursor:pointer; position:relative;
+    font-size:2.5vw; font-family:'Inter', sans-serif; font-weight:600;
+    letter-spacing:0.14em; text-transform:uppercase;
+    padding:0.5vh 3.5vw; border-radius:100px; margin-bottom:0.8vh; cursor:pointer;
   }
-  #screen-display .badge-main-row{ display:flex; align-items:center; gap:1.2vw; }
-  #screen-display .badge-main-text{ font-size:2.6vw; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; }
-  #screen-display .badge-code{ font-size:2.1vw; font-weight:500; letter-spacing:0.06em; color:var(--ink); opacity:0.55; }
   #screen-display .badge-info-icon{
     width:3.2vw; height:3.2vw; min-width:13px; min-height:13px; border-radius:50%;
     border:1px solid var(--gold-soft); display:flex; align-items:center; justify-content:center;
-    font-size:2.2vw; font-style:italic; font-weight:700; flex-shrink:0;
+    font-size:2.2vw; font-style:italic; font-weight:700;
   }
 
-  #screen-display .info-overlay{ display:none; position:fixed; inset:0; background:rgba(28,27,25,0.45); z-index:50; align-items:center; justify-content:center; padding:8vw; }
+  #screen-display h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.8vw; line-height:1.05; margin-bottom:0.6vh; }
+  #screen-display .rule{ width:36px; height:1px; background:var(--gold-soft); margin:0 auto 0.7vh auto; }
+
+  /* Subtítulo/clasificación (BT): nombre científico en itálica — se
+     mantiene el slot .subtitle del STD, pero con estilo itálico en vez del
+     uppercase default (regla de nomenclatura binomial, nunca en mayúscula). */
+  #screen-display .subtitle{ font-style:italic; font-size:2.7vw; color:var(--gold); font-weight:600; letter-spacing:0.02em; margin-bottom:0.5vh; }
+
+  /* Línea de clasificación adicional (Nota 1 del BT — extensión tipográfica
+     nueva, no contemplada aún en Display_Instrucciones.pdf): ícono + texto
+     de familia botánica, debajo del nombre científico. Se propone para
+     formalización futura del STD si el resultado visual se aprueba. */
+  #screen-display .family-line{ display:flex; align-items:center; justify-content:center; gap:1.3vw; font-size:2.3vw; color:var(--ink); opacity:0.62; margin-bottom:0.9vh; }
+  #screen-display .family-line svg{ width:3.2vw; height:3.2vw; min-width:13px; min-height:13px; flex-shrink:0; }
+
+  #screen-display .description{ font-size:2.8vw; line-height:1.4; color:rgba(28,27,26,0.75); max-width:90%; margin:0 auto; }
+
+  #screen-display .info-overlay{
+    display:none; position:fixed; inset:0; background:rgba(28,27,25,0.45); z-index:50;
+    align-items:center; justify-content:center; padding:8vw;
+  }
   #screen-display .info-overlay.open{ display:flex; }
-  #screen-display .info-box{ position:relative; background:var(--bg); border:1px solid var(--gold-soft); border-radius:18px; padding:6vh 6vw 5vh 6vw; max-width:380px; width:100%; box-shadow:0 12px 36px rgba(0,0,0,0.25); }
-  #screen-display .info-box-badge{ display:inline-block; border:1px solid var(--gold-soft); color:var(--gold); font-size:2.6vw; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; padding:0.6vh 4vw; border-radius:100px; margin-bottom:1vh; }
-  #screen-display .info-box-code{ display:block; font-size:2.4vw; color:var(--ink); opacity:0.6; margin-bottom:2vh; }
+  #screen-display .info-box{
+    position:relative; background:var(--bg); border:1px solid var(--gold-soft); border-radius:18px;
+    padding:6vh 6vw 5vh 6vw; max-width:380px; width:100%; box-shadow:0 12px 36px rgba(0,0,0,0.25);
+  }
+  #screen-display .info-box-badge{
+    display:inline-block; border:1px solid var(--gold-soft); color:var(--gold); font-size:2.6vw;
+    font-weight:600; letter-spacing:0.14em; text-transform:uppercase; padding:0.6vh 4vw;
+    border-radius:100px; margin-bottom:2vh;
+  }
   #screen-display .hotspot-popup-title{ font-family:'Cormorant Garamond',serif; font-size:4.6vw; font-weight:600; color:var(--ink); margin-bottom:1.5vh; }
   #screen-display .hotspot-popup-image{ width:100%; height:32vh; object-fit:cover; border-radius:10px; margin-bottom:1.5vh; display:block; }
-  #screen-display .hotspot-popup-image-placeholder{ width:100%; height:32vh; background:#E4E1DA; border-radius:10px; align-items:center; justify-content:center; color:#9B968C; font-size:2.8vw; margin-bottom:1.5vh; display:flex; }
+  #screen-display .hotspot-popup-image-placeholder{
+    width:100%; height:32vh; background:#E4E1DA; border-radius:10px; align-items:center; justify-content:center;
+    color:#9B968C; font-size:2.8vw; margin-bottom:1.5vh;
+  }
   #screen-display .info-box p{ font-size:3.4vw; line-height:1.55; color:var(--ink); }
-  #screen-display .info-close{ position:absolute; top:14px; right:14px; width:7vw; height:7vw; max-width:30px; max-height:30px; border-radius:50%; border:1px solid var(--gold-soft); background:transparent; color:var(--gold); font-size:4vw; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  #screen-display .info-close{
+    position:absolute; top:14px; right:14px; width:7vw; height:7vw; max-width:30px; max-height:30px;
+    border-radius:50%; border:1px solid var(--gold-soft); background:transparent; color:var(--gold);
+    font-size:4vw; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
 
-  #screen-display h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:clamp(6.2vw,6.8vw,7.4vw); line-height:1.05; margin-bottom:0.4vh; }
-  #screen-display .sci-name{ font-family:'Cormorant Garamond',serif; font-style:italic; font-weight:500; font-size:clamp(2.3vw,2.6vw,2.9vw); color:rgba(28,27,25,0.75); margin-bottom:0.6vh; }
-  #screen-display .family-line{ display:flex; align-items:center; justify-content:center; gap:1vw; font-size:2.4vw; color:var(--gold); font-weight:500; }
-  #screen-display .family-line svg{ width:2.6vw; height:2.6vw; min-width:11px; min-height:11px; flex-shrink:0; }
-
-  #screen-display .viewer-wrap{ position:relative; margin:1vh 0 0 0; height:50vh; flex-shrink:0; overflow:hidden; }
+  #screen-display .viewer-wrap{ position:relative; margin:1vh 0 0 0; height:50%; flex-shrink:0; overflow:hidden; }
   #screen-display #viewer3d{ width:100%; height:85%; position:absolute; top:0; left:0; z-index:2; }
   #screen-display #viewer3d canvas{ touch-action:none; cursor:grab; display:block; }
+
   #screen-display .loading-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#999; text-align:center; padding:0 10vw; }
   #screen-display .error-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#b33; text-align:center; padding:0 10vw; }
 
+  #screen-display .viewer-shimmer{
+    position:absolute; left:50%; bottom:8%; transform:translateX(-50%); width:60%; height:14%;
+    border-radius:50%; background:#E4E1DA; z-index:1; pointer-events:none;
+  }
+  #screen-display .shimmer{ position:relative; overflow:hidden; }
+  #screen-display .shimmer::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(100deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%);
+    transform:translateX(-100%);
+    animation:shimmerSweep var(--motion-slow) var(--motion-ease) infinite;
+  }
+  @keyframes shimmerSweep{ to{ transform:translateX(100%); } }
+
   #screen-display .hotspot-anchor{ position:absolute; width:1.6vw; height:1.6vw; max-width:8px; max-height:8px; border-radius:50%; background:var(--gold-soft); pointer-events:none; transform:translate(-50%,-50%); }
-  #screen-display .hotspot-number{ position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%; background:#1C2333; border:1.4px solid var(--gold); color:#E8C77A; display:flex; align-items:center; justify-content:center; font-size:3.2vw; font-weight:700; cursor:pointer; transform:translate(-50%,-50%); box-shadow:0 2px 6px rgba(0,0,0,0.25); }
-  #screen-display .hotspot-number::after{ content:''; position:absolute; inset:0; border-radius:50%; border:1.4px solid var(--gold-soft); animation:hotspotBreathe 2.4s ease-in-out infinite; }
-  @keyframes hotspotBreathe{ 0%,100%{ transform:scale(1); opacity:0.7; } 50%{ transform:scale(1.55); opacity:0; } }
+  #screen-display .hotspot-number{
+    position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%;
+    background:#2A1116; border:1.4px solid var(--gold); color:#F2D9C9; display:flex; align-items:center;
+    justify-content:center; font-size:3.2vw; font-weight:700; cursor:pointer; transform:translate(-50%,-50%);
+    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  #screen-display .hotspot-number::after{
+    content:''; position:absolute; inset:0; border-radius:50%; border:1.4px solid var(--gold-soft);
+    animation: hotspotBreathe 2.4s var(--motion-ease) infinite;
+  }
+  @keyframes hotspotBreathe{ 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.55); opacity: 0; } }
   #screen-display #hotspots3d{ position:absolute; inset:0; pointer-events:none; z-index:5; }
   #screen-display #hotspots3d .hotspot-number{ pointer-events:auto; }
 
-  #screen-display .shadow-plane{ position:absolute; bottom:8%; left:50%; transform:translateX(-50%); width:96%; max-width:420px; height:auto; z-index:1; pointer-events:none; }
-  #screen-display .rotate-arc-ring{ position:absolute; bottom:8%; left:50%; transform:translateX(-50%); width:96%; max-width:420px; height:auto; color:var(--gold); z-index:3; pointer-events:none; }
-  #screen-display .rotate-hint-text{ position:absolute; bottom:6%; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:1.8vw; color:var(--gold); font-size:2.6vw; white-space:nowrap; z-index:4; }
-  #screen-display .hand-icon-wrap{ width:7vw; max-width:30px; height:7vw; max-height:30px; flex-shrink:0; background-color:var(--gold); opacity:0.85; -webkit-mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png'); mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
+  #screen-display .shadow-plane{ position:absolute; left:50%; transform:translateX(-50%); visibility:hidden; height:auto; z-index:1; pointer-events:none; }
+  #screen-display .rotate-arc-ring{ position:absolute; left:50%; transform:translateX(-50%); visibility:hidden; height:auto; color:var(--gold); z-index:3; pointer-events:none; }
+  #screen-display .rotate-hint-text{
+    position:absolute; bottom:6%; left:50%; transform:translateX(-50%); display:flex; align-items:center;
+    gap:1.8vw; color:var(--gold); font-size:2.6vw; white-space:nowrap; z-index:4;
+  }
+  #screen-display .hand-icon-wrap{
+    width:7vw; max-width:30px; height:7vw; max-height:30px; flex-shrink:0; background-color:var(--gold); opacity:0.85;
+    -webkit-mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png');
+    mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png');
+    -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:center; mask-position:center;
+  }
 
-  #screen-display .cta-detail{ margin:0 6vw 1.2vh 6vw; background:var(--gold); border:1px solid var(--gold); border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center; justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0; font-family:'Inter',sans-serif; position:relative; overflow:hidden; }
-  #screen-display .cta-title{ text-align:center; font-size:4.4vw; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--card); }
-  #screen-display .cta-arrow{ color:var(--card); opacity:0.8; font-size:4.5vw; flex-shrink:0; }
-  #screen-display .cta-shine{ position:absolute; top:0; left:-40%; width:26%; height:100%; background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%); transform:skewX(-20deg); pointer-events:none; animation:ctaShineSweep 5s ease-in-out infinite; }
+  /* CTA — DECISIÓN DE ESTA SESIÓN: fondo bordó sólido + texto blanco
+     (en vez del default STD --card/--gold). Sin subtítulo (Nota 10 del BT:
+     el STD actual del CTA ya no tiene ese campo). */
+  #screen-display .cta-detail{
+    margin:0 6vw 1.2vh 6vw; background:var(--gold); border:1px solid var(--gold);
+    border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center;
+    justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0;
+    font-family:'Inter',sans-serif; position:relative; overflow:hidden;
+  }
+  #screen-display .cta-title{ text-align:center; font-size:4.4vw; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#FFFFFF; }
+  #screen-display .cta-arrow{ color:#FFFFFF; opacity:0.85; font-size:4.5vw; flex-shrink:0; }
+  #screen-display .cta-shine{
+    position:absolute; top:0; left:-40%; width:26%; height:100%;
+    background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%);
+    transform:skewX(-20deg); pointer-events:none;
+    animation:ctaShineSweep 5s var(--motion-ease) infinite;
+  }
   @keyframes ctaShineSweep{ 0%{ left:-40%; } 18%{ left:140%; } 100%{ left:140%; } }
-  @media (prefers-reduced-motion: reduce){ #screen-display .cta-shine{ animation:none; display:none; } }
 
-  /* ============================================================
-     #screen-detalle — EL DT
-     Misma paleta que el D, mapeada con prefijo dt- (BT: "misma paleta,
-     sin --dt-bg-2"). Clases con prefijo dt- obligatorio (Arquitectura_De_
-     Archivo_Unico.pdf).
-     ============================================================ */
+  #screen-display .badge, #screen-display .back-link, #screen-display .info-close,
+  #screen-display .cta-detail, #screen-display .hotspot-number{
+    transition:transform var(--motion-fast) var(--motion-ease);
+  }
+  #screen-display .badge:active, #screen-display .back-link:active,
+  #screen-display .info-close:active, #screen-display .cta-detail:active{ transform:scale(0.97); }
+  #screen-display .hotspot-number:active{ transform:translate(-50%,-50%) scale(0.97); }
+
+  /* ======================================================================
+     #screen-detalle — EL DT (Pantalla_Detalle_Instrucciones.pdf)
+     Todo el CSS anidado bajo #screen-detalle; todas las clases con
+     prefijo dt- (evita colisión de nombres con #screen-display).
+     ====================================================================== */
   #screen-detalle{
     --dt-bg:#FFFFFF;
     --dt-ink:#1C1B1A;
     --dt-gold:#7A1E39;
     --dt-gold-soft:#D9C7C2;
     --dt-card:#FAFAFA;
+    background-color:#FFFFFF; /* LEY 10: el DT conserva SIEMPRE su fondo opaco propio */
+    display:flex; flex-direction:column; font-family:'Inter',sans-serif; color:var(--dt-ink);
   }
-  #screen-detalle .dt-screen{ max-width:480px; margin:0 auto; height:100%; display:flex; flex-direction:column; background:var(--dt-bg); color:var(--dt-ink); overflow:hidden; }
 
-  /* dt-header: back-link izq, logo der — sin divisor con title-block */
-  #screen-detalle .dt-header{ display:flex; align-items:center; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
-  #screen-detalle .dt-back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--dt-gold); font-size:2.5vw; cursor:pointer; white-space:nowrap; }
-  #screen-detalle .dt-back-link .arrow{ font-size:4.5vw; line-height:1; }
+  #screen-detalle .dt-header{ display:flex; align-items:center; justify-content:space-between; padding:1.8vh 6vw 0 6vw; flex-shrink:0; }
+  #screen-detalle .dt-back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--dt-gold); font-size:2.5vw; cursor:pointer; white-space:nowrap; transition:transform var(--motion-fast) var(--motion-ease); }
+  #screen-detalle .dt-back-link:active{ transform:scale(0.97); }
+  #screen-detalle .dt-back-link .dt-arrow{ font-size:4.5vw; line-height:1; }
   #screen-detalle .dt-logo-mark{ height:8vw; max-height:36px; width:auto; display:block; }
 
-  /* dt-title-block: h1 centrado. Esta pieza: "Sin subtítulo" (BT) */
-  #screen-detalle .dt-title-block{ padding:1vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
-  #screen-detalle .dt-h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:clamp(5.8vw,6.4vw,7.0vw); line-height:1.05; }
+  #screen-detalle .dt-title-block{ padding:0.8vh 7vw 1.4vh 7vw; text-align:center; flex-shrink:0; }
+  #screen-detalle .dt-h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.4vw; line-height:1.05; }
+  #screen-detalle .dt-rule{ width:36px; height:1px; background:var(--dt-gold-soft); margin:0.7vh auto 0 auto; }
 
-  /* dt-tabs-nav: 3 botones, texto pegado a su borde inferior */
-  #screen-detalle .dt-tabs-nav{ display:flex; justify-content:space-around; gap:2vw; padding:1.6vh 6vw 0 6vw; border-bottom:1px solid var(--dt-gold-soft); flex-shrink:0; }
-  #screen-detalle .dt-tab-btn{ background:none; border:none; cursor:pointer; font-family:'Inter',sans-serif; font-size:clamp(2.7vw,3.0vw,3.3vw); font-weight:600; color:rgba(28,27,25,0.55); padding:0 0 1.2vh 0; border-bottom:2px solid transparent; margin-bottom:-1px; }
-  #screen-detalle .dt-tab-btn.active{ color:var(--dt-gold); border-bottom-color:var(--dt-gold); }
+  #screen-detalle .dt-tabs-nav{ display:flex; flex-direction:row; border-bottom:1px solid var(--dt-gold-soft); flex-shrink:0; }
+  #screen-detalle .dt-tab-btn{
+    flex:1; text-align:center; padding:1.6vh 1vw 1.3vh 1vw; font-size:3vw; font-weight:600;
+    color:var(--dt-ink); opacity:0.48; background:transparent; border:none; border-bottom:2px solid transparent;
+    cursor:pointer; transition:opacity var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+    font-family:'Inter',sans-serif;
+  }
+  #screen-detalle .dt-tab-btn:active{ transform:scale(0.97); }
+  #screen-detalle .dt-tab-btn.dt-active{ opacity:1; color:var(--dt-gold); border-bottom-color:var(--dt-gold); }
 
-  /* dt-content-area: flexible entre tabs-nav y el panel — único lugar,
-     junto con .dt-tab-panel, donde overflow:hidden / min-height:0 están
-     permitidos (checklist, Pantalla_Detalle_Instrucciones.pdf pág. 6-7). */
-  #screen-detalle .dt-content-area{ flex:1; min-height:0; overflow:hidden; padding:0 6vw; }
+  /* Área de contenido: overflow:hidden + min-height:0 permitidos SOLO acá
+     (contenedor sin contenido apilable propio) y en .dt-tab-panel (donde
+     corre la rutina de fit). Ningún grupo interno los lleva. */
+  #screen-detalle .dt-content-area{ flex:1; min-height:0; overflow:hidden; position:relative; }
   #screen-detalle .dt-tab-panel{
-    display:none; flex-direction:column; justify-content:space-between;
-    height:100%; overflow:hidden;
-    gap:calc(var(--dt-gap-vh,3) * 1vh);
-    padding:1.6vh 0 2vh 0;
+    position:absolute; inset:0; display:none; flex-direction:column; overflow:hidden;
+    padding:2vh 6vw 2.2vh 6vw; gap:2vh; justify-content:space-between;
   }
-  #screen-detalle .dt-tab-panel.active{ display:flex; }
+  #screen-detalle .dt-tab-panel.dt-active{ display:flex; }
 
-  /* Todo hijo directo de dt-tab-panel: flex-shrink:0 obligatorio */
-  #screen-detalle .dt-tab-panel > *{ flex-shrink:0; }
+  /* ---- Widget interactivo (Grupo visual) ---- */
+  #screen-detalle .dt-widget{ display:flex; flex-direction:column; border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden; flex-shrink:0; }
+  #screen-detalle .dt-widget-image-wrap{ width:100%; aspect-ratio:4/3; overflow:hidden; background:#ECEAE6; position:relative; }
+  #screen-detalle .dt-widget-image{ width:100%; height:100%; object-fit:cover; display:block; }
+  #screen-detalle .dt-widget-image-placeholder{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9B968C; font-size:2.4vw; text-align:center; padding:0 4vw; }
+  #screen-detalle .dt-widget-body{ padding:1.6vh 4vw 1.4vh 4vw; display:flex; flex-direction:column; gap:0.7vh; }
+  #screen-detalle .dt-widget-name{ font-family:'Cormorant Garamond',serif; font-size:3.6vw; font-weight:600; color:var(--dt-ink); }
+  /* Descripción de widget: SIN padding lateral propio (ya lo hereda del body) — spec: se extiende al máximo. */
+  #screen-detalle .dt-widget-desc{ font-size:2.4vw; line-height:1.5; color:rgba(28,27,26,0.78); }
+  #screen-detalle .dt-widget-selectors{ border-top:1px solid var(--dt-gold-soft); }
 
-  /* --- Grupo visual: hero image (sin epígrafe en esta pieza para Ecosistema) --- */
-  #screen-detalle .dt-hero-img{ width:100%; height:calc(30vh * var(--dt-image-scale,1)); object-fit:cover; border-radius:10px; display:block; }
-  #screen-detalle .dt-hero-placeholder{ width:100%; height:calc(30vh * var(--dt-image-scale,1)); background:#E4E1DA; border-radius:10px; align-items:center; justify-content:center; color:#9B968C; font-size:2.6vw; display:flex; text-align:center; padding:2vw; }
-
-  /* --- Grupo textual: bloque de texto (título + párrafo) --- */
-  #screen-detalle .dt-text-block{ padding:calc(clamp(9px, 1.5vh, 18px) * var(--dt-pad-v-scale,1)) 0; }
-  #screen-detalle .dt-section-title{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:clamp(3.5vw, calc(3.7vw * var(--dt-font-scale-primary,1)), 4.1vw); margin-bottom:0.8vh; color:var(--dt-ink); }
-  #screen-detalle .dt-paragraph{ font-size:clamp(2.4vw, calc(2.6vw * var(--dt-font-scale-primary,1)), 3.0vw); line-height:1.5; color:rgba(28,27,25,0.8); }
-
-  /* --- Widget interactivo: imagen → nombre → descripción → selectores --- */
-  #screen-detalle .dt-widget{
-    border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden;
-    background:var(--dt-card); display:flex; flex-direction:column;
+  /* Catálogo de Selectores — Segmentado (Anatomía) */
+  #screen-detalle .dt-selector-segmented{ display:flex; width:100%; }
+  #screen-detalle .dt-seg-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:0.5vh; padding:1.3vh 1vw;
+    font-size:2.3vw; color:var(--dt-ink); background:transparent; border:none; border-right:0.5px solid var(--dt-gold-soft);
+    cursor:pointer; transition:background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
+    font-family:'Inter',sans-serif; text-align:center;
   }
-  #screen-detalle .dt-widget-img{ width:100%; height:calc(22vh * var(--dt-image-scale,1)); object-fit:cover; display:block; }
-  #screen-detalle .dt-widget-img-placeholder{ width:100%; height:calc(22vh * var(--dt-image-scale,1)); background:#E4E1DA; align-items:center; justify-content:center; color:#9B968C; font-size:2.6vw; display:flex; text-align:center; padding:2vw; }
-  #screen-detalle .dt-widget-body{ padding:calc(clamp(9px,1.5vh,18px) * var(--dt-pad-v-scale,1)) calc(clamp(18px,3vw,36px) * var(--dt-pad-h-scale,1)) calc(clamp(9px,1.5vh,18px) * var(--dt-pad-v-scale,1)) calc(clamp(18px,3vw,36px) * var(--dt-pad-h-scale,1)); }
-  #screen-detalle .dt-widget-name{ font-family:'Inter',sans-serif; font-weight:700; font-size:clamp(3.4vw, calc(3.6vw * var(--dt-font-scale-primary,1)), 4.0vw); color:var(--dt-gold); margin-bottom:0.6vh; }
-  #screen-detalle .dt-widget-desc{ font-size:clamp(2.2vw, calc(2.4vw * var(--dt-font-scale-secondary,1)), 2.8vw); line-height:1.5; color:rgba(28,27,25,0.78); padding:0; }
-  #screen-detalle .dt-widget-desc.pending{ font-style:italic; opacity:0.55; }
+  #screen-detalle .dt-seg-btn:last-child{ border-right:none; }
+  #screen-detalle .dt-seg-btn.dt-active{ background:#EADBDF; background:color-mix(in srgb, var(--dt-gold) 16%, var(--dt-bg)); color:var(--dt-gold); }
+  #screen-detalle .dt-seg-btn svg{ width:4.2vw; height:4.2vw; min-width:16px; min-height:16px; }
+  #screen-detalle .dt-seg-btn:active{ transform:scale(0.97); }
 
-  /* Selector — estilo "botones discretos" (segmented, sin conectores) */
-  #screen-detalle .dt-selector-discrete{ display:flex; border-top:1px solid var(--dt-gold-soft); }
-  #screen-detalle .dt-discrete-btn{
-    flex:1; display:flex; flex-direction:column; align-items:center; gap:0.5vh;
-    background:none; border:none; border-right:1px solid var(--dt-gold-soft);
-    cursor:pointer; padding:calc(clamp(6px,1vh,12px) * var(--dt-pad-v-scale,1)) 1vw;
-    font-family:'Inter',sans-serif; font-size:2.2vw; color:rgba(28,27,25,0.55);
+  /* Catálogo de Selectores — Stepper horizontal (Adaptaciones) */
+  #screen-detalle .dt-selector-stepper{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.6vh 4vw 1.2vh 4vw; position:relative; }
+  #screen-detalle .dt-step{ display:flex; flex-direction:column; align-items:center; gap:0.6vh; flex:1; position:relative; cursor:pointer; }
+  #screen-detalle .dt-step:active{ transform:scale(0.97); }
+  #screen-detalle .dt-step-connector{ position:absolute; top:3vw; left:-50%; width:100%; height:1px; background:var(--dt-gold-soft); z-index:1; }
+  #screen-detalle .dt-step-dot{
+    width:6vw; height:6vw; max-width:26px; max-height:26px; border-radius:50%; border:1px solid var(--dt-gold-soft);
+    display:flex; align-items:center; justify-content:center; background:var(--dt-card); position:relative; z-index:2;
+    color:var(--dt-gold); transition:background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
   }
-  #screen-detalle .dt-discrete-btn:last-child{ border-right:none; }
-  #screen-detalle .dt-discrete-btn svg{ width:4.4vw; height:4.4vw; }
-  #screen-detalle .dt-discrete-btn.active{ color:var(--dt-gold); background:rgba(122,30,57,0.06); }
-  #screen-detalle .dt-discrete-btn.active svg{ stroke:var(--dt-gold); }
+  #screen-detalle .dt-step-dot svg{ width:3.4vw; height:3.4vw; min-width:13px; min-height:13px; }
+  #screen-detalle .dt-step.dt-active .dt-step-dot{ background:var(--dt-gold); border-color:var(--dt-gold); color:#FFFFFF; }
+  #screen-detalle .dt-step-label{ font-size:2.1vw; text-align:center; color:var(--dt-ink); opacity:0.65; }
+  #screen-detalle .dt-step.dt-active .dt-step-label{ opacity:1; color:var(--dt-gold); font-weight:600; }
 
-  /* Selector — estilo "stepper horizontal" (íconos conectados por línea) */
-  #screen-detalle .dt-selector-stepper{ display:flex; align-items:flex-start; border-top:1px solid var(--dt-gold-soft); padding:calc(clamp(6px,1vh,12px) * var(--dt-pad-v-scale,1)) calc(clamp(12px,2vw,24px) * var(--dt-pad-h-scale,1)); position:relative; }
-  #screen-detalle .dt-stepper-item{ flex:1; display:flex; flex-direction:column; align-items:center; gap:0.6vh; position:relative; background:none; border:none; cursor:pointer; font-family:'Inter',sans-serif; }
-  #screen-detalle .dt-stepper-line{ position:absolute; top:2.6vw; left:12%; right:12%; height:1px; background:var(--dt-gold-soft); z-index:0; }
-  #screen-detalle .dt-stepper-icon{ width:5.2vw; height:5.2vw; min-width:20px; min-height:20px; border-radius:50%; border:1.4px solid var(--dt-gold-soft); background:var(--dt-bg); display:flex; align-items:center; justify-content:center; z-index:1; }
-  #screen-detalle .dt-stepper-icon svg{ width:2.6vw; height:2.6vw; }
-  #screen-detalle .dt-stepper-item.active .dt-stepper-icon{ border-color:var(--dt-gold); }
-  #screen-detalle .dt-stepper-item.active .dt-stepper-icon svg{ stroke:var(--dt-gold); }
-  #screen-detalle .dt-stepper-label{ font-size:2.2vw; color:rgba(28,27,25,0.55); text-align:center; }
-  #screen-detalle .dt-stepper-item.active .dt-stepper-label{ color:var(--dt-gold); font-weight:600; }
+  /* ---- Bloque de texto (Grupo textual) ---- */
+  #screen-detalle .dt-text-block{ display:flex; flex-direction:column; gap:0.9vh; flex-shrink:0; }
+  #screen-detalle .dt-text-title{ font-family:'Cormorant Garamond',serif; font-size:3.7vw; font-weight:700; color:var(--dt-ink); }
+  #screen-detalle .dt-text-body{ font-size:2.6vw; line-height:1.55; color:rgba(28,27,26,0.8); }
 
-  /* --- Boxes académicos --- */
-  #screen-detalle .dt-academic-boxes{ display:flex; flex-direction:column; gap:1.2vh; }
-  #screen-detalle .dt-academic-box{
-    display:flex; align-items:flex-start; gap:3vw; border:1px solid var(--dt-gold-soft);
-    border-radius:12px; background:var(--dt-card);
-    padding:calc(clamp(9px,1.5vh,18px) * var(--dt-pad-v-scale,1)) calc(clamp(18px,3vw,36px) * var(--dt-pad-h-scale,1));
+  /* ---- Hero + (sin epígrafe en este caso: BT no define datos de epígrafe
+     para Ecosistema, solo imagen hero) ---- */
+  #screen-detalle .dt-hero-group{ display:flex; flex-direction:column; gap:0; flex-shrink:0; }
+  #screen-detalle .dt-hero-img{ width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:14px; border:1px solid var(--dt-gold-soft); display:block; background:#ECEAE6; }
+  #screen-detalle .dt-hero-img-placeholder{
+    width:100%; aspect-ratio:16/10; border-radius:14px; border:1px solid var(--dt-gold-soft); background:#ECEAE6;
+    display:flex; align-items:center; justify-content:center; color:#9B968C; font-size:2.4vw; text-align:center; padding:0 6vw;
   }
-  #screen-detalle .dt-academic-icon{ width:6vw; height:6vw; min-width:24px; min-height:24px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--dt-gold); }
-  #screen-detalle .dt-academic-icon svg{ width:100%; height:100%; }
-  #screen-detalle .dt-academic-title{ font-family:'Inter',sans-serif; font-weight:700; font-size:clamp(2.5vw, calc(2.7vw * var(--dt-font-scale-primary,1)), 3.1vw); color:var(--dt-ink); margin-bottom:0.3vh; }
-  #screen-detalle .dt-academic-text{ font-size:clamp(2.2vw, calc(2.4vw * var(--dt-font-scale-primary,1)), 2.8vw); line-height:1.45; color:rgba(28,27,25,0.78); }
 
-  /* Cero emojis / iconografía de línea fina en todo el sistema */
-  #screen-detalle svg{ stroke:currentColor; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  /* ---- Boxes académicos (Grupo complementario / textual) — preset
+     acordeon-academico, default con 3+ boxes en un mismo tab ---- */
+  #screen-detalle .dt-academic-boxes{ display:flex; flex-direction:column; border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden; flex-shrink:0; }
+  #screen-detalle .dt-academic-box{ border-bottom:0.5px solid var(--dt-gold-soft); }
+  #screen-detalle .dt-academic-box:last-child{ border-bottom:none; }
+  #screen-detalle .dt-academic-box-header{ display:flex; align-items:center; gap:2.2vw; padding:1.6vh 4vw; cursor:pointer; }
+  #screen-detalle .dt-academic-box-header:active{ transform:scale(0.99); }
+  #screen-detalle .dt-academic-box-header svg{ width:4.6vw; height:4.6vw; min-width:18px; min-height:18px; color:var(--dt-gold); flex-shrink:0; }
+  #screen-detalle .dt-academic-box-title{ flex:1; font-size:2.7vw; font-weight:600; color:var(--dt-ink); }
+  #screen-detalle .dt-academic-box-chevron{ width:3.4vw; height:3.4vw; min-width:12px; min-height:12px; color:var(--dt-ink); opacity:0.5; transition:transform var(--motion-base) var(--motion-ease); flex-shrink:0; }
+  #screen-detalle .dt-academic-box.dt-open .dt-academic-box-chevron{ transform:rotate(180deg); }
+  #screen-detalle .dt-academic-box-content{ max-height:0; overflow:hidden; transition:max-height var(--motion-base) var(--motion-ease); }
+  #screen-detalle .dt-academic-box.dt-open .dt-academic-box-content{ max-height:240px; }
+  #screen-detalle .dt-academic-box-text{ padding:0 4vw 1.6vh 4vw; font-size:2.4vw; line-height:1.5; color:rgba(28,27,26,0.8); }
+
+  /* LEY 8 — anulación total del movimiento bajo prefers-reduced-motion. */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+    #screen-display .cta-shine{ display:none; }
+    #screen-display .shimmer::after{ display:none; }
+  }
 </style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body>
 
-<div class="chrome-tint-top"></div>
-<div class="chrome-tint-bottom"></div>
-
 <div class="app-root">
 
-  <!-- Fondo del D — distinto por pieza (BT). Fuera de ambas pantallas a
-       propósito (ver comentario CSS de .d-bg-layer). Si el asset todavía no
-       fue subido, se oculta solo y queda el blanco sólido de siempre. -->
-  <img class="d-bg-layer" src="assets/bg-display.png" alt="" onerror="this.style.display='none'">
+  <!-- ===== Sprite de íconos STD — recurso compartido D + DT (único, al
+       inicio del body). Incluye el set inicial usado por esta pieza y los
+       íconos NUEVOS propuestos (comentados abajo), dibujados siguiendo la
+       especificación (grilla 24x24, trazo 1.5, sin relleno, currentColor). ===== -->
+  <svg id="std-icon-sprite" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Set inicial STD -->
+      <symbol id="ic-hoja" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.5 19.5C4.5 10.5 10.5 4.5 19.5 4.5C19.5 13.5 13.5 19.5 4.5 19.5Z"/>
+        <path d="M4.5 19.5L14 10"/>
+      </symbol>
+      <symbol id="ic-flor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="2"/>
+        <circle cx="12" cy="6.3" r="2.3"/>
+        <circle cx="12" cy="17.7" r="2.3"/>
+        <circle cx="6.3" cy="12" r="2.3"/>
+        <circle cx="17.7" cy="12" r="2.3"/>
+      </symbol>
+      <symbol id="ic-raiz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3V10"/>
+        <path d="M12 10C9 11 8 14 7 20"/>
+        <path d="M12 10C11 12.5 11 16 12 20"/>
+        <path d="M12 10C15 11 16 14 17 20"/>
+      </symbol>
 
-  <!-- ============================================================
+      <!-- ===== Íconos NUEVOS propuestos (no estaban en el set inicial) ===== -->
+      <!-- ic-anillos-concentricos: corte transversal de tronco, para la
+           variante "Tronco" del widget de Anatomía. -->
+      <symbol id="ic-anillos-concentricos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <circle cx="12" cy="12" r="6.2"/>
+        <circle cx="12" cy="12" r="9.3"/>
+      </symbol>
+      <!-- ic-flechas-circulares: sistema circulatorio (agua/nutrientes). -->
+      <symbol id="ic-flechas-circulares" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4.2 12a7.8 7.8 0 0 1 13.3-5.7"/>
+        <path d="M19.8 12a7.8 7.8 0 0 1-13.3 5.7"/>
+        <path d="M17.5 3.6v3.2h-3.2"/>
+        <path d="M6.5 20.4v-3.2h3.2"/>
+      </symbol>
+      <!-- ic-propagulo: propágulo del mangle (plántula alargada). -->
+      <symbol id="ic-propagulo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.2c1.4 0 2.1 1.1 2.1 3.3 0 6-1 12-2.1 15.7-1.1-3.7-2.1-9.7-2.1-15.7 0-2.2.7-3.3 2.1-3.3Z"/>
+        <path d="M12 3.2V1.8"/>
+      </symbol>
+      <!-- ic-ondas: dispersión por agua. -->
+      <symbol id="ic-ondas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.5 7.5c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
+        <path d="M2.5 12.5c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
+        <path d="M2.5 17.5c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
+      </symbol>
+      <!-- ic-mangle-olas: protección costera (Ecosistema). -->
+      <symbol id="ic-mangle-olas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.2v8.2"/>
+        <path d="M12 6.4c-2.1 0-3.1 1-3.1 2.9"/>
+        <path d="M12 8.6c2.1 0 3.1 1 3.1 2.9"/>
+        <path d="M2.5 18c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
+        <path d="M8.2 21c1-4 2-7 3.8-9 1.8 2 2.8 5 3.8 9"/>
+      </symbol>
+      <!-- ic-pez-cangrejo: refugio de fauna (Ecosistema). -->
+      <symbol id="ic-pez-cangrejo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2.8 12.5c3.2-4.2 8.4-6.3 12.6-4.2 2 1 4 3.1 5.8 4.2-1.8 1.1-3.8 3.2-5.8 4.2-4.2 2.1-9.4-.1-12.6-4.2Z"/>
+        <path d="M15.4 10.6l3-2.5v8.8l-3-2.5"/>
+        <circle cx="7.3" cy="11.5" r="0.5"/>
+      </symbol>
+      <!-- ic-nube-co2: carbono azul (Ecosistema). -->
+      <symbol id="ic-nube-co2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 16.2a4 4 0 0 1 .5-8 5 5 0 0 1 9.6-1.4A4.4 4.4 0 0 1 16.9 16.2H7Z"/>
+        <path d="M12 16.2v4.6"/>
+        <path d="M9.6 18.6L12 21l2.4-2.4"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ======================================================================
        #screen-display — EL D
-       ============================================================ -->
+       ====================================================================== -->
   <div class="app-screen" id="screen-display">
     <div class="screen">
 
       <header>
         <div class="logo">
-          <img class="logo-mark" src="assets/logo.png" alt="UEES — Universidad Espíritu Santo" onerror="this.style.display='none'">
+          <img class="logo-mark" src="assets/logo.png" alt="Logo UEES">
         </div>
         <div class="back-link" onclick="volverAlEscaner()">
           <span class="arrow">&#8592;</span>
@@ -300,33 +476,29 @@
       </header>
 
       <div class="title-block">
-        <button class="badge" id="badgeBtn" type="button">
-          <div class="badge-main-row">
-            <span class="badge-main-text">Casi amenazado</span>
-            <span class="badge-info-icon">i</span>
-          </div>
-        </button>
+        <button class="badge" id="badgeBtn" type="button">Casi amenazado <span class="badge-info-icon">i</span></button>
         <h1>Mangle rojo</h1>
-        <div class="sci-name">Rhizophora samoensis</div>
+        <div class="rule"></div>
+        <div class="subtitle"><em>Rhizophora samoensis</em></div>
         <div class="family-line">
-          <svg viewBox="0 0 24 24"><path d="M12 3c-3 3-4 6-4 9a4 4 0 0 0 8 0c0-3-1-6-4-9Z"/><path d="M12 12v9"/></svg>
+          <svg><use href="#ic-hoja"/></svg>
           <span>Familia Rhizophoraceae</span>
+        </div>
+      </div>
+
+      <div class="info-overlay" id="infoOverlay">
+        <div class="info-box">
+          <button class="info-close" id="infoClose" type="button">&times;</button>
+          <div class="info-box-badge">Casi amenazado</div>
+          <p>[PENDIENTE — texto de justificación de la categoría de conservación a confirmar con el cliente]</p>
         </div>
       </div>
 
       <div id="hotspotPopupsContainer"></div>
 
-      <!-- Popup del badge -->
-      <div class="info-overlay" id="infoOverlay">
-        <div class="info-box">
-          <button class="info-close" id="infoClose" type="button">&times;</button>
-          <div class="info-box-badge">Casi amenazado</div>
-          <p style="font-style:italic; opacity:0.6;">Texto de justificación pendiente — a completar con el criterio de conservación provisto por UEES.</p>
-        </div>
-      </div>
-
       <div class="viewer-wrap">
         <div id="viewer3d">
+          <div class="viewer-shimmer shimmer" id="viewerShimmer"></div>
           <div class="loading-msg" id="loadingMsg">Cargando modelo 3D…</div>
         </div>
 
@@ -371,169 +543,200 @@
     </div>
   </div>
 
-  <!-- ============================================================
+  <!-- ======================================================================
        #screen-detalle — EL DT
-       ============================================================ -->
+       ====================================================================== -->
   <div class="app-screen" id="screen-detalle">
-    <div class="dt-screen">
 
-      <div class="dt-header">
-        <div class="dt-back-link" onclick="showDisplay()">
-          <span class="arrow">&#8592;</span>
-          <span>Volver a la pieza</span>
-        </div>
-        <img class="dt-logo-mark" src="assets/logo.png" alt="UEES" onerror="this.style.display='none'">
+    <div class="dt-header">
+      <div class="dt-back-link" onclick="showDisplay()">
+        <span class="dt-arrow">&#8592;</span>
+        <span>Volver a la pieza</span>
       </div>
+      <img class="dt-logo-mark" src="assets/logo.png" alt="Logo UEES">
+    </div>
 
-      <div class="dt-title-block">
-        <h1 class="dt-h1">Mangle rojo</h1>
-      </div>
+    <div class="dt-title-block">
+      <h1 class="dt-h1">Mangle rojo</h1>
+      <div class="dt-rule"></div>
+      <!-- Sin subtítulo (confirmado por BT) -->
+    </div>
 
-      <div class="dt-tabs-nav">
-        <button class="dt-tab-btn active" data-tab="anatomia" onclick="showTab('anatomia')">Anatomía</button>
-        <button class="dt-tab-btn" data-tab="adaptaciones" onclick="showTab('adaptaciones')">Adaptaciones</button>
-        <button class="dt-tab-btn" data-tab="ecosistema" onclick="showTab('ecosistema')">Ecosistema</button>
-      </div>
+    <div class="dt-tabs-nav">
+      <button class="dt-tab-btn dt-active" type="button" data-tab="anatomia">Anatomía</button>
+      <button class="dt-tab-btn" type="button" data-tab="adaptaciones">Adaptaciones</button>
+      <button class="dt-tab-btn" type="button" data-tab="ecosistema">Ecosistema</button>
+    </div>
 
-      <div class="dt-content-area">
+    <div class="dt-content-area">
 
-        <!-- TAB: Anatomía — solo widget interactivo (sin boxes académicos, BT Nota 4) -->
-        <div class="dt-tab-panel active" id="panel-anatomia" data-panel="anatomia">
-          <div class="dt-widget" id="widget-anatomia">
-            <img class="dt-widget-img" id="anatomia-img" src="assets/anatomia-tronco.jpg" alt="Tronco" onerror="this.style.display='none'; document.getElementById('anatomia-img-ph').style.display='flex';">
-            <div class="dt-widget-img-placeholder" id="anatomia-img-ph" style="display:none;">[ imagen — anatomia-tronco.jpg ]</div>
-            <div class="dt-widget-body">
-              <div class="dt-widget-name" id="anatomia-name">Tronco</div>
-              <div class="dt-widget-desc" id="anatomia-desc">Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.</div>
-            </div>
-            <div class="dt-selector-discrete">
-              <button class="dt-discrete-btn active" data-variant="tronco" onclick="selectAnatomia('tronco')">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="10.5"/></svg>
+      <!-- ===== TAB: Anatomía — Widget interactivo, selector Segmentado ===== -->
+      <div class="dt-tab-panel dt-active" data-panel="anatomia" style="gap:2vh;">
+        <div class="dt-widget" id="widgetAnatomia">
+          <div class="dt-widget-image-wrap">
+            <img class="dt-widget-image" id="anatomiaImg" src="assets/anatomia-tronco.jpg" alt="Tronco">
+          </div>
+          <div class="dt-widget-body">
+            <div class="dt-widget-name" id="anatomiaNombre">Tronco</div>
+            <div class="dt-widget-desc" id="anatomiaDesc">Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.</div>
+          </div>
+          <div class="dt-widget-selectors">
+            <div class="dt-selector-segmented">
+              <button class="dt-seg-btn dt-active" type="button" data-variant="0">
+                <svg><use href="#ic-anillos-concentricos"/></svg>
                 <span>Tronco</span>
               </button>
-              <button class="dt-discrete-btn" data-variant="hoja" onclick="selectAnatomia('hoja')">
-                <svg viewBox="0 0 24 24"><path d="M12 3c-4 3-7 7-7 11a7 7 0 0 0 14 0c0-4-3-8-7-11Z"/><path d="M12 5v16"/></svg>
+              <button class="dt-seg-btn" type="button" data-variant="1">
+                <svg><use href="#ic-hoja"/></svg>
                 <span>Hoja (celular)</span>
               </button>
-              <button class="dt-discrete-btn" data-variant="sistema" onclick="selectAnatomia('sistema')">
-                <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M20 4v5h-5"/></svg>
-                <span>Sistema circulatorio</span>
+              <button class="dt-seg-btn" type="button" data-variant="2">
+                <svg><use href="#ic-flechas-circulares"/></svg>
+                <span>Sist. circulatorio</span>
               </button>
             </div>
           </div>
         </div>
-
-        <!-- TAB: Adaptaciones — bloque de texto + widget stepper -->
-        <div class="dt-tab-panel" id="panel-adaptaciones" data-panel="adaptaciones">
-          <div class="dt-text-block">
-            <div class="dt-section-title">Adaptaciones</div>
-            <div class="dt-paragraph">El mangle rojo tiene adaptaciones únicas que le permiten vivir y prosperar en ambientes costeros.</div>
-          </div>
-          <div class="dt-widget" id="widget-adaptaciones">
-            <img class="dt-widget-img" id="adaptaciones-img" src="assets/adaptaciones-propagulo.jpg" alt="Propágulo" onerror="this.style.display='none'; document.getElementById('adaptaciones-img-ph').style.display='flex';">
-            <div class="dt-widget-img-placeholder" id="adaptaciones-img-ph" style="display:none;">[ imagen — adaptaciones-propagulo.jpg ]</div>
-            <div class="dt-widget-body">
-              <div class="dt-widget-name" id="adaptaciones-name">Propágulo</div>
-              <div class="dt-widget-desc" id="adaptaciones-desc">El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.</div>
-            </div>
-            <div class="dt-selector-stepper">
-              <div class="dt-stepper-line"></div>
-              <button class="dt-stepper-item" data-variant="flor" onclick="selectAdaptacion('flor')">
-                <div class="dt-stepper-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.2"/><path d="M12 3a3 3 0 0 1 0 6 3 3 0 0 1 0-6Z"/><path d="M12 21a3 3 0 0 0 0-6 3 3 0 0 0 0 6Z"/><path d="M3 12a3 3 0 0 1 6 0 3 3 0 0 1-6 0Z"/><path d="M21 12a3 3 0 0 0-6 0 3 3 0 0 0 6 0Z"/></svg></div>
-                <span class="dt-stepper-label">Flor</span>
-              </button>
-              <button class="dt-stepper-item active" data-variant="propagulo" onclick="selectAdaptacion('propagulo')">
-                <div class="dt-stepper-icon"><svg viewBox="0 0 24 24"><path d="M12 2v14"/><path d="M12 16c-2 1-3 3-3 5"/><path d="M12 16c2 1 3 3 3 5"/></svg></div>
-                <span class="dt-stepper-label">Propágulo</span>
-              </button>
-              <button class="dt-stepper-item" data-variant="dispersion" onclick="selectAdaptacion('dispersion')">
-                <div class="dt-stepper-icon"><svg viewBox="0 0 24 24"><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg></div>
-                <span class="dt-stepper-label">Dispersión</span>
-              </button>
-              <button class="dt-stepper-item" data-variant="enraizamiento" onclick="selectAdaptacion('enraizamiento')">
-                <div class="dt-stepper-icon"><svg viewBox="0 0 24 24"><path d="M12 3v7"/><path d="M12 10c-2 2-3 5-3 8"/><path d="M12 10c2 2 3 5 3 8"/><path d="M12 10c-4 1-6 3-7 6"/><path d="M12 10c4 1 6 3 7 6"/></svg></div>
-                <span class="dt-stepper-label">Enraizamiento</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB: Ecosistema — hero image + 3 boxes académicos (sin widget, BT confirmado) -->
-        <div class="dt-tab-panel" id="panel-ecosistema" data-panel="ecosistema">
-          <img class="dt-hero-img" id="ecosistema-img" src="assets/ecosistema-hero.jpg" alt="Ecosistema del mangle rojo" onerror="this.style.display='none'; document.getElementById('ecosistema-img-ph').style.display='flex';">
-          <div class="dt-hero-placeholder" id="ecosistema-img-ph" style="display:none;">[ imagen — ecosistema-hero.jpg ]</div>
-          <div class="dt-academic-boxes">
-            <div class="dt-academic-box">
-              <div class="dt-academic-icon"><svg viewBox="0 0 24 24"><path d="M3 20c3-4 6-4 9 0s6 4 9 0"/><path d="M12 20V9"/><path d="M12 9c-2 2-4 2-5 0"/><path d="M12 9c2 2 4 2 5 0"/></svg></div>
-              <div>
-                <div class="dt-academic-title">Protección costera</div>
-                <div class="dt-academic-text">Sus raíces retienen sedimentos y ayudan a amortiguar el oleaje.</div>
-              </div>
-            </div>
-            <div class="dt-academic-box">
-              <div class="dt-academic-icon"><svg viewBox="0 0 24 24"><path d="M4 12c2-3 5-4 8-4s6 1 8 4c-2 3-5 4-8 4s-6-1-8-4Z"/><circle cx="15" cy="12" r="0.6" fill="currentColor"/></svg></div>
-              <div>
-                <div class="dt-academic-title">Refugio de fauna</div>
-                <div class="dt-academic-text">Las raíces sirven de vivero para peces juveniles, cangrejos, moluscos y aves.</div>
-              </div>
-            </div>
-            <div class="dt-academic-box">
-              <div class="dt-academic-icon"><svg viewBox="0 0 24 24"><path d="M6 17a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.6A4 4 0 0 1 18 17H6Z"/><path d="M9 20h.01"/><path d="M13 20h.01"/></svg></div>
-              <div>
-                <div class="dt-academic-title">Carbono azul</div>
-                <div class="dt-academic-text">Los manglares almacenan carbono en su biomasa y en sus suelos anegados.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
+
+      <!-- ===== TAB: Adaptaciones — Bloque de texto + Widget con Stepper ===== -->
+      <div class="dt-tab-panel" data-panel="adaptaciones" style="gap:2vh;">
+        <div class="dt-text-block">
+          <div class="dt-text-title">Adaptaciones</div>
+          <div class="dt-text-body">El mangle rojo tiene adaptaciones únicas que le permiten vivir y prosperar en ambientes costeros.</div>
+        </div>
+        <div class="dt-widget" id="widgetAdaptaciones">
+          <div class="dt-widget-image-wrap">
+            <img class="dt-widget-image" id="adaptacionesImg" src="assets/adaptaciones-flor.jpg" alt="Flor">
+          </div>
+          <div class="dt-widget-body">
+            <div class="dt-widget-name" id="adaptacionesNombre">Flor</div>
+            <div class="dt-widget-desc" id="adaptacionesDesc">[PENDIENTE — sin contenido visible en la referencia]</div>
+          </div>
+          <div class="dt-widget-selectors">
+            <div class="dt-selector-stepper">
+              <div class="dt-step dt-active" data-variant="0">
+                <div class="dt-step-dot"><svg><use href="#ic-flor"/></svg></div>
+                <div class="dt-step-label">Flor</div>
+              </div>
+              <div class="dt-step" data-variant="1">
+                <div class="dt-step-connector"></div>
+                <div class="dt-step-dot"><svg><use href="#ic-propagulo"/></svg></div>
+                <div class="dt-step-label">Propágulo</div>
+              </div>
+              <div class="dt-step" data-variant="2">
+                <div class="dt-step-connector"></div>
+                <div class="dt-step-dot"><svg><use href="#ic-ondas"/></svg></div>
+                <div class="dt-step-label">Dispersión</div>
+              </div>
+              <div class="dt-step" data-variant="3">
+                <div class="dt-step-connector"></div>
+                <div class="dt-step-dot"><svg><use href="#ic-raiz"/></svg></div>
+                <div class="dt-step-label">Enraizamiento</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: Ecosistema — Hero + Boxes académicos (acordeón) ===== -->
+      <div class="dt-tab-panel" data-panel="ecosistema" style="gap:2vh;">
+        <div class="dt-hero-group">
+          <img class="dt-hero-img" src="assets/ecosistema-hero.jpg" alt="Ecosistema del mangle rojo">
+        </div>
+        <div class="dt-academic-boxes" id="academicBoxes">
+          <div class="dt-academic-box dt-open" data-box="0">
+            <div class="dt-academic-box-header" onclick="toggleAcademicBox(this)">
+              <svg><use href="#ic-mangle-olas"/></svg>
+              <div class="dt-academic-box-title">Protección costera</div>
+              <svg class="dt-academic-box-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="dt-academic-box-content">
+              <div class="dt-academic-box-text">Sus raíces retienen sedimentos y ayudan a amortiguar el oleaje.</div>
+            </div>
+          </div>
+          <div class="dt-academic-box" data-box="1">
+            <div class="dt-academic-box-header" onclick="toggleAcademicBox(this)">
+              <svg><use href="#ic-pez-cangrejo"/></svg>
+              <div class="dt-academic-box-title">Refugio de fauna</div>
+              <svg class="dt-academic-box-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="dt-academic-box-content">
+              <div class="dt-academic-box-text">Las raíces sirven de vivero para peces juveniles, cangrejos, moluscos y aves.</div>
+            </div>
+          </div>
+          <div class="dt-academic-box" data-box="2">
+            <div class="dt-academic-box-header" onclick="toggleAcademicBox(this)">
+              <svg><use href="#ic-nube-co2"/></svg>
+              <div class="dt-academic-box-title">Carbono azul</div>
+              <svg class="dt-academic-box-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </div>
+            <div class="dt-academic-box-content">
+              <div class="dt-academic-box-text">Los manglares almacenan carbono en su biomasa y en sus suelos anegados.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
 </div>
 
 <script>
-  // ---------- Navegación interna (Arquitectura_De_Archivo_Unico.pdf) ----------
+  /* ===== Navegación interna (Arquitectura_de_Archivo_Unico.pdf) ===== */
   function showDetalle(){
     document.getElementById('screen-display').classList.add('slide-out');
     document.getElementById('screen-detalle').classList.add('slide-in');
-    fitAllPanels();
   }
   function showDisplay(){
     document.getElementById('screen-display').classList.remove('slide-out');
     document.getElementById('screen-detalle').classList.remove('slide-in');
   }
+  // Única excepción con cambio de URL real: vuelve al escáner MindAR raíz.
+  // NOTA: default STD para carpeta displays/[pieza]/ — revisar profundidad
+  // real si el repo UEES-Manglar mantiene su estructura plana (ver memoria
+  // de proyecto: sin subcarpeta displays/).
   function volverAlEscaner(){
     window.location.href = '../../index.html?volver=1';
   }
 
-  // ---------- Bloqueo de zoom (LEY 5) ----------
-  document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive:false });
+  /* ===== Bloqueo de zoom / gestos (LEY 5) ===== */
+  document.addEventListener('touchmove', (e) => {
+    if (e.touches.length > 1) e.preventDefault();
+  }, { passive: false });
   let lastTouchEnd = 0;
   document.addEventListener('touchend', (e) => {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) e.preventDefault();
     lastTouchEnd = now;
-  }, { passive:false });
+  }, { passive: false });
 
-  // ---------- Captura de errores (Arquitectura_De_Archivo_Unico.pdf) ----------
-  window.addEventListener('error', (e) => {
+  /* ===== Manejo de errores (Arquitectura_de_Archivo_Unico.pdf) ===== */
+  function showViewerError(mainText, detailText) {
+    const shimmer = document.getElementById('viewerShimmer');
+    if (shimmer) shimmer.remove();
     const el = document.getElementById('loadingMsg');
-    if (el) {
-      el.className = 'error-msg';
-      el.innerHTML = 'Error JS: ' + (e.message || 'desconocido') + '<br><span style="font-size:0.75em;opacity:0.7;">' + (e.filename || '') + ':' + (e.lineno || '') + '</span>';
+    if (!el) return;
+    el.className = 'error-msg';
+    el.textContent = mainText;
+    if (detailText) {
+      el.appendChild(document.createElement('br'));
+      const detail = document.createElement('span');
+      detail.style.fontSize = '0.75em';
+      detail.style.opacity = '0.7';
+      detail.textContent = detailText;
+      el.appendChild(detail);
     }
+  }
+  window.addEventListener('error', (e) => {
+    showViewerError('Error JS: ' + (e.message || 'desconocido'), (e.filename || '') + ':' + (e.lineno || ''));
   });
   window.addEventListener('unhandledrejection', (e) => {
-    const el = document.getElementById('loadingMsg');
-    if (el) {
-      el.className = 'error-msg';
-      el.innerHTML = 'Promesa rechazada: ' + (e.reason?.message || e.reason || 'desconocido');
-    }
+    showViewerError('Promesa rechazada: ' + ((e.reason && e.reason.message) || e.reason || 'desconocido'));
   });
 
-  // ---------- Badge popup (D) ----------
+  /* ===== Badge (D) ===== */
   const badgeBtn = document.getElementById('badgeBtn');
   const infoOverlay = document.getElementById('infoOverlay');
   const infoClose = document.getElementById('infoClose');
@@ -541,104 +744,171 @@
   infoClose?.addEventListener('click', () => infoOverlay.classList.remove('open'));
   infoOverlay?.addEventListener('click', (e) => { if (e.target === infoOverlay) infoOverlay.classList.remove('open'); });
 
-  // ---------- Tabs del DT ----------
-  function showTab(tabId){
-    document.querySelectorAll('.dt-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
-    document.querySelectorAll('.dt-tab-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tabId));
-    requestAnimationFrame(() => fitPanel(document.getElementById('panel-' + tabId)));
-  }
-
-  // ---------- Widget Anatomía (selector discreto) ----------
-  const ANATOMIA_DATA = {
-    tronco:  { name:'Tronco', desc:'Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.', img:'assets/anatomia-tronco.jpg', pending:false },
-    hoja:    { name:'Hoja (celular)', desc:'Estructura celular de la hoja, adaptada para minimizar la pérdida de agua y tolerar la salinidad.', img:'assets/anatomia-hoja.jpg', pending:false },
-    sistema: { name:'Sistema circulatorio', desc:'Recorrido del agua y los nutrientes desde las raíces hasta las hojas a través del tronco.', img:'assets/anatomia-sistema-circulatorio.jpg', pending:false },
-  };
-  function selectAnatomia(key){
-    const d = ANATOMIA_DATA[key];
-    document.getElementById('anatomia-name').textContent = d.name;
-    const descEl = document.getElementById('anatomia-desc');
-    descEl.textContent = d.pending ? '[ Contenido pendiente — a completar según BT ]' : d.desc;
-    descEl.classList.toggle('pending', d.pending);
-    const img = document.getElementById('anatomia-img');
-    const ph = document.getElementById('anatomia-img-ph');
-    img.style.display = 'block'; ph.style.display = 'none';
-    img.src = d.img; ph.textContent = '[ imagen — ' + d.img.split('/').pop() + ' ]';
-    document.querySelectorAll('#widget-anatomia .dt-discrete-btn').forEach(b => b.classList.toggle('active', b.dataset.variant === key));
-    requestAnimationFrame(() => fitPanel(document.getElementById('panel-anatomia')));
-  }
-
-  // ---------- Widget Adaptaciones (selector stepper) ----------
-  const ADAPTACIONES_DATA = {
-    flor:          { name:'Flor', desc:null, img:'assets/adaptaciones-flor.jpg', pending:true },
-    propagulo:     { name:'Propágulo', desc:'El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.', img:'assets/adaptaciones-propagulo.jpg', pending:false },
-    dispersion:    { name:'Dispersión', desc:null, img:'assets/adaptaciones-dispersion.jpg', pending:true },
-    enraizamiento: { name:'Enraizamiento', desc:null, img:'assets/adaptaciones-enraizamiento.jpg', pending:true },
-  };
-  function selectAdaptacion(key){
-    const d = ADAPTACIONES_DATA[key];
-    document.getElementById('adaptaciones-name').textContent = d.name;
-    const descEl = document.getElementById('adaptaciones-desc');
-    descEl.textContent = d.pending ? '[ Contenido pendiente — a completar según BT ]' : d.desc;
-    descEl.classList.toggle('pending', d.pending);
-    const img = document.getElementById('adaptaciones-img');
-    const ph = document.getElementById('adaptaciones-img-ph');
-    img.style.display = 'block'; ph.style.display = 'none';
-    img.src = d.img; ph.textContent = '[ imagen — ' + d.img.split('/').pop() + ' ]';
-    document.querySelectorAll('#widget-adaptaciones .dt-stepper-item').forEach(b => b.classList.toggle('active', b.dataset.variant === key));
-    requestAnimationFrame(() => fitPanel(document.getElementById('panel-adaptaciones')));
-  }
-
-  // ---------- Jerarquía de Sacrificio (Pantalla_Detalle_Instrucciones.pdf) ----------
-  // Orden estricto, agotando cada paso antes de pasar al siguiente:
-  // gap → padding vertical → padding horizontal → imágenes (100%→90%) →
-  // tipografía secundaria → tipografía primaria. Nunca toca header/título/tabs.
-  const FIT_STEPS = [
-    { varName:'--dt-gap-vh',              from:3,    to:2,    delta:-0.15 },
-    { varName:'--dt-pad-v-scale',         from:1,    to:0.55, delta:-0.05 },
-    { varName:'--dt-pad-h-scale',         from:1,    to:0.55, delta:-0.05 },
-    { varName:'--dt-image-scale',         from:1,    to:0.9,  delta:-0.02 },
-    { varName:'--dt-font-scale-secondary',from:1,    to:0.8,  delta:-0.03 },
-    { varName:'--dt-font-scale-primary',  from:1,    to:0.83, delta:-0.03 },
-  ];
-  function fitPanel(panel){
-    if (!panel) return;
-    FIT_STEPS.forEach(s => panel.style.setProperty(s.varName, s.from));
-    if (panel.scrollHeight <= panel.clientHeight) return;
-    for (const s of FIT_STEPS){
-      let val = s.from;
-      let guard = 0;
-      while (panel.scrollHeight > panel.clientHeight && val > s.to && guard < 200){
-        val = Math.max(s.to, Math.round((val + s.delta) * 1000) / 1000);
-        panel.style.setProperty(s.varName, val);
-        guard++;
-      }
-      if (panel.scrollHeight <= panel.clientHeight) return;
-    }
-  }
-  function fitAllPanels(){
-    document.querySelectorAll('.dt-tab-panel').forEach(fitPanel);
-  }
-  let resizeDebounce;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeDebounce);
-    resizeDebounce = setTimeout(fitAllPanels, 120);
+  /* ===== DT — Tabs ===== */
+  const tabButtons = document.querySelectorAll('.dt-tab-btn');
+  const tabPanels = document.querySelectorAll('.dt-tab-panel');
+  tabButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      tabButtons.forEach((b) => b.classList.toggle('dt-active', b === btn));
+      tabPanels.forEach((p) => p.classList.toggle('dt-active', p.dataset.panel === target));
+      // Cada panel corre su rutina de fit al mostrarse por primera vez.
+      const panel = document.querySelector(`.dt-tab-panel[data-panel="${target}"]`);
+      if (panel) runFitRoutine(panel);
+    });
   });
-  window.addEventListener('load', () => setTimeout(fitAllPanels, 60));
+
+  /* ===== DT — Widget Anatomía (selector Segmentado) ===== */
+  const ANATOMIA_VARIANTS = [
+    { nombre: 'Tronco', desc: 'Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.', img: 'assets/anatomia-tronco.jpg' },
+    { nombre: 'Hoja (celular)', desc: 'Estructura celular de la hoja, adaptada para minimizar la pérdida de agua y tolerar la salinidad.', img: 'assets/anatomia-hoja.jpg' },
+    { nombre: 'Sistema circulatorio', desc: 'Recorrido del agua y los nutrientes desde las raíces hasta las hojas a través del tronco.', img: 'assets/anatomia-sistema-circulatorio.jpg' },
+  ];
+  document.querySelectorAll('#widgetAnatomia .dt-seg-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number(btn.dataset.variant);
+      document.querySelectorAll('#widgetAnatomia .dt-seg-btn').forEach((b) => b.classList.toggle('dt-active', b === btn));
+      const v = ANATOMIA_VARIANTS[idx];
+      document.getElementById('anatomiaNombre').textContent = v.nombre;
+      document.getElementById('anatomiaDesc').textContent = v.desc;
+      document.getElementById('anatomiaImg').src = v.img;
+      runFitRoutine(document.querySelector('.dt-tab-panel[data-panel="anatomia"]'));
+    });
+  });
+
+  /* ===== DT — Widget Adaptaciones (selector Stepper) ===== */
+  const ADAPTACIONES_VARIANTS = [
+    { nombre: 'Flor', desc: '[PENDIENTE — sin contenido visible en la referencia]', img: 'assets/adaptaciones-flor.jpg' },
+    { nombre: 'Propágulo', desc: 'El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.', img: 'assets/adaptaciones-propagulo.jpg' },
+    { nombre: 'Dispersión', desc: '[PENDIENTE — sin contenido visible en la referencia]', img: 'assets/adaptaciones-dispersion.jpg' },
+    { nombre: 'Enraizamiento', desc: '[PENDIENTE — sin contenido visible en la referencia]', img: 'assets/adaptaciones-enraizamiento.jpg' },
+  ];
+  document.querySelectorAll('#widgetAdaptaciones .dt-step').forEach((step) => {
+    step.addEventListener('click', () => {
+      const idx = Number(step.dataset.variant);
+      document.querySelectorAll('#widgetAdaptaciones .dt-step').forEach((s) => s.classList.toggle('dt-active', s === step));
+      const v = ADAPTACIONES_VARIANTS[idx];
+      document.getElementById('adaptacionesNombre').textContent = v.nombre;
+      document.getElementById('adaptacionesDesc').textContent = v.desc;
+      document.getElementById('adaptacionesImg').src = v.img;
+      runFitRoutine(document.querySelector('.dt-tab-panel[data-panel="adaptaciones"]'));
+    });
+  });
+
+  /* ===== DT — Boxes académicos (acordeón de apertura única) ===== */
+  function toggleAcademicBox(headerEl){
+    const box = headerEl.closest('.dt-academic-box');
+    const container = box.closest('.dt-academic-boxes');
+    const wasOpen = box.classList.contains('dt-open');
+    container.querySelectorAll('.dt-academic-box').forEach((b) => b.classList.remove('dt-open'));
+    if (!wasOpen) box.classList.add('dt-open');
+    // El cambio de box abierto NO re-dispara la rutina de fit (los estados
+    // cerrados ocupan siempre lo mismo) — spec explícita.
+  }
+
+  /* ===== Rutina de Checkeo (Pantalla_Detalle_Instrucciones.pdf) =====
+     Reduce, en orden estricto y deteniéndose apenas se resuelve el overflow:
+     gap → padding vertical → padding horizontal → altura de imágenes →
+     tipografía secundaria → tipografía primaria. Corre por tab, nunca global. */
+  const FIT_STEPS = ['gap', 'padV', 'padH', 'img', 'fontSec', 'fontPri'];
+  const FIT_MIN = { gap: 1.2, padV: 0.6, padH: 0.6, img: 0.90, fontSec: 0.85, fontPri: 0.85 };
+
+  function fitsWithoutOverflow(panel){
+    return panel.scrollHeight <= panel.clientHeight + 1;
+  }
+
+  function runFitRoutine(panel){
+    if (!panel) return;
+    // Reset a valores base antes de medir.
+    panel.style.gap = '2vh';
+    panel.querySelectorAll('.dt-widget-body, .dt-widget-selectors, .dt-text-block, .dt-academic-box-header')
+      .forEach((el) => { el.style.transform = ''; });
+    panel.style.setProperty('--fit-img-scale', '1');
+    panel.style.setProperty('--fit-font-sec', '1');
+    panel.style.setProperty('--fit-font-pri', '1');
+
+    // Solo mide en el próximo frame, cuando el layout ya se aplicó.
+    requestAnimationFrame(() => {
+      let scale = { gap: 1, padV: 1, padH: 1, img: 1, fontSec: 1, fontPri: 1 };
+      let step = 0;
+      const maxIterations = 24;
+      let iterations = 0;
+
+      while (!fitsWithoutOverflow(panel) && step < FIT_STEPS.length && iterations < maxIterations) {
+        iterations++;
+        const key = FIT_STEPS[step];
+        scale[key] = Math.max(FIT_MIN[key], scale[key] - 0.05);
+        applyFitScale(panel, scale);
+        if (scale[key] <= FIT_MIN[key]) step++;
+      }
+    });
+  }
+
+  function applyFitScale(panel, scale){
+    panel.style.gap = `${2 * scale.gap}vh`;
+    panel.style.setProperty('--fit-img-scale', String(scale.img));
+    panel.querySelectorAll('.dt-widget-image-wrap, .dt-hero-img').forEach((el) => {
+      el.style.transform = `scaleY(${scale.img})`;
+      el.style.transformOrigin = 'top center';
+    });
+    panel.querySelectorAll('.dt-widget-body').forEach((el) => {
+      el.style.padding = `${1.6 * scale.padV}vh ${4 * scale.padH}vw ${1.4 * scale.padV}vh ${4 * scale.padH}vw`;
+    });
+    panel.querySelectorAll('.dt-widget-desc, .dt-step-label, .dt-academic-box-text').forEach((el) => {
+      el.style.fontSize = '';
+      el.style.fontSize = `calc(${el.tagName === 'DIV' ? '1em' : '1em'} * ${scale.fontSec})`;
+    });
+  }
+
+  // Corre la rutina en el tab visible al cargar y en cada resize/orientación
+  // (debounced), nunca global — solo sobre el panel activo en cada momento.
+  let dtResizeTimer = 0;
+  function handleDtViewportChange(){
+    clearTimeout(dtResizeTimer);
+    dtResizeTimer = setTimeout(() => {
+      const activePanel = document.querySelector('.dt-tab-panel.dt-active');
+      if (activePanel) runFitRoutine(activePanel);
+    }, 150);
+  }
+  window.addEventListener('resize', handleDtViewportChange);
+  document.fonts?.ready?.then(() => {
+    const activePanel = document.querySelector('.dt-tab-panel.dt-active');
+    if (activePanel) runFitRoutine(activePanel);
+  });
+  // Corrida inicial sobre el tab activo por default (Anatomía).
+  runFitRoutine(document.querySelector('.dt-tab-panel[data-panel="anatomia"]'));
 </script>
 
 <script>
-  // ---------- Hotspots: popups dinámicos (D) ----------
+  /* ===== Popups de Hotspots (D) — generados dinámicamente desde HOTSPOTS_3D ===== */
   const HOTSPOTS_3D = [
-    { id:'hotspot-1', azimuthDeg:165, heightFraction:0.215, label:'Raíces fúlcreas',
-      popupTitle:'Raíces fúlcreas', popupText:'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.', popupImage:'assets/hotspot-1.jpg' },
-    { id:'hotspot-2', azimuthDeg:315, heightFraction:0.66, label:'Hojas opuestas',
-      popupTitle:'Hojas opuestas', popupText:'[ Contenido pendiente — a completar según BT ]', popupImage:'assets/hotspot-2.jpg' },
-    { id:'hotspot-3', azimuthDeg:100, heightFraction:0.64, label:'Flor y propágulo',
-      popupTitle:'Flor y propágulo', popupText:'[ Contenido pendiente — a completar según BT ]', popupImage:'assets/hotspot-3.jpg' },
+    { id: 'hotspot-1', azimuthDeg: 35,  heightFraction: 0.20, label: 'Raíces fúlcreas',
+      popupTitle: 'Raíces fúlcreas',
+      popupText: 'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.',
+      popupImage: 'assets/hotspot-1.jpg' },
+    { id: 'hotspot-2', azimuthDeg: 315, heightFraction: 0.70, label: 'Hojas opuestas',
+      popupTitle: 'Hojas opuestas',
+      popupText: '[PENDIENTE — solo el label es visible en la referencia]',
+      popupImage: 'assets/hotspot-2.jpg' },
+    { id: 'hotspot-3', azimuthDeg: 100, heightFraction: 0.69, label: 'Flor y propágulo',
+      popupTitle: 'Flor y propágulo',
+      popupText: '[PENDIENTE — mismo caso que Hotspot 2]',
+      popupImage: 'assets/hotspot-3.jpg' },
   ];
+  // NOTA — posiciones estimadas preliminares (mismo criterio de la sesión
+  // anterior de análisis de vértices): a reverificar contra el GLB real una
+  // vez cargado en Blender (el .glb de esta pieza todavía no fue provisto).
 
-  function createHotspotPopups(){
+  const hotspotContainer = document.getElementById('hotspots3d');
+  const hotspotElements = {};
+  let modelBoxForHotspots = null;
+  let modelCenterForHotspots = null;
+
+  const hotspotSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  hotspotSvg.setAttribute('style', 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;');
+  hotspotContainer.appendChild(hotspotSvg);
+
+  function createHotspotPopups() {
     const container = document.getElementById('hotspotPopupsContainer');
     HOTSPOTS_3D.forEach((h) => {
       const overlay = document.createElement('div');
@@ -655,17 +925,48 @@
       `;
       overlay.querySelector('.hotspot-popup-title').textContent = h.popupTitle || '';
       overlay.querySelector('p').textContent = h.popupText || '';
+
       const img = overlay.querySelector('.hotspot-popup-image');
       const placeholder = overlay.querySelector('.hotspot-popup-image-placeholder');
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+      placeholder.classList.add('shimmer');
+      img.onload = () => { placeholder.classList.remove('shimmer'); placeholder.style.display = 'none'; img.style.display = 'block'; };
+      img.onerror = () => { placeholder.classList.remove('shimmer'); placeholder.textContent = `[ imagen — ${h.id} ]`; };
       img.src = h.popupImage || '';
-      placeholder.textContent = `[ imagen — ${h.id} ]`;
-      img.onerror = () => { img.style.display = 'none'; placeholder.style.display = 'flex'; };
+
       overlay.querySelector('.info-close').addEventListener('click', () => overlay.classList.remove('open'));
       overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
       container.appendChild(overlay);
     });
   }
   createHotspotPopups();
+
+  function createHotspotElements() {
+    HOTSPOTS_3D.forEach((h, idx) => {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('stroke', 'var(--gold-soft)');
+      line.setAttribute('stroke-width', '1.5');
+      hotspotSvg.appendChild(line);
+
+      const anchor = document.createElement('div');
+      anchor.className = 'hotspot-anchor';
+      hotspotContainer.appendChild(anchor);
+
+      const number = document.createElement('div');
+      number.className = 'hotspot-number';
+      number.textContent = String(idx + 1);
+      number.title = h.label;
+      number.addEventListener('click', () => {
+        const overlay = document.getElementById(`popup-${h.id}`);
+        if (overlay) overlay.classList.add('open');
+      });
+      hotspotContainer.appendChild(number);
+
+      hotspotElements[h.id] = { line, anchor, number };
+    });
+  }
+  createHotspotElements();
 </script>
 
 <script type="module">
@@ -676,15 +977,11 @@
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
-  // Ruta esperada del .glb real de esta pieza — subir a displays/mangle-rojo/assets/mangle_model.glb
-  // ?v=N al final evita que el navegador/CDN sirvan una versión vieja del .glb
-  // en caché — subir este número cada vez que reemplaces el archivo.
-  const MODEL_URL = 'assets/mangle_model.glb?v=3';
+  // PENDIENTE: el cliente todavía no proveyó el .glb del mangle rojo.
+  const MODEL_URL = '';
 
   if (!MODEL_URL) {
-    document.getElementById('loadingMsg').className = 'error-msg';
-    document.getElementById('loadingMsg').innerHTML =
-      'MODEL_URL no fue completado.<br><span style="font-size:0.8em;opacity:0.7;">Reemplazá la constante MODEL_URL con la URL real de assets/mangle_model.glb cuando UEES lo provea.</span>';
+    showViewerError('MODEL_URL no fue completado.', 'Reemplazá la constante MODEL_URL con la URL real del .glb de esta pieza.');
     throw new Error('MODEL_URL vacío — completar antes de desplegar.');
   }
 
@@ -694,10 +991,11 @@
   const h = mount.clientHeight;
 
   const scene = new THREE.Scene();
+  const CAMERA_DISTANCE = 4;
   const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-  camera.position.set(0, 0, 4);
+  camera.position.set(0, 0, CAMERA_DISTANCE);
 
-  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   mount.appendChild(renderer.domElement);
@@ -726,9 +1024,9 @@
   const modelGroup = new THREE.Group();
   scene.add(modelGroup);
 
-  function computeBaseFootprintCenter(model, box, thresholdFraction = 0.08) {
-    const yThreshold = box.min.y + (box.max.y - box.min.y) * thresholdFraction;
-    let sumX = 0, sumZ = 0, count = 0;
+  // ---------- LEY DE ENCUADRE — E4: base robusta por percentil ----------
+  function computeRobustBaseY(model, box) {
+    const ys = [];
     const v = new THREE.Vector3();
     model.updateMatrixWorld(true);
     model.traverse((node) => {
@@ -738,40 +1036,142 @@
       for (let i = 0; i < posAttr.count; i++) {
         v.fromBufferAttribute(posAttr, i);
         v.applyMatrix4(node.matrixWorld);
-        if (v.y <= yThreshold) { sumX += v.x; sumZ += v.z; count++; }
+        ys.push(v.y);
       }
     });
-    if (count === 0) {
+    if (ys.length === 0) return box.min.y;
+    const sorted = Float64Array.from(ys).sort();
+    return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.01))];
+  }
+
+  function computeBaseFootprint(model, box, baseY, thresholdFraction = 0.08) {
+    const yThreshold = baseY + (box.max.y - baseY) * thresholdFraction;
+    const bandX = [], bandZ = [];
+    const v = new THREE.Vector3();
+    model.updateMatrixWorld(true);
+    model.traverse((node) => {
+      if (!node.isMesh || !node.geometry) return;
+      const posAttr = node.geometry.attributes.position;
+      if (!posAttr) return;
+      for (let i = 0; i < posAttr.count; i++) {
+        v.fromBufferAttribute(posAttr, i);
+        v.applyMatrix4(node.matrixWorld);
+        if (v.y <= yThreshold) { bandX.push(v.x); bandZ.push(v.z); }
+      }
+    });
+    if (bandX.length === 0) {
       const c = box.getCenter(new THREE.Vector3());
-      return { x:c.x, z:c.z };
+      const s = box.getSize(new THREE.Vector3());
+      return { x: c.x, z: c.z, radius: Math.max(s.x, s.z) / 2 };
     }
-    return { x:sumX / count, z:sumZ / count };
+    let sumX = 0, sumZ = 0;
+    for (let i = 0; i < bandX.length; i++) { sumX += bandX[i]; sumZ += bandZ[i]; }
+    const cx = sumX / bandX.length;
+    const cz = sumZ / bandZ.length;
+    let maxR2 = 0;
+    for (let i = 0; i < bandX.length; i++) {
+      const dx = bandX[i] - cx, dz = bandZ[i] - cz;
+      const r2 = dx * dx + dz * dz;
+      if (r2 > maxR2) maxR2 = r2;
+    }
+    return { x: cx, z: cz, radius: Math.sqrt(maxR2) };
+  }
+
+  // ---------- Perfiles de Composición ----------
+  const COMPOSITION_PROFILES = {
+    vertical:    { widthFraction: 0.63, heightFraction: 0.82, ringFactor: 1.0 },
+    equilibrado: { widthFraction: 0.63, heightFraction: 0.78, ringFactor: 1.0 },
+    horizontal:  { widthFraction: 0.58, heightFraction: 0.70, ringFactor: 1.1 },
+  };
+  // El mangle rojo es un árbol (proporción vertical alta) — sin override:
+  // el clasificador automático debería resolver "vertical" apenas cargue el GLB real.
+  const COMPOSITION_PROFILE_OVERRIDE = '';
+
+  function resolveCompositionProfile(size) {
+    if (COMPOSITION_PROFILE_OVERRIDE && COMPOSITION_PROFILES[COMPOSITION_PROFILE_OVERRIDE]) {
+      return COMPOSITION_PROFILES[COMPOSITION_PROFILE_OVERRIDE];
+    }
+    const P = size.y / Math.max(size.x, size.z);
+    if (P > 1.4) return COMPOSITION_PROFILES.vertical;
+    if (P < 0.7) return COMPOSITION_PROFILES.horizontal;
+    return COMPOSITION_PROFILES.equilibrado;
+  }
+
+  let loadedModel = null;
+  let modelGeom = null;
+  let currentScale = 0;
+  let currentModelHeight = 0;
+
+  function applyFraming() {
+    if (!loadedModel || !modelGeom) return;
+    const { size, baseY, topY, footprint, profile } = modelGeom;
+    const vFov = (camera.fov * Math.PI) / 180;
+    const visibleHeight = 2 * Math.tan(vFov / 2) * CAMERA_DISTANCE;
+    const visibleWidth = visibleHeight * camera.aspect;
+    const scaleH = (visibleWidth * profile.widthFraction) / Math.max(size.x, size.z);
+    const scaleV = (visibleHeight * profile.heightFraction) / size.y;
+    const scale = Math.min(scaleH, scaleV);
+
+    loadedModel.scale.setScalar(scale);
+    loadedModel.position.y = -baseY * scale;
+    loadedModel.position.x = -footprint.x * scale;
+    loadedModel.position.z = -footprint.z * scale;
+
+    const modelHeight = (topY - baseY) * scale;
+    camera.position.set(0, modelHeight / 2, CAMERA_DISTANCE);
+    camera.lookAt(0, modelHeight / 2, 0);
+
+    if (currentScale > 0 && scale !== currentScale) {
+      const ratio = scale / currentScale;
+      Object.values(hotspotAnchorsLocal).forEach((a) => a.multiplyScalar(ratio));
+      if (modelCenterForHotspots) modelCenterForHotspots.multiplyScalar(ratio);
+    }
+    currentScale = scale;
+    currentModelHeight = modelHeight;
+
+    positionGroundOverlays();
+  }
+
+  const RING_CENTER_Y_FRACTION = 71 / 300;
+  const RING_DIAMETER_FRACTION = 242 / 300;
+
+  function positionGroundOverlays() {
+    if (!modelGeom || currentScale <= 0) return;
+    const rWorld = modelGeom.footprint.radius * currentScale;
+    const leftPt = projectToScreen(new THREE.Vector3(-rWorld, 0, 0));
+    const rightPt = projectToScreen(new THREE.Vector3(rWorld, 0, 0));
+    const footprintPx = Math.abs(rightPt.x - leftPt.x);
+
+    const viewerWidth = mount.clientWidth;
+    const idealWidth = (footprintPx * modelGeom.profile.ringFactor) / RING_DIAMETER_FRACTION;
+    const svgWidth = Math.max(viewerWidth * 0.55, Math.min(viewerWidth * 0.96, idealWidth));
+
+    const origin = projectToScreen(new THREE.Vector3(0, 0, 0));
+    const topPx = origin.y - svgWidth * RING_CENTER_Y_FRACTION;
+
+    document.querySelectorAll('#screen-display .shadow-plane, #screen-display .rotate-arc-ring').forEach((el) => {
+      el.style.width = `${svgWidth}px`;
+      el.style.top = `${topPx}px`;
+      el.style.visibility = 'visible';
+    });
   }
 
   const loader = new GLTFLoader();
-
-  // Sketchfab suele exportar/optimizar con compresión de malla (Draco) y/o de
-  // texturas (KTX2/Basis) — un visor GLB genérico trae ambos decodificadores
-  // incluidos por default, GLTFLoader solo no. Se registran acá los dos, sin
-  // costo si el .glb en cuestión no los usa.
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
   loader.setDRACOLoader(dracoLoader);
-
   const ktx2Loader = new KTX2Loader();
   ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/');
   ktx2Loader.detectSupport(renderer);
   loader.setKTX2Loader(ktx2Loader);
   let loadResolved = false;
+
   const timeoutId = setTimeout(() => {
-    if (!loadResolved) {
-      loadingMsg.className = 'error-msg';
-      loadingMsg.innerHTML = 'El modelo está demorando demasiado o no responde.<br><span style="font-size:0.8em;opacity:0.7;">' + MODEL_URL + '</span>';
-    }
+    if (!loadResolved) showViewerError('El modelo está demorando demasiado o no responde.', MODEL_URL);
   }, 15000);
 
-  // Material — Tabla 4.4: Madera/orgánico (BT Mangle Rojo)
-  const MATERIAL_CONFIG = { metalness:0, roughness:0.75 };
+  // Material — tabla 4.4 STD: Madera / orgánico. metalness 0, roughness 0.75 (BT).
+  const MATERIAL_CONFIG = { metalness: 0, roughness: 0.75 };
 
   async function applySpecGlossTextureManually(gltf) {
     const json = gltf.parser.json;
@@ -799,53 +1199,87 @@
     }
   }
 
-  const hotspotContainer = document.getElementById('hotspots3d');
-  const hotspotElements = {};
-  let modelBoxForHotspots = null;
-  let modelCenterForHotspots = null;
+  loader.load(
+    MODEL_URL,
+    async (gltf) => {
+      loadResolved = true;
+      clearTimeout(timeoutId);
+      loadingMsg.remove();
+      const shimmerEl = document.getElementById('viewerShimmer');
+      if (shimmerEl) shimmerEl.remove();
+      const model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const baseY = computeRobustBaseY(model, box);
+      const footprint = computeBaseFootprint(model, box, baseY);
 
-  const hotspotSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  hotspotSvg.setAttribute('style', 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;');
-  hotspotContainer.appendChild(hotspotSvg);
+      loadedModel = model;
+      modelGeom = { size, baseY, topY: box.max.y, footprint, profile: resolveCompositionProfile(size) };
+      modelGroup.add(model);
+      applyFraming();
 
-  function createHotspotElements() {
-    HOTSPOTS_3D.forEach((h, idx) => {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('stroke', 'var(--gold-soft)');
-      line.setAttribute('stroke-width', '1.5');
-      hotspotSvg.appendChild(line);
+      modelBoxForHotspots = new THREE.Box3().setFromObject(model);
+      modelCenterForHotspots = modelBoxForHotspots.getCenter(new THREE.Vector3());
+      computeHotspotAnchors(model);
 
-      const anchor = document.createElement('div');
-      anchor.className = 'hotspot-anchor';
-      hotspotContainer.appendChild(anchor);
+      try { await applySpecGlossTextureManually(gltf); }
+      catch (e) { console.warn('No se pudo aplicar la textura manualmente:', e); }
+    },
+    (progress) => {
+      if (progress.total) {
+        const pct = Math.round((progress.loaded / progress.total) * 100);
+        loadingMsg.textContent = `Cargando modelo 3D… ${pct}%`;
+      }
+    },
+    (err) => {
+      loadResolved = true;
+      clearTimeout(timeoutId);
+      console.error('Error cargando GLB:', err);
+      showViewerError('No se pudo cargar el modelo 3D.', MODEL_URL);
+    }
+  );
 
-      const number = document.createElement('div');
-      number.className = 'hotspot-number';
-      number.textContent = String(idx + 1);
-      number.title = h.label;
-      number.addEventListener('click', () => {
-        const overlay = document.getElementById(`popup-${h.id}`);
-        if (overlay) overlay.classList.add('open');
-      });
-      hotspotContainer.appendChild(number);
-
-      hotspotElements[h.id] = { line, anchor, number };
-    });
+  let isDragging = false;
+  let prevX = 0;
+  let rotY = 0;
+  function onDown(x) { isDragging = true; prevX = x; }
+  function onMove(x) {
+    if (!isDragging) return;
+    const dx = x - prevX;
+    rotY += dx * 0.01;
+    modelGroup.rotation.y = rotY;
+    prevX = x;
   }
-  createHotspotElements();
+  function onUp() { isDragging = false; }
+  renderer.domElement.addEventListener('mousedown', (e) => onDown(e.clientX));
+  window.addEventListener('mousemove', (e) => onMove(e.clientX));
+  window.addEventListener('mouseup', onUp);
+  renderer.domElement.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onDown(e.touches[0].clientX); }, { passive: true });
+  renderer.domElement.addEventListener('touchmove', (e) => { if (e.touches.length === 1) onMove(e.touches[0].clientX); }, { passive: true });
+  renderer.domElement.addEventListener('touchend', onUp);
 
-  const anchorRaycasterMargin = 2.5;
+  const HOTSPOT_LINE_LENGTH = 0.55;
+  const SCREEN_CLAMP_MARGIN = 18;
+
+  function projectToScreen(vec3) {
+    const halfW = mount.clientWidth / 2;
+    const halfH = mount.clientHeight / 2;
+    const p = vec3.clone().project(camera);
+    return { x: p.x * halfW + halfW, y: -p.y * halfH + halfH, behindCamera: p.z > 1 };
+  }
+
   const hotspotAnchorsLocal = {};
+
   function computeHotspotAnchors(model) {
     const anchorRaycaster = new THREE.Raycaster();
     const box = new THREE.Box3().setFromObject(model);
     const sphere = new THREE.Sphere();
     box.getBoundingSphere(sphere);
-    const rayOriginDistance = sphere.radius * anchorRaycasterMargin;
+    const rayOriginDistance = sphere.radius * 2.5;
 
     HOTSPOTS_3D.forEach((h) => {
       const azimuthRad = (h.azimuthDeg * Math.PI) / 180;
-      const y = sphere.center.y - sphere.radius + sphere.radius * 2 * h.heightFraction;
+      const y = currentModelHeight * h.heightFraction;
       const origin = new THREE.Vector3(
         sphere.center.x + Math.sin(azimuthRad) * rayOriginDistance,
         y,
@@ -866,16 +1300,6 @@
     });
   }
 
-  const SCREEN_CLAMP_MARGIN = 18;
-  const HOTSPOT_LINE_LENGTH = 0.55;
-
-  function projectToScreen(vec3) {
-    const halfW = mount.clientWidth / 2;
-    const halfH = mount.clientHeight / 2;
-    const p = vec3.clone().project(camera);
-    return { x:p.x * halfW + halfW, y:-p.y * halfH + halfH, behindCamera:p.z > 1 };
-  }
-
   function updateHotspotPositions() {
     if (!modelCenterForHotspots) return;
     const center = modelCenterForHotspots;
@@ -891,9 +1315,9 @@
       const numberScreen = projectToScreen(worldNumber);
       const els = hotspotElements[h.id];
       if (!els) return;
-      const w2 = mount.clientWidth;
+      const w = mount.clientWidth;
       const hgt = mount.clientHeight;
-      const clampedX = Math.max(SCREEN_CLAMP_MARGIN, Math.min(w2 - SCREEN_CLAMP_MARGIN, numberScreen.x));
+      const clampedX = Math.max(SCREEN_CLAMP_MARGIN, Math.min(w - SCREEN_CLAMP_MARGIN, numberScreen.x));
       const clampedY = Math.max(SCREEN_CLAMP_MARGIN, Math.min(hgt - SCREEN_CLAMP_MARGIN, numberScreen.y));
       els.number.style.display = numberScreen.behindCamera ? 'none' : 'flex';
       els.number.style.left = `${clampedX}px`;
@@ -916,90 +1340,6 @@
     });
   }
 
-  loader.load(
-    MODEL_URL,
-    async (gltf) => {
-      loadResolved = true;
-      clearTimeout(timeoutId);
-      loadingMsg.remove();
-      const model = gltf.scene;
-      // CRÍTICO: forzar la actualización de matrices de mundo ANTES de medir
-      // el bounding box. Three.js no actualiza matrixWorld automáticamente
-      // hasta el próximo render — si se mide el box antes de este llamado,
-      // no se tiene en cuenta ninguna rotación de los nodos (por ejemplo la
-      // rotación de -90° en X que Blender/Sketchfab hornea en la exportación
-      // para convertir de Z-up a Y-up), dando una caja completamente
-      // incorrecta y una posición/escala mal calculada como consecuencia.
-      model.updateMatrixWorld(true);
-      const box = new THREE.Box3().setFromObject(model);
-      const size = box.getSize(new THREE.Vector3());
-
-      const TARGET_WIDTH_FRACTION = 0.63;
-      const cameraDistance = camera.position.z;
-      const vFov = (camera.fov * Math.PI) / 180;
-      const visibleHeightAtDistance = 2 * Math.tan(vFov / 2) * cameraDistance;
-      const visibleWidthAtDistance = visibleHeightAtDistance * camera.aspect;
-      const horizontalExtent = Math.max(size.x, size.z);
-      const scale = (visibleWidthAtDistance * TARGET_WIDTH_FRACTION) / horizontalExtent;
-      model.scale.setScalar(scale);
-
-      // Ajuste manual de altura — este .glb (descargado de Sketchfab) trae geometría
-      // extra por debajo de la base visual real del árbol (ver BT Nota 9: raíces
-      // sin base plana convencional), lo que corre el cálculo automático de
-      // box.min.y hacia abajo y empuja visualmente todo el modelo hacia arriba.
-      // Valor positivo = baja el modelo. Ajustar a ojo hasta que la base pise
-      // exactamente sobre el anillo/sombra.
-      const MODEL_VERTICAL_NUDGE = 0; // fracción del alto visible del visor — modelo limpio, ya no hace falta
-
-      model.position.y = -box.min.y * scale - MODEL_VERTICAL_NUDGE * visibleHeightAtDistance;
-      const footprint = computeBaseFootprintCenter(model, box);
-      model.position.x = -footprint.x * scale;
-      model.position.z = -footprint.z * scale;
-
-      modelGroup.add(model);
-      modelGroup.updateMatrixWorld(true);
-
-      modelBoxForHotspots = new THREE.Box3().setFromObject(model);
-      modelCenterForHotspots = modelBoxForHotspots.getCenter(new THREE.Vector3());
-      computeHotspotAnchors(model);
-
-      try { await applySpecGlossTextureManually(gltf); }
-      catch (e) { console.warn('No se pudo aplicar la textura manualmente:', e); }
-    },
-    (progress) => {
-      if (progress.total) {
-        const pct = Math.round((progress.loaded / progress.total) * 100);
-        loadingMsg.textContent = `Cargando modelo 3D… ${pct}%`;
-      }
-    },
-    (err) => {
-      loadResolved = true;
-      clearTimeout(timeoutId);
-      console.error('Error cargando GLB:', err);
-      loadingMsg.className = 'error-msg';
-      loadingMsg.innerHTML = 'No se pudo cargar el modelo 3D.<br><span style="font-size:0.8em;opacity:0.7;">' + MODEL_URL + '</span>';
-    }
-  );
-
-  let isDragging = false;
-  let prevX = 0;
-  let rotY = 0;
-  function onDown(x) { isDragging = true; prevX = x; }
-  function onMove(x) {
-    if (!isDragging) return;
-    const dx = x - prevX;
-    rotY += dx * 0.01;
-    modelGroup.rotation.y = rotY;
-    prevX = x;
-  }
-  function onUp() { isDragging = false; }
-  renderer.domElement.addEventListener('mousedown', (e) => onDown(e.clientX));
-  window.addEventListener('mousemove', (e) => onMove(e.clientX));
-  window.addEventListener('mouseup', onUp);
-  renderer.domElement.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onDown(e.touches[0].clientX); }, { passive:true });
-  renderer.domElement.addEventListener('touchmove', (e) => { if (e.touches.length === 1) onMove(e.touches[0].clientX); }, { passive:true });
-  renderer.domElement.addEventListener('touchend', onUp);
-
   let lastHotspotUpdate = 0;
   const HOTSPOT_UPDATE_INTERVAL = 1000 / 30;
   function animate(timestamp) {
@@ -1012,13 +1352,21 @@
   }
   animate();
 
-  window.addEventListener('resize', () => {
-    const newW = mount.clientWidth;
-    const newH = mount.clientHeight;
-    camera.aspect = newW / newH;
-    camera.updateProjectionMatrix();
-    renderer.setSize(newW, newH);
-  });
+  let resizeTimer = 0;
+  function handleViewportChange() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const newW = mount.clientWidth;
+      const newH = mount.clientHeight;
+      if (!newW || !newH) return;
+      camera.aspect = newW / newH;
+      camera.updateProjectionMatrix();
+      renderer.setSize(newW, newH);
+      applyFraming();
+    }, 150);
+  }
+  window.addEventListener('resize', handleViewportChange);
+  new ResizeObserver(handleViewportChange).observe(mount);
 </script>
 
 </body>
