@@ -1,419 +1,645 @@
 <!DOCTYPE html>
 <!--
-  MANGLE ROJO (Rhizophora samoensis) — UEES Manglar
-  Tipo 2 (Display AR) — Ocarina Digital
-  Archivo único D+DT. Repo: ocarinadigital/UEES-Manglar (estructura plana).
-  Generado contra BT_Mangle_Rojo.pdf + STD v2 (Julio 2026).
+  DISPLAY-BASE.HTML — Tipo 2 (Display AR), Ocarina Digital
+  HTML base reutilizable según el STD de Tipo 2. NO se edita pieza por pieza:
+  cada D nuevo parte de este archivo, ajustando únicamente:
+    - MODEL_URL (el .glb real de la pieza)
+    - assets/logo.png (logo del cliente, PNG con transparencia — el nombre del
+      cliente no se repite como texto, el logo ya lo comunica)
+    - HOTSPOTS_3D (posición + contenido de cada hotspot, según BT)
+    - Textos del título/badge/CTA (vía Previsualizador)
+    - Material (metalness/roughness, según tabla 4.4 del STD)
+  La estructura, el sistema de capas del visor, el sistema de popups, y las
+  reglas de rendimiento NO se modifican caso por caso.
 
-  Decisiones de sesión aplicadas sobre el BT:
-  - Segunda línea "NT – Near Threatened" bajo el badge: SE MANTIENE AFUERA
-    (decisión de sesión anterior, ratificada en esta).
-  - CTA: bordó sólido (--gold) de fondo + texto blanco (no el default STD de
-    fondo --card / texto --gold).
-  - Ícono del badge: "i" info default del STD (no huella, no hoja).
-  - Línea de clasificación nueva (Nota 1 del BT): el nombre científico
-    "Rhizophora samoensis" ocupa el slot de .subtitle ya exist671ente (itálica);
-    la única línea NUEVA es "Familia Rhizophoraceae" con ícono "hoja" del
-    sprite STD, ubicada entre el .rule y el .subtitle.
-  - Selectores de Anatomía (segmentado) y Adaptaciones (stepper): uso directo
-    de los presets ya formalizados en Pantalla_Detalle_Instrucciones.pdf
-    (Catálogo de Selectores) — no son excepciones puntuales.
-  - Contenido PENDIENTE sin dato real en el BT (popup de badge, popup Hotspot
-    2 y 3, descripciones de Flor/Dispersión/Enraizamiento): texto neutro
-    "Contenido en preparación." — nunca se inventó contenido académico.
-  - Íconos sin equivalente en el set STD inicial (anillos concéntricos, flechas
-    circulares, ondas de agua, pez+cangrejo, nube CO2, mangle+olas) se dibujaron
-    siguiendo la especificación de dibujo (grilla 24×24, trazo 1.5px,
-    stroke-linecap:round, sin relleno, currentColor) y quedan propuestos para
-    incorporación al set STD.
+  Cambios v3 (Julio 2026 — revisión Ocarina):
+  - Ícono "Desliza para rotar" ahora EMBEBIDO como data-URI base64 en el CSS
+    (.hand-icon-wrap), en vez de una URL remota — evita el fallo silencioso de
+    mask-image cross-origin en iOS Safari y elimina la dependencia de un repo
+    externo. Se sigue tintando con --gold vía máscara (usa el alpha del PNG).
+  - Anillo de rotación: reemplazado el arco de trazo constante por una CINTA de
+    ancho variable (contorno relleno) con grosor que decae a ~0 en el punto más
+    cercano a la cámara (0,-R) y flechas por tangente — implementa por fin la
+    sección "Geometría del anillo" de Display_Instrucciones.
+  - Anillo +10%: RING_RADIUS_BOOST=1.10 sobre el footprint proyectado (respeta
+    el clamp 55-96%).
+  - Modelo más grande: fracciones de los Perfiles de Composición aumentadas
+    (ancho sobre todo; alto con mesura para no bajar la base y recortar el anillo).
+  - Divisor del título: ancho = 110% del ancho real del texto del h1 (medido por
+    JS con Range, debounced) y más aire vertical arriba/abajo.
+  - Popups (badge y hotspot): X alineada con el título y con el borde de la
+    imagen; menos padding vertical inferior y lateral.
+  - Tipografía del D centralizada en variables CSS (--fs-*), fuente única de
+    verdad por rol (ver tabla en Display_Instrucciones).
+
+  Cambios de esta revisión:
+  - LEY DE ENCUADRE DEL VISOR (E1–E5, ver Display_Instrucciones.pdf): escala
+    por doble restricción ancho/alto con Perfiles de Composición automáticos
+    (vertical/equilibrado/horizontal según proporción de la pieza), cámara a
+    media altura del modelo mirando horizontal (nunca inclinada), sombra+anillo
+    anclados proyectando el punto (0,0,0) del mundo a pantalla — al cargar y en
+    cada resize, debounced — en vez de porcentajes CSS, base robusta por
+    percentil 1 de los vértices (no box.min.y), y altura de hotspots resuelta
+    sobre el bounding box (0=base, 1=tope). El ancho del anillo se deriva del
+    footprint proyectado de la base, con clamp 55%–96% del visor. Ninguna
+    constante de corrección manual por pieza (tipo MODEL_VERTICAL_NUDGE) está
+    permitida: si una pieza la necesitara, el GLB se re-exporta desde Blender.
+  - LEYES 1 y 2 (Leyes_de_Layout.pdf): el contenedor raíz .screen pasa a
+    position:fixed; inset:0 (nunca height:100vh) y los hijos estructurales
+    ocupan pantalla con porcentajes (el visor ya no usa vh/dvh).
+  - Visor 3D a espacio remanente: el visor deja de tener un 50% fijo y pasa a
+    flex:1 1 auto (con min-height:45% de piso de seguridad), absorbiendo todo
+    el espacio sobrante entre el bloque de título y el CTA. Esto le da más
+    protagonismo al modelo y elimina el espacio muerto que antes quedaba
+    después del CTA — su margin-bottom ahora sí es el margen real contra el
+    borde inferior del viewport. La Ley de Encuadre (E1–E5) no requirió
+    cambios: ya calcula todo en base a las dimensiones reales del contenedor.
+  - LEY 8: tokens de movimiento (--motion-fast/base/slow + curva única de
+    easing), microinteracción :active scale(0.97) en todos los interactivos,
+    y anulación total del movimiento bajo prefers-reduced-motion.
+  - Estados de carga: shimmer elíptico en la zona del suelo del visor mientras
+    descarga el GLB (convive con el % de progreso) y shimmer en las imágenes
+    de los popups de hotspot. Todos los mensajes de error se arman con
+    textContent/nodos DOM — nunca innerHTML con strings externos.
 -->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mangle Rojo — UEES Manglar</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>Display AR — Ocarina Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ============================================================
-     PALETA STD — Tipo 2 (Display AR)
-     Bordó institucional UEES ocupa el slot de acento (--gold), no
-     es un dorado real: nombre de variable heredado del STD, el
-     valor es el bordó de marca (aproximado a ojo — BT Nota 7,
-     pendiente de confirmar contra manual real).
-     Fondo blanco puro explícito (BT Nota 8) — no se matchea el tono
-     azulado de las ilustraciones de referencia.
-  ============================================================ */
+  /* ===== PALETA STD — Tipo 2 (Display AR) =====
+     Estas 5 variables son el ÚNICO lugar donde un D define su identidad visual.
+     Valores neutros por defecto: si el BT no especifica colores, el D se ve en
+     blanco/negro/gris sin tinte de marca alguno. El BT de cada cliente pisa
+     estas variables (no la estructura ni el resto del CSS) para aplicar su
+     paleta real. --bg-transparent existe para folios/casos donde no se quiere
+     fondo sólido (ej. si el D se inserta sobre un fondo ya definido afuera).
+     Fondo sólido, NUNCA gradiente (ver LEY 3 de Leyes_De_Layout.pdf): Safari iOS
+     pinta el área detrás de sus barras (safe areas) con el background-color de
+     <body>, que es un único color plano — un gradiente de varios stops no puede
+     coincidir con ambos extremos a la vez, y genera una costura de color visible
+     en los bordes superior e inferior. Por eso el fondo de toda la pantalla usa
+     un solo color sólido (--bg), igual al de <body>. */
   :root{
-    --bg:#FFFFFF;
+    --bg:#FFFFFF;        /* BT UEES — blanco puro (Nota 8) */
     --bg-transparent:transparent;
-    --ink:#1C1B1A;
-    --gold:#7A1E39;
-    --gold-soft:#D9C7C2;
-    --card:#FAFAFA;
+    --ink:#1C1B1A;        /* BT UEES */
+    --gold:#7A1E39;       /* BT UEES — bordó/guinda institucional (ocupa el slot de acento) */
+    --gold-soft:#D9C7C2;  /* BT UEES — bordó suavizado (bordes/líneas) */
+    --card:#FAFAFA;       /* BT UEES */
 
-    --dt-bg:#FFFFFF;
-    --dt-ink:#1C1B1A;
-    --dt-gold:#7A1E39;
-    --dt-gold-soft:#D9C7C2;
-    --dt-card:#FAFAFA;
+    /* LEY 9 — tonos derivados del acento para el D (fondos tenues / estados).
+       Literal primero (fallback iOS < 16.2), color-mix después. */
+    --accent-08:#F4EDEF;
+    --accent-08:color-mix(in srgb, var(--gold) 8%, var(--bg));
+    --accent-16:#EADBDF;
+    --accent-16:color-mix(in srgb, var(--gold) 16%, var(--bg));
 
-    /* LEY 9 — tonos derivados de paleta (fallback literal en línea anterior,
-       compatibilidad iOS < 16.2). Valores literales actualizados junto a la
-       paleta bordó de esta pieza. */
-    --accent-08:#F4EDEC;
-    --accent-08: color-mix(in srgb, var(--gold) 8%, var(--bg));
-    --accent-16:#EADBD9;
-    --accent-16: color-mix(in srgb, var(--gold) 16%, var(--bg));
+    /* LEY 8 (Leyes_de_Layout.pdf) — Sistema de Movimiento único: todo
+       movimiento del sistema usa exclusivamente estos tokens y esta curva.
+       Prohibido introducir duraciones, curvas o animaciones nuevas por pieza
+       sin pedido explícito del BT y su correspondiente documentación. */
+    --motion-fast:150ms;   /* microinteracciones táctiles */
+    --motion-base:240ms;   /* transiciones de contenido */
+    --motion-slow:320ms;   /* transiciones de pantalla / shimmer */
+    --motion-ease:cubic-bezier(0.4, 0, 0.2, 1); /* curva única de easing */
 
-    --dt-accent-08:#F4EDEC;
-    --dt-accent-08: color-mix(in srgb, var(--dt-gold) 8%, var(--dt-bg));
-    --dt-accent-16:#EADBD9;
-    --dt-accent-16: color-mix(in srgb, var(--dt-gold) 16%, var(--dt-bg));
-
-    /* LEY 8 — Sistema de Movimiento único */
-    --motion-fast:150ms;
-    --motion-base:240ms;
-    --motion-slow:320ms;
-    --motion-ease:cubic-bezier(0.4, 0, 0.2, 1);
+    /* TIPOGRAFÍA DEL D — fuente única de verdad por rol (ver tabla "Tipografía
+       del D" en Display_Instrucciones.pdf). Valor único en vw por rol: el D NO
+       tiene jerarquía de sacrificio (el visor flexible absorbe el espacio, el
+       texto no se encoge), así que no usa clamp min/ideal/máx como el DT. Para
+       ajustar un tamaño se edita acá — un solo lugar por rol. */
+    --fs-h1:6.8vw;             /* título de la pieza */
+    --fs-subtitle:2.6vw;       /* subtítulo / clasificación */
+    --fs-badge:2.5vw;          /* texto del badge en pantalla */
+    --fs-back-link:2.5vw;      /* "volver al escáner" */
+    --fs-rotate-hint:2.6vw;    /* "Desliza para rotar" */
+    --fs-cta-title:4.4vw;      /* texto del CTA */
+    --fs-hotspot-number:3.2vw; /* número de hotspot */
+    --fs-popup-title:4.6vw;    /* título del popup de hotspot */
+    --fs-popup-text:3.4vw;     /* texto de los popups (badge y hotspot) */
+    --fs-popup-badge:2.6vw;    /* pill del popup de badge */
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   html, body{ height:100%; overflow:hidden; touch-action:manipulation; }
   *{ touch-action:manipulation; }
-
-  /* LEY 3 — color sólido explícito en <body>, igual a --bg. Nunca gradiente. */
+  /* LEY 3: color sólido explícito en <body>, igual a --bg — nunca gradiente. */
+  /* LEY 3 (Arquitectura §Alcance de variables): el <body> lleva su color de
+     fondo como HEX LITERAL igual al --bg de la pieza (#FFFFFF), no var(--bg),
+     porque en el archivo único body es ancestro de las pantallas y no debe
+     depender de una variable de pantalla para pintar sus safe-areas. */
   body{ background:#FFFFFF; color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  /* LEY 1: el contenedor raíz se ancla al viewport real con position:fixed;
+     inset:0; overflow:hidden — NUNCA height:100vh/100dvh (Safari iOS reserva
+     espacio dinámico para sus barras, y solo fixed+inset:0 ancla bien en todos
+     los estados de esas barras). inset:0 + margin:0 auto + max-width conservan
+     el centrado horizontal en pantallas anchas. LEY 3: background sólido
+     explícito también en el raíz, igual al del <body>. */
+  /* En el archivo único, el raíz fixed es .app-root (LEY 1). La .screen del D
+     pasa a absolute inset:0 dentro de su .app-screen y conserva el centrado. */
+  #screen-display .screen{ position:absolute; inset:0; max-width:480px; margin:0 auto; background:var(--bg); display:flex; flex-direction:column; overflow:hidden; }
 
-  /* ============================================================
-     ARQUITECTURA DE ARCHIVO ÚNICO — app-root + dos app-screen
-  ============================================================ */
-  .app-root{ position:fixed; inset:0; overflow:hidden; }
+  header{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
+  .logo{ display:flex; align-items:center; }
+  /* Logo del cliente — siempre PNG con transparencia (assets/logo.png). Altura fija,
+     ancho automático: respeta la proporción real del archivo subido en vez de forzarlo
+     a un círculo, ya que cada cliente puede traer un logo de proporciones distintas. */
+  .logo-mark{ height:9vw; max-height:42px; width:auto; display:block; }
+  /* LEY DE HEADER — back-link SIEMPRE en una sola línea: flecha + texto en fila,
+     centrados verticalmente entre sí. Nunca apilados (flecha arriba, texto abajo
+     con salto de línea), ese patrón quedó descartado tras revisión en dispositivo real. */
+  .back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--gold); font-size:var(--fs-back-link); line-height:1.2; cursor:pointer; white-space:nowrap; }
+  .back-link .arrow{ font-size:4.5vw; margin:0; line-height:1; }
 
-  .app-screen{
-    position:absolute; inset:0; overflow:hidden;
-    transition:transform var(--motion-slow) var(--motion-ease);
-    max-width:480px; margin:0 auto;
+  .title-block{ padding:0.8vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:1.2vw;
+    border:1px solid var(--gold-soft);
+    background:transparent;
+    color:var(--gold);
+    font-size:var(--fs-badge);
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    padding:0.5vh 3.5vw;
+    border-radius:100px;
+    margin-bottom:0.8vh;
+    cursor:pointer;
   }
-  #screen-display{ transform:translateX(0%); }
-  #screen-detalle{ transform:translateX(100%); background:var(--dt-bg); }
-  #screen-display.slide-out{ transform:translateX(-30%); }
-  #screen-detalle.slide-in{ transform:translateX(0%); }
-
-  @media (prefers-reduced-motion: reduce){
-    *, *::before, *::after{ animation:none !important; transition:none !important; }
+  .badge-info-icon{
+    width:3.2vw;
+    height:3.2vw;
+    min-width:13px;
+    min-height:13px;
+    border-radius:50%;
+    border:1px solid var(--gold-soft);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:2.2vw;
+    font-style:italic;
+    font-weight:700;
   }
 
-  /* ============================================================
-     #screen-display — TODO el CSS de esta pantalla anidado bajo
-     su ID (Arquitectura_De_Archivo_Unico.pdf — Prefijo de CSS obligatorio)
-  ============================================================ */
-  #screen-display{
-    display:flex; flex-direction:column;
+  .info-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(28,27,25,0.45);
+    z-index:50;
+    align-items:center;
+    justify-content:center;
+    padding:8vw;
   }
-  #screen-display .screen{
-    position:fixed; inset:0; max-width:480px; margin:0 auto;
-    background:var(--bg); display:flex; flex-direction:column; overflow:hidden;
+  .info-overlay.open{ display:flex; }
+  .info-box{
+    position:relative;
+    background:var(--bg);
+    border:1px solid var(--gold-soft);
+    border-radius:18px;
+    padding:3.5vh 5vw 2.5vh 5vw;
+    max-width:380px;
+    width:100%;
+    box-shadow:0 12px 36px rgba(0,0,0,0.25);
   }
-
-  #screen-display header{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
-  #screen-display .logo{ display:flex; align-items:center; }
-  #screen-display .logo-mark{ height:9vw; max-height:42px; width:auto; display:block; }
-  #screen-display .back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--gold); font-size:2.5vw; line-height:1.2; cursor:pointer; white-space:nowrap; transition:transform var(--motion-fast) var(--motion-ease); }
-  #screen-display .back-link:active{ transform:scale(0.97); }
-  #screen-display .back-link .arrow{ font-size:4.5vw; margin:0; line-height:1; }
-
-  #screen-display .title-block{ padding:0.8vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
-
-  #screen-display .badge{
-    display:inline-flex; align-items:center; gap:1.2vw;
-    border:1px solid var(--gold-soft); background:transparent; color:var(--gold);
-    font-size:2.5vw; font-family:'Inter', sans-serif; font-weight:600;
-    letter-spacing:0.14em; text-transform:uppercase;
-    padding:0.5vh 3.5vw; border-radius:100px; margin-bottom:0.8vh; cursor:pointer;
-    transition:transform var(--motion-fast) var(--motion-ease);
+  .info-box-badge{
+    display:inline-block;
+    border:1px solid var(--gold-soft);
+    color:var(--gold);
+    font-size:var(--fs-popup-badge);
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    padding:0.6vh 4vw;
+    border-radius:100px;
+    margin-bottom:2vh;
   }
-  #screen-display .badge:active{ transform:scale(0.97); }
-  #screen-display .badge-info-icon{
-    width:3.2vw; height:3.2vw; min-width:13px; min-height:13px; border-radius:50%;
-    border:1px solid var(--gold-soft); display:flex; align-items:center; justify-content:center;
-    font-size:2.2vw; font-style:italic; font-weight:700;
+  .hotspot-popup-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:var(--fs-popup-title);
+    font-weight:600;
+    color:var(--ink);
+    margin-bottom:1.5vh;
   }
-
-  #screen-display h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.8vw; line-height:1.05; margin-bottom:0.6vh; }
-  #screen-display .rule{ width:36px; height:1px; background:var(--gold-soft); margin:0 auto 0.6vh auto; }
-
-  /* Línea de clasificación nueva (BT Nota 1): "Familia Rhizophoraceae" con
-     ícono hoja. Vive entre .rule y .subtitle — extensión tipográfica nueva,
-     no contemplada aún en Display_Instrucciones.pdf. Reutiliza el token
-     tipográfico del subtítulo para no introducir un tamaño nuevo por pieza. */
-  #screen-display .classification-line{
-    display:flex; align-items:center; justify-content:center; gap:1vw;
-    font-size:2.4vw; letter-spacing:0.08em; color:var(--gold); font-weight:600;
-    margin-bottom:0.5vh;
+  .hotspot-popup-image{
+    width:100%;
+    height:32vh;
+    object-fit:cover;
+    border-radius:10px;
+    margin-bottom:1.5vh;
+    display:block;
   }
-  #screen-display .classification-line .ic{ width:3vw; height:3vw; min-width:12px; min-height:12px; flex-shrink:0; }
-
-  #screen-display .subtitle{ font-size:2.6vw; letter-spacing:0.05em; color:var(--gold); font-weight:600; font-style:italic; margin-bottom:0.8vh; text-transform:none; }
-
-  #screen-display .info-overlay{
-    display:none; position:fixed; inset:0; background:rgba(28,27,25,0.45); z-index:50;
-    align-items:center; justify-content:center; padding:8vw;
+  .hotspot-popup-image-placeholder{
+    width:100%;
+    height:32vh;
+    background:#E4E1DA;
+    border-radius:10px;
+    align-items:center;
+    justify-content:center;
+    color:#9B968C;
+    font-size:2.8vw;
+    margin-bottom:1.5vh;
   }
-  #screen-display .info-overlay.open{ display:flex; }
-  #screen-display .info-box{
-    position:relative; background:var(--bg); border:1px solid var(--gold-soft); border-radius:18px;
-    padding:6vh 6vw 5vh 6vw; max-width:380px; width:100%; box-shadow:0 12px 36px rgba(0,0,0,0.25);
+  .info-box p{
+    font-size:var(--fs-popup-text);
+    line-height:1.55;
+    color:var(--ink);
   }
-  #screen-display .info-box-badge{
-    display:inline-block; border:1px solid var(--gold-soft); color:var(--gold);
-    font-size:2.6vw; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
-    padding:0.6vh 4vw; border-radius:100px; margin-bottom:2vh;
+  .info-close{
+    position:absolute;
+    top:3.5vh;
+    right:5vw;
+    width:7vw;
+    height:7vw;
+    max-width:30px;
+    max-height:30px;
+    border-radius:50%;
+    border:1px solid var(--gold-soft);
+    background:transparent;
+    color:var(--gold);
+    font-size:4vw;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
-  #screen-display .hotspot-popup-title{ font-family:'Cormorant Garamond',serif; font-size:4.6vw; font-weight:600; color:var(--ink); margin-bottom:1.5vh; }
-  #screen-display .hotspot-popup-image{ width:100%; height:32vh; object-fit:cover; border-radius:10px; margin-bottom:1.5vh; display:block; }
-  #screen-display .hotspot-popup-image-placeholder{ width:100%; height:32vh; background:#E4E1DA; border-radius:10px; align-items:center; justify-content:center; color:#9B968C; font-size:2.8vw; margin-bottom:1.5vh; }
-  #screen-display .info-box p{ font-size:3.4vw; line-height:1.55; color:var(--ink); }
-  #screen-display .info-close{
-    position:absolute; top:14px; right:14px; width:7vw; height:7vw; max-width:30px; max-height:30px;
-    border-radius:50%; border:1px solid var(--gold-soft); background:transparent; color:var(--gold);
-    font-size:4vw; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:transform var(--motion-fast) var(--motion-ease);
-  }
-  #screen-display .info-close:active{ transform:scale(0.97); }
+  h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:var(--fs-h1); line-height:1.05; margin-bottom:0.6vh; }
+  /* Divisor del título: ancho = 110% del ancho REAL del texto del h1 (lo mide
+     el JS con un Range y setea --rule-width; fallback 36px). Márgenes verticales
+     ampliados para separarlo del título y del subtítulo (LEY 6: unidad relativa). */
+  .rule{ width:var(--rule-width, 36px); max-width:100%; height:1px; background:var(--gold-soft); margin:1.3vh auto 1.3vh auto; }
+  .subtitle{ font-size:var(--fs-subtitle); letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:0.8vh; }
+  .description{ font-size:2.8vw; line-height:1.4; color:rgba(28,27,25,0.75); max-width:90%; margin:0 auto; }
 
-  #screen-display .viewer-wrap{ position:relative; margin:1vh 0 0 0; flex:1 1 auto; min-height:45%; overflow:hidden; }
-  #screen-display #viewer3d{ width:100%; height:85%; position:absolute; top:0; left:0; z-index:2; }
-  #screen-display #viewer3d canvas{ touch-action:none; cursor:grab; display:block; }
+  /* LEY 2: los hijos estructurales ocupan pantalla con porcentajes (heredan
+     del raíz fixed), nunca con vh/dvh. El visor es el 50% de la pantalla (STD). */
+  .viewer-wrap{ position:relative; margin:1vh 0 0 0; flex:1 1 auto; min-height:45%; overflow:hidden; }
+  #viewer3d{ width:100%; height:85%; position:absolute; top:0; left:0; z-index:2; }
+  #viewer3d canvas{ touch-action:none; cursor:grab; display:block; }
 
-  #screen-display .loading-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#999; text-align:center; padding:0 10vw; }
-  #screen-display .error-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#b33; text-align:center; padding:0 10vw; }
+  .loading-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#999; text-align:center; padding:0 10vw; }
+  .error-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#b33; text-align:center; padding:0 10vw; }
 
-  #screen-display .viewer-shimmer{
-    position:absolute; left:50%; bottom:8%; transform:translateX(-50%);
-    width:60%; height:14%; border-radius:50%; background:#E4E1DA; z-index:1; pointer-events:none;
+  /* Estado de carga del visor: placeholder elíptico en la zona del suelo con
+     shimmer mientras el GLB descarga — convive con el % de progreso de
+     .loading-msg. Se elimina al terminar la carga (éxito o error). Su posición
+     es solo un placeholder previo al modelo: el anclaje real del suelo
+     (sombra+anillo) lo calcula el JS por proyección (regla E3). */
+  .viewer-shimmer{
+    position:absolute;
+    left:50%;
+    bottom:8%;
+    transform:translateX(-50%);
+    width:60%;
+    height:14%;
+    border-radius:50%;
+    background:#E4E1DA;
+    z-index:1;
+    pointer-events:none;
   }
-  #screen-display .shimmer{ position:relative; overflow:hidden; }
-  #screen-display .shimmer::after{
-    content:''; position:absolute; inset:0;
+  /* Shimmer genérico (visor + imágenes de popups): franja de gradiente que
+     barre el placeholder en loop a duración slow con la curva única (LEY 8).
+     Bajo prefers-reduced-motion queda el placeholder gris estático (ver bloque
+     reduced-motion al final del CSS). */
+  .shimmer{ position:relative; overflow:hidden; }
+  .shimmer::after{
+    content:'';
+    position:absolute;
+    inset:0;
     background:linear-gradient(100deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%);
-    transform:translateX(-100%); animation:shimmerSweep var(--motion-slow) var(--motion-ease) infinite;
+    transform:translateX(-100%);
+    animation:shimmerSweep var(--motion-slow) var(--motion-ease) infinite;
   }
-  @keyframes shimmerSweep{ to{ transform:translateX(100%); } }
-
-  #screen-display .hotspot-anchor{ position:absolute; width:1.6vw; height:1.6vw; max-width:8px; max-height:8px; border-radius:50%; background:var(--gold-soft); pointer-events:none; transform:translate(-50%,-50%); }
-  #screen-display .hotspot-number{
-    position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%;
-    background:#1C2333; border:1.4px solid var(--gold); color:#EAD9D2; display:flex; align-items:center;
-    justify-content:center; font-size:3.2vw; font-weight:700; cursor:pointer; transform:translate(-50%,-50%);
-    box-shadow:0 2px 6px rgba(0,0,0,0.25); transition:transform var(--motion-fast) var(--motion-ease);
-  }
-  #screen-display .hotspot-number:active{ transform:translate(-50%,-50%) scale(0.97); }
-  #screen-display .hotspot-number::after{
-    content:''; position:absolute; inset:0; border-radius:50%; border:1.4px solid var(--gold-soft);
-    animation: hotspotBreathe 2.4s var(--motion-ease) infinite;
-  }
-  @keyframes hotspotBreathe{ 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.55); opacity: 0; } }
-  #screen-display #hotspots3d{ position:absolute; inset:0; pointer-events:none; z-index:5; }
-  #screen-display #hotspots3d .hotspot-number{ pointer-events:auto; }
-
-  #screen-display .shadow-plane{ position:absolute; left:50%; transform:translateX(-50%); visibility:hidden; height:auto; z-index:1; pointer-events:none; }
-  #screen-display .rotate-arc-ring{ position:absolute; left:50%; transform:translateX(-50%); visibility:hidden; height:auto; color:var(--gold); z-index:3; pointer-events:none; }
-  #screen-display .rotate-hint-text{
-    position:absolute; bottom:6%; left:50%; transform:translateX(-50%); display:flex; align-items:center;
-    gap:1.8vw; color:var(--gold); font-size:2.6vw; white-space:nowrap; z-index:4;
-  }
-  #screen-display .hand-icon-wrap{
-    width:7vw; max-width:30px; height:7vw; max-height:30px; flex-shrink:0;
-    background-color:var(--gold); opacity:0.85;
-    -webkit-mask-image:url('assets/Icono_Rotar.png'); mask-image:url('assets/Icono_Rotar.png');
-    -webkit-mask-size:contain; mask-size:contain;
-    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
-    -webkit-mask-position:center; mask-position:center;
+  @keyframes shimmerSweep{
+    to{ transform:translateX(100%); }
   }
 
-  /* CTA — decisión de sesión: bordó sólido de fondo + texto blanco
-     (no el default STD de fondo --card / texto --gold). Sin subtítulo
-     (BT Nota 10 — el STD actual del CTA ya no tiene ese campo). */
-  #screen-display .cta-detail{
-    margin:0 6vw 1.6vh 6vw; background:var(--gold); border:1px solid var(--gold);
+  .hotspot-anchor{ position:absolute; width:1.6vw; height:1.6vw; max-width:8px; max-height:8px; border-radius:50%; background:var(--gold-soft); pointer-events:none; transform:translate(-50%,-50%); }
+  .hotspot-number{ position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%; background:#1C2333; border:1.4px solid var(--gold); color:#E8C77A; display:flex; align-items:center; justify-content:center; font-size:var(--fs-hotspot-number); font-weight:700; cursor:pointer; transform:translate(-50%,-50%); box-shadow:0 2px 6px rgba(0,0,0,0.25); }
+  .hotspot-number::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    border:1.4px solid var(--gold-soft);
+    animation: hotspotBreathe 2.4s var(--motion-ease) infinite; /* curva única (LEY 8) */
+  }
+  @keyframes hotspotBreathe{
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.55); opacity: 0; }
+  }
+  #hotspots3d{ position:absolute; inset:0; pointer-events:none; z-index:5; }
+  #hotspots3d .hotspot-number{ pointer-events:auto; }
+
+  /* E3 (Ley de Encuadre): sombra y anillo NO se anclan con porcentajes CSS —
+     su ancho (derivado del footprint proyectado de la base, clamp 55%–96% del
+     visor) y su posición vertical (proyección del punto del mundo (0,0,0) a
+     pantalla) los fija el JS al terminar de cargar el modelo y en cada resize
+     (debounced). Hasta entonces permanecen ocultos. */
+  .shadow-plane{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    visibility:hidden;
+    height:auto;
+    z-index:1;
+    pointer-events:none;
+  }
+  .rotate-arc-ring{
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    visibility:hidden;
+    height:auto;
+    color:var(--gold);
+    z-index:3;
+    pointer-events:none;
+  }
+  .rotate-hint-text{
+    position:absolute;
+    bottom:6%;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    align-items:center;
+    gap:1.8vw;
+    color:var(--gold);
+    font-size:var(--fs-rotate-hint);
+    white-space:nowrap;
+    z-index:4;
+  }
+  .hand-icon-wrap{
+    width:7vw;
+    max-width:30px;
+    height:7vw;
+    max-height:30px;
+    flex-shrink:0;
+    background-color:var(--gold);
+    opacity:0.85;
+    -webkit-mask-image:url('data:image/png;base64,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');
+    mask-image:url('data:image/png;base64,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');
+    -webkit-mask-size:contain;
+    mask-size:contain;
+    -webkit-mask-repeat:no-repeat;
+    mask-repeat:no-repeat;
+    -webkit-mask-position:center;
+    mask-position:center;
+  }
+
+  /* Sin ícono: solo título (definido por BT) + flecha, centrados como grupo
+     para máximo protagonismo del texto. */
+  .cta-detail{
+    margin:0 6vw 1.6vh 6vw; background:var(--card); border:1px solid var(--gold-soft);
     border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center;
     justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0;
     font-family:'Inter',sans-serif; position:relative; overflow:hidden;
+  }
+  .cta-title{ text-align:center; font-size:var(--fs-cta-title); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--gold); }
+  .cta-arrow{ color:var(--gold-soft); font-size:4.5vw; flex-shrink:0; }
+
+  /* Brillo/foil que recorre el botón cada pocos segundos, para darle dinamismo
+     y llamar la atención sin depender de íconos ni emojis. Barra diagonal
+     angosta que atraviesa el botón y se queda "apagada" (fuera de pantalla)
+     el resto del ciclo — no es un loop continuo, es un guiño periódico. */
+  .cta-shine{
+    position:absolute; top:0; left:-40%; width:26%; height:100%;
+    background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%);
+    transform:skewX(-20deg); pointer-events:none;
+    animation:ctaShineSweep 5s var(--motion-ease) infinite; /* período de 5s documentado en Display_Instrucciones; curva única (LEY 8) */
+  }
+  @keyframes ctaShineSweep{
+    0%{ left:-40%; }
+    18%{ left:140%; }
+    100%{ left:140%; }
+  }
+
+  /* LEY 8 — microinteracción táctil universal: todo elemento interactivo
+     aplica transform:scale(0.97) en :active, a duración fast con la curva única. */
+  .badge, .back-link, .info-close, .cta-detail, .hotspot-number{
     transition:transform var(--motion-fast) var(--motion-ease);
   }
-  #screen-display .cta-detail:active{ transform:scale(0.97); }
-  #screen-display .cta-title{ text-align:center; font-size:4.4vw; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#FFFFFF; }
-  #screen-display .cta-arrow{ color:#FFFFFF; opacity:0.85; font-size:4.5vw; flex-shrink:0; }
-
-  #screen-display .cta-shine{
-    position:absolute; top:0; left:-40%; width:26%; height:100%;
-    background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
-    transform:skewX(-20deg); pointer-events:none;
-    animation:ctaShineSweep 5s var(--motion-ease) infinite;
+  .badge:active, .back-link:active, .info-close:active, .cta-detail:active{
+    transform:scale(0.97);
   }
-  @keyframes ctaShineSweep{ 0%{ left:-40%; } 18%{ left:140%; } 100%{ left:140%; } }
+  /* El número de hotspot ya usa translate(-50%,-50%) para centrarse sobre su
+     coordenada proyectada — el :active debe conservarlo y componer el scale. */
+  .hotspot-number:active{
+    transform:translate(-50%,-50%) scale(0.97);
+  }
 
+  /* LEY 8 — todo movimiento del sistema se anula bajo prefers-reduced-motion,
+     sin excepciones: animaciones, transiciones y shimmer (queda el placeholder
+     gris estático). */
   @media (prefers-reduced-motion: reduce){
-    #screen-display .cta-shine{ display:none; }
-    #screen-display .shimmer::after{ display:none; }
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+    .cta-shine{ display:none; }
+    .shimmer::after{ display:none; }
   }
 
   /* ============================================================
-     #screen-detalle — TODO el CSS de esta pantalla anidado bajo su
-     ID, y TODAS sus clases con prefijo dt- (Arquitectura de Archivo
-     Único — Prefijo de CSS obligatorio)
-  ============================================================ */
+     ARQUITECTURA DE ARCHIVO ÚNICO — contenedor raíz + dos pantallas
+     ============================================================ */
+  /* LEY 1 — único elemento fixed;inset:0 del archivo. LEY 3 — color sólido literal. */
+  .app-root{ position:fixed; inset:0; overflow:hidden; background:#FFFFFF; }
+  /* Ambas pantallas: absolute inset:0 + transición de 320ms (LEY 8 / --motion-slow). */
+  .app-screen{ position:absolute; inset:0; overflow:hidden;
+    transition:transform var(--motion-slow) var(--motion-ease); }
+  #screen-display{ transform:translateX(0%); z-index:1; }
+  #screen-detalle{ transform:translateX(100%); z-index:2; background:var(--dt-bg); }
+  #screen-display.slide-out{ transform:translateX(-30%); }   /* profundidad */
+  #screen-detalle.slide-in{ transform:translateX(0%); }
+
+  /* Ícono genérico (D y DT): hereda color por currentColor, sin círculo. */
+  .fam-ic, .dt-ic{ display:inline-block; fill:none; stroke:currentColor; }
+  .fam-ic{ width:3.4vw; height:3.4vw; max-width:16px; max-height:16px; flex-shrink:0; }
+
+  /* Clasificación nueva del D (BT Nota 1) — bajo el divisor del título. */
+  #screen-display .classification{ margin-top:0.2vh; }
+  #screen-display .classification-sci{ font-family:'Cormorant Garamond',serif;
+    font-style:italic; font-size:3.2vw; line-height:1.2; color:var(--ink); }
+  #screen-display .classification-fam{ display:flex; align-items:center;
+    justify-content:center; gap:1.4vw; margin-top:0.4vh; font-size:2.5vw;
+    letter-spacing:0.1em; text-transform:uppercase; font-weight:600; color:var(--gold); }
+
+  /* Código de categoría del popup del badge (BT Nota 2 — campo sin slot propio hoy). */
+  #screen-display .info-box-cat{ font-size:var(--fs-popup-badge); font-weight:600;
+    letter-spacing:0.06em; color:var(--gold); opacity:0.85; margin-bottom:1.6vh; }
+
+  /* ============================================================
+     PANTALLA DE DETALLE (DT) — Pantalla_Detalle_Instrucciones v3
+     Todo el bloque va prefijado dt- y anidado bajo #screen-detalle.
+     ============================================================ */
   #screen-detalle{
-    background:var(--dt-bg); color:var(--dt-ink); font-family:'Inter',sans-serif;
-    display:flex; flex-direction:column;
+    /* Paleta DT (BT UEES — misma paleta que el D, mapeada). */
+    --dt-bg:#FFFFFF; --dt-ink:#1C1B1A; --dt-gold:#7A1E39;
+    --dt-gold-soft:#D9C7C2; --dt-card:#FAFAFA;
+    /* LEY 9 — derivados de acento (literal primero, color-mix después). */
+    --dt-accent-08:#F4EDEF;
+    --dt-accent-08:color-mix(in srgb, var(--dt-gold) 8%, var(--dt-bg));
+    --dt-accent-16:#EADBDF;
+    --dt-accent-16:color-mix(in srgb, var(--dt-gold) 16%, var(--dt-bg));
+
+    /* Escalas de la Jerarquía de Sacrificio (las pisa la rutina de fit por panel). */
+    --dt-gap-scale:1; --dt-pad-v-scale:1; --dt-pad-h-scale:1;
+    --dt-image-scale:1; --dt-font-scale-secondary:1; --dt-font-scale-primary:1;
+
+    color:var(--dt-ink); font-family:'Inter',sans-serif;
   }
 
-  #screen-detalle .dt-header{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:1.5vh 6vw 0 6vw; flex-shrink:0;
-  }
-  #screen-detalle .dt-back-link{
-    display:flex; flex-direction:row; align-items:center; gap:1.2vw;
-    color:var(--dt-gold); font-size:2.5vw; line-height:1.2; cursor:pointer; white-space:nowrap;
-    transition:transform var(--motion-fast) var(--motion-ease);
-  }
-  #screen-detalle .dt-back-link:active{ transform:scale(0.97); }
-  #screen-detalle .dt-back-link .dt-arrow{ font-size:4.5vw; margin:0; line-height:1; }
-  #screen-detalle .dt-logo-mark{ height:8vw; max-height:36px; width:auto; display:block; }
+  /* Paddings con clamp (Detalle §Reglas Generales pt.4), escalables por la rutina. */
+  /* chico */    #screen-detalle{ --pv-s:clamp(6px, calc(1vh   * var(--dt-pad-v-scale)), 12px);
+                                  --ph-s:clamp(12px,calc(2vw   * var(--dt-pad-h-scale)), 24px);
+  /* estándar */                 --pv-m:clamp(9px, calc(1.5vh  * var(--dt-pad-v-scale)), 18px);
+                                  --ph-m:clamp(18px,calc(3vw   * var(--dt-pad-h-scale)), 36px); }
 
-  #screen-detalle .dt-title-block{ padding:1vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
-  #screen-detalle .dt-h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.4vw; line-height:1.05; margin-bottom:0.6vh; }
-  #screen-detalle .dt-rule{ width:36px; height:1px; background:var(--dt-gold-soft); margin:0 auto; }
+  #screen-detalle .dt-screen{ position:absolute; inset:0; max-width:480px; margin:0 auto;
+    background:var(--dt-bg); display:flex; flex-direction:column; overflow:hidden; }
 
-  #screen-detalle .dt-tabs-nav{
-    display:flex; flex-shrink:0; margin-top:1.4vh; border-bottom:1px solid var(--dt-gold-soft);
-    padding:0 4vw;
-  }
-  #screen-detalle .dt-tab-btn{
-    flex:1; background:none; border:none; font-family:'Inter',sans-serif; font-weight:600;
-    font-size:3vw; color:rgba(28,27,26,0.5); padding:1.2vh 1vw 1.2vh 1vw; cursor:pointer;
-    border-bottom:2px solid transparent; margin-bottom:-1px;
-    transition:transform var(--motion-fast) var(--motion-ease), color var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
-  }
-  #screen-detalle .dt-tab-btn:active{ transform:scale(0.97); }
-  #screen-detalle .dt-tab-btn.active{ color:var(--dt-gold); border-bottom-color:var(--dt-gold); }
+  /* --- 1. Header (sin divisor con el título) --- */
+  #screen-detalle .dt-header{ display:flex; align-items:center; justify-content:space-between;
+    padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
+  #screen-detalle .dt-back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw;
+    color:var(--dt-gold); font-size:2.5vw; line-height:1.2; cursor:pointer; white-space:nowrap; }
+  #screen-detalle .dt-back-link .dt-arrow{ font-size:4.5vw; line-height:1; }
+  #screen-detalle .dt-logo-mark{ height:9vw; max-height:42px; width:auto; display:block; }
 
-  #screen-detalle .dt-content-area{ flex:1 1 auto; min-height:0; overflow:hidden; position:relative; }
+  /* --- 2. Title block (h1 + rule; sin subtítulo — BT) --- */
+  #screen-detalle .dt-title-block{ padding:1.2vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
+  #screen-detalle .dt-h1{ font-family:'Cormorant Garamond',serif; font-weight:600;
+    font-size:clamp(5.8vw, 6.4vw, 7.0vw); line-height:1.05; }
+  #screen-detalle .dt-rule{ width:var(--dt-rule-width, 40px); max-width:100%; height:1px;
+    background:var(--dt-gold-soft); margin:1.1vh auto 0.4vh auto; }
 
-  #screen-detalle .dt-tab-panel{
-    display:none; flex-direction:column; overflow:hidden; height:100%;
-    padding:2vh 6vw 2vh 6vw; gap:2vh; justify-content:space-between;
+  /* --- 3. Tabs nav --- */
+  #screen-detalle .dt-tabs-nav{ display:flex; padding:0.8vh 6vw 0 6vw; gap:0;
+    border-bottom:1px solid var(--dt-gold-soft); flex-shrink:0; }
+  #screen-detalle .dt-tab{ flex:1; background:transparent; border:none; cursor:pointer;
+    padding:1.1vh 1vw 1.4vh 1vw; font-family:'Inter',sans-serif; font-weight:600;
+    font-size:clamp(2.7vw, 3.0vw, 3.3vw); letter-spacing:0.03em; color:var(--dt-ink);
+    opacity:0.55; position:relative; transition:opacity var(--motion-fast) var(--motion-ease); }
+  #screen-detalle .dt-tab.active{ opacity:1; color:var(--dt-gold); }
+  #screen-detalle .dt-tab.active::after{ content:''; position:absolute; left:12%; right:12%;
+    bottom:-1px; height:2px; background:var(--dt-gold); border-radius:2px; }
+  #screen-detalle .dt-tab:active{ transform:scale(0.97); }
 
-    /* variables de fit — controladas por la rutina de checkeo JS */
-    --dt-gap-scale:2vh;
-    --dt-pad-v-scale:1.5vh;
-    --dt-pad-h-scale:3vw;
-    --dt-image-scale:1;
-    --dt-font-scale-secondary:1;
-    --dt-font-scale-primary:1;
-  }
-  #screen-detalle .dt-tab-panel.active{ display:flex; }
-  #screen-detalle .dt-tab-panel{ gap:var(--dt-gap-scale); }
+  /* --- 4. Content area + paneles --- */
+  /* overflow:hidden + min-height:0 SOLO acá y en dt-tab-panel (§Aislamiento de overflow). */
+  #screen-detalle .dt-content-area{ flex:1 1 auto; min-height:0; overflow:hidden;
+    position:relative; display:flex; }
+  #screen-detalle .dt-tab-panel{ display:none; }
+  #screen-detalle .dt-tab-panel.active{ display:flex; flex-direction:column; width:100%;
+    flex:1 1 auto; min-height:0; overflow:hidden;
+    justify-content:space-between; gap:max(2vh, calc(3vh * var(--dt-gap-scale)));
+    padding:1.6vh 6vw; }
+  /* Regla operativa: TODO hijo directo del panel es flex-shrink:0, sin overflow propio. */
+  #screen-detalle .dt-tab-panel.active > *{ flex-shrink:0; }
 
-  /* Regla operativa (Aislamiento de overflow en el DT): todo hijo directo de
-     .dt-tab-panel es flex-shrink:0 sin excepción. overflow/min-height quedan
-     reservados a .dt-tab-panel y .dt-content-area — nunca a un grupo interno. */
-  #screen-detalle .dt-tab-panel > *{ flex-shrink:0; }
+  /* Entrada escalonada por grupo (LEY 8): fade + translateY(8px)->0, stagger 60ms. */
+  @keyframes dtEnter{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  #screen-detalle .dt-tab-panel.dt-animate > *{ animation:dtEnter var(--motion-base) var(--motion-ease) both; }
+  #screen-detalle .dt-tab-panel.dt-animate > *:nth-child(1){ animation-delay:0ms; }
+  #screen-detalle .dt-tab-panel.dt-animate > *:nth-child(2){ animation-delay:60ms; }
+  #screen-detalle .dt-tab-panel.dt-animate > *:nth-child(3){ animation-delay:120ms; }
 
-  /* --- Grupo Visual: Widget interactivo (selector) --- */
-  #screen-detalle .dt-widget{
-    display:flex; flex-direction:column; border:1px solid var(--dt-gold-soft); border-radius:14px;
-    overflow:hidden;
-  }
-  #screen-detalle .dt-widget-media-wrap{ width:100%; position:relative; background:#EDEAE6; }
-  #screen-detalle .dt-widget-media{
-    width:100%; aspect-ratio:16/10; object-fit:cover; display:block;
-    transform:scale(var(--dt-image-scale)); transform-origin:center;
-  }
-  #screen-detalle .dt-widget-media-placeholder{
-    width:100%; aspect-ratio:16/10; background:#E4E1DA; display:flex; align-items:center;
-    justify-content:center; color:#9B968C; font-size:calc(2.4vw * var(--dt-font-scale-secondary));
-    text-align:center; padding:2vw;
-  }
-  #screen-detalle .dt-widget-body{ padding:calc(1.5vh * var(--dt-pad-v-scale) / 1.5vh) calc(3vw * var(--dt-pad-h-scale) / 3vw); display:flex; flex-direction:column; gap:0.8vh; }
-  #screen-detalle .dt-widget-name{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:calc(3.6vw * var(--dt-font-scale-primary)); color:var(--dt-ink); }
-  #screen-detalle .dt-widget-desc{ font-size:calc(2.4vw * var(--dt-font-scale-secondary)); line-height:1.5; color:rgba(28,27,26,0.78); padding:0; }
+  /* ---- Grupo textual: bloque de texto (título de sección + párrafo) ---- */
+  #screen-detalle .dt-text-block{ display:flex; flex-direction:column; padding:var(--pv-m) 0; }
+  #screen-detalle .dt-section-title{ font-family:'Cormorant Garamond',serif; font-weight:600;
+    font-size:clamp(3.5vw, calc(3.7vw * var(--dt-font-scale-primary)), 4.1vw);
+    color:var(--dt-ink); margin-bottom:0.8vh; }
+  #screen-detalle .dt-paragraph{ font-size:clamp(2.4vw, calc(2.6vw * var(--dt-font-scale-primary)), 3.0vw);
+    line-height:1.5; color:var(--dt-ink); }
 
-  /* Selector Segmentado — preset del Catálogo de Selectores */
-  #screen-detalle .dt-selector-segmented{
-    display:flex; border:1px solid var(--dt-gold-soft); border-radius:10px; overflow:hidden;
-    margin-top:0.4vh;
-  }
-  #screen-detalle .dt-segmented-btn{
-    flex:1; background:transparent; border:none; border-right:0.5px solid var(--dt-gold-soft);
-    font-family:'Inter',sans-serif; font-size:calc(3vw * var(--dt-font-scale-primary)); font-weight:600;
-    color:var(--dt-ink); padding:1.3vh 1.5vw; cursor:pointer; display:flex; flex-direction:column;
-    align-items:center; gap:0.6vh; transition:transform var(--motion-fast) var(--motion-ease), background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
-  }
-  #screen-detalle .dt-segmented-btn:last-child{ border-right:none; }
-  #screen-detalle .dt-segmented-btn:active{ transform:scale(0.97); }
-  #screen-detalle .dt-segmented-btn .dt-ic{ width:4.2vw; height:4.2vw; min-width:16px; min-height:16px; }
-  #screen-detalle .dt-segmented-btn.active{ background:var(--dt-accent-16); color:var(--dt-gold); }
-  #screen-detalle .dt-segmented-btn span.dt-seg-label{ font-size:2.4vw; line-height:1.15; text-align:center; }
+  /* ---- Grupo visual: widget interactivo (imagen -> nombre -> desc -> selector) ---- */
+  #screen-detalle .dt-widget{ display:flex; flex-direction:column;
+    border:1px solid var(--dt-gold-soft); border-radius:14px;
+    padding:var(--pv-m) var(--ph-m); background:var(--dt-card); }
+  #screen-detalle .dt-widget-media{ width:100%; height:calc(24vh * var(--dt-image-scale));
+    object-fit:cover; border-radius:12px; display:block; }
+  #screen-detalle .dt-widget-name{ text-align:center; margin-top:1.2vh;
+    font-family:'Cormorant Garamond',serif; font-weight:600;
+    font-size:clamp(3.4vw, calc(3.6vw * var(--dt-font-scale-primary)), 4.0vw); color:var(--dt-ink); }
+  /* descripción SIN padding lateral (§Grupo Visual). */
+  #screen-detalle .dt-widget-desc{ text-align:center; margin-top:0.4vh;
+    font-size:clamp(2.2vw, calc(2.4vw * var(--dt-font-scale-secondary)), 2.8vw);
+    line-height:1.45; color:var(--dt-ink); opacity:0.85; }
+  #screen-detalle .dt-widget-selector{ margin-top:1.4vh; }
 
-  /* Selector Stepper — preset del Catálogo de Selectores */
-  #screen-detalle .dt-selector-stepper{
-    display:flex; align-items:flex-start; margin-top:0.6vh;
-  }
-  #screen-detalle .dt-stepper-item{
-    display:flex; flex-direction:column; align-items:center; flex:1; gap:0.8vh; position:relative;
-    cursor:pointer; transition:transform var(--motion-fast) var(--motion-ease);
-  }
-  #screen-detalle .dt-stepper-item:active{ transform:scale(0.97); }
-  #screen-detalle .dt-stepper-row{ display:flex; align-items:center; width:100%; }
-  #screen-detalle .dt-stepper-connector{
-    flex:1; height:1px; background:var(--dt-gold-soft); margin-top:calc(-1 * 0.1vh);
-  }
-  #screen-detalle .dt-stepper-item:first-child .dt-stepper-connector.dt-connector-left{ visibility:hidden; }
-  #screen-detalle .dt-stepper-item:last-child .dt-stepper-connector.dt-connector-right{ visibility:hidden; }
-  #screen-detalle .dt-stepper-dot{
-    width:7vw; height:7vw; max-width:30px; max-height:30px; border-radius:50%;
-    border:1px solid var(--dt-gold-soft); background:var(--dt-bg); display:flex; align-items:center;
-    justify-content:center; flex-shrink:0; transition:background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
-  }
-  #screen-detalle .dt-stepper-dot .dt-ic{ width:3.6vw; height:3.6vw; min-width:14px; min-height:14px; color:var(--dt-gold); }
-  #screen-detalle .dt-stepper-item.active .dt-stepper-dot{ background:var(--dt-gold); border-color:var(--dt-gold); }
-  #screen-detalle .dt-stepper-item.active .dt-stepper-dot .dt-ic{ color:#FFFFFF; }
-  #screen-detalle .dt-stepper-label{ font-size:2.2vw; text-align:center; color:rgba(28,27,26,0.7); font-weight:600; }
-  #screen-detalle .dt-stepper-item.active .dt-stepper-label{ color:var(--dt-gold); }
+  /* Selector SEGMENTADO (Catálogo de Selectores): contenedor único, botones flex:1,
+     divisores 0.5px, radios solo en extremos. Activo: fondo --dt-accent-16, texto acento. */
+  #screen-detalle .dt-seg{ display:flex; border:1px solid var(--dt-gold-soft);
+    border-radius:10px; overflow:hidden; }
+  #screen-detalle .dt-seg .dt-seg-btn{ flex:1; display:flex; flex-direction:column;
+    align-items:center; gap:0.5vh; background:transparent; border:none;
+    border-left:0.5px solid var(--dt-gold-soft); padding:1.1vh 1vw; cursor:pointer;
+    color:var(--dt-ink); font-family:'Inter',sans-serif; font-weight:600;
+    font-size:clamp(2.7vw, 3.0vw, 3.3vw); line-height:1.1;
+    transition:background var(--motion-fast) var(--motion-ease); }
+  #screen-detalle .dt-seg .dt-seg-btn:first-child{ border-left:none; }
+  #screen-detalle .dt-seg .dt-seg-btn .dt-ic{ width:5vw; height:5vw; max-width:22px; max-height:22px; }
+  #screen-detalle .dt-seg .dt-seg-btn.active{ background:var(--dt-accent-16); color:var(--dt-gold); }
+  #screen-detalle .dt-seg .dt-seg-btn:active{ transform:scale(0.97); }
 
-  /* --- Grupo Textual: bloque de texto intro --- */
-  #screen-detalle .dt-text-block{ display:flex; flex-direction:column; gap:0.8vh; }
-  #screen-detalle .dt-section-title{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:calc(3.7vw * var(--dt-font-scale-primary)); color:var(--dt-ink); }
-  #screen-detalle .dt-paragraph{ font-size:calc(2.6vw * var(--dt-font-scale-secondary)); line-height:1.55; color:rgba(28,27,26,0.8); }
+  /* Selector STEPPER (Catálogo de Selectores): puntos circulares unidos por
+     conectores 1px punto-a-punto (nunca exceden extremos); activo relleno con acento;
+     etiqueta debajo centrada. Aquí n=4 -> inset lateral de la línea = 100%/(2·4)=12.5%. */
+  #screen-detalle .dt-stepper{ position:relative; }
+  #screen-detalle .dt-stepper-line{ position:absolute; left:12.5%; right:12.5%;
+    top:calc(3.4vw); height:1px; background:var(--dt-gold-soft); z-index:0; }
+  #screen-detalle .dt-stepper-dots{ display:flex; position:relative; z-index:1; }
+  #screen-detalle .dt-step{ flex:1; display:flex; flex-direction:column; align-items:center;
+    gap:0.6vh; background:transparent; border:none; cursor:pointer; padding:0; }
+  #screen-detalle .dt-step-dot{ width:6.8vw; height:6.8vw; max-width:34px; max-height:34px;
+    border-radius:50%; border:1px solid var(--dt-gold-soft); background:var(--dt-bg);
+    display:flex; align-items:center; justify-content:center; color:var(--dt-gold-soft);
+    transition:background var(--motion-fast) var(--motion-ease); }
+  #screen-detalle .dt-step-dot .dt-ic{ width:3.6vw; height:3.6vw; max-width:18px; max-height:18px; }
+  #screen-detalle .dt-step.active .dt-step-dot{ background:var(--dt-gold); border-color:var(--dt-gold); color:#fff; }
+  #screen-detalle .dt-step-label{ font-size:clamp(2.4vw, 2.7vw, 3.0vw); line-height:1.1;
+    text-align:center; color:var(--dt-ink); opacity:0.65; }
+  #screen-detalle .dt-step.active .dt-step-label{ opacity:1; color:var(--dt-gold); font-weight:600; }
+  #screen-detalle .dt-step:active{ transform:scale(0.97); }
 
-  /* --- Grupo Visual: hero-group (imagen + epígrafe como unidad) --- */
-  #screen-detalle .dt-hero-group{ display:flex; flex-direction:column; gap:0; border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden; }
-  #screen-detalle .dt-hero-img{ width:100%; aspect-ratio:16/10; object-fit:cover; display:block; transform:scale(var(--dt-image-scale)); transform-origin:center; }
-  #screen-detalle .dt-hero-img-placeholder{ width:100%; aspect-ratio:16/10; background:#E4E1DA; display:flex; align-items:center; justify-content:center; color:#9B968C; font-size:2.6vw; text-align:center; padding:2vw; }
+  /* ---- Grupo visual: imagen hero (unidad §Reglas de oro pt.5; sin epígrafe -> solo img) ---- */
+  #screen-detalle .dt-hero-group{ display:flex; flex-direction:column; gap:0; }
+  #screen-detalle .dt-hero-img{ width:100%; height:calc(30vh * var(--dt-image-scale));
+    object-fit:cover; border-radius:14px; display:block; }
 
-  /* --- Grupo Complementario: boxes académicos --- */
-  #screen-detalle .dt-academic-boxes{ display:flex; flex-direction:column; gap:1.2vh; }
-  #screen-detalle .dt-academic-box{
-    display:flex; align-items:flex-start; gap:2.2vw; border:1px solid var(--dt-gold-soft);
-    border-radius:12px; padding:calc(1.5vh) calc(3vw);
-  }
-  #screen-detalle .dt-academic-box .dt-ic{ width:5vw; height:5vw; min-width:20px; min-height:20px; color:var(--dt-gold); flex-shrink:0; margin-top:0.2vh; }
-  #screen-detalle .dt-academic-box-body{ display:flex; flex-direction:column; gap:0.4vh; }
-  #screen-detalle .dt-academic-box-title{ font-size:calc(2.7vw * var(--dt-font-scale-primary)); font-weight:700; color:var(--dt-ink); }
-  #screen-detalle .dt-academic-box-text{ font-size:calc(2.4vw * var(--dt-font-scale-secondary)); line-height:1.5; color:rgba(28,27,26,0.78); }
+  /* ---- Grupo textual: boxes académicos como acordeón (3+ boxes -> acordeon-academico) ---- */
+  #screen-detalle .dt-academic-boxes{ display:flex; flex-direction:column; gap:1vh; }
+  #screen-detalle .dt-acc-item{ border:1px solid var(--dt-gold-soft); border-radius:12px;
+    background:var(--dt-card); overflow:hidden; }
+  #screen-detalle .dt-acc-header{ display:flex; align-items:center; gap:2.5vw; width:100%;
+    background:transparent; border:none; cursor:pointer; text-align:left;
+    padding:var(--pv-m) var(--ph-m); color:var(--dt-ink); }
+  #screen-detalle .dt-acc-header .dt-ic{ width:5.2vw; height:5.2vw; max-width:24px; max-height:24px;
+    color:var(--dt-gold); flex-shrink:0; }
+  #screen-detalle .dt-acc-title{ flex:1; font-family:'Cormorant Garamond',serif; font-weight:600;
+    font-size:clamp(2.5vw, calc(2.7vw * var(--dt-font-scale-primary)), 3.1vw); }
+  #screen-detalle .dt-acc-chevron{ width:3.4vw; height:3.4vw; max-width:16px; max-height:16px;
+    flex-shrink:0; color:var(--dt-gold-soft);
+    transition:transform var(--motion-base) var(--motion-ease); }
+  #screen-detalle .dt-acc-item.open .dt-acc-chevron{ transform:rotate(180deg); }
+  #screen-detalle .dt-acc-item.open .dt-acc-header .dt-ic{ color:var(--dt-gold); }
+  #screen-detalle .dt-acc-body{ display:grid; grid-template-rows:0fr;
+    transition:grid-template-rows var(--motion-base) var(--motion-ease); }
+  #screen-detalle .dt-acc-item.open .dt-acc-body{ grid-template-rows:1fr; }
+  #screen-detalle .dt-acc-body-inner{ overflow:hidden; }
+  #screen-detalle .dt-acc-text{ padding:0 var(--ph-m) var(--pv-m) calc(var(--ph-m) + 5.2vw + 2.5vw);
+    font-size:clamp(2.2vw, calc(2.4vw * var(--dt-font-scale-primary)), 2.8vw);
+    line-height:1.5; color:var(--dt-ink); opacity:0.9; }
 
-  /* Estados de carga de imágenes (shimmer STD) */
-  #screen-detalle .dt-shimmer{ position:relative; overflow:hidden; }
-  #screen-detalle .dt-shimmer::after{
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(100deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%);
-    transform:translateX(-100%); animation:dtShimmerSweep var(--motion-slow) var(--motion-ease) infinite;
-  }
-  @keyframes dtShimmerSweep{ to{ transform:translateX(100%); } }
+  /* Microinteracción táctil universal (LEY 8) en interactivos del DT. */
+  #screen-detalle .dt-back-link, #screen-detalle .dt-tab, #screen-detalle .dt-seg-btn,
+  #screen-detalle .dt-step, #screen-detalle .dt-acc-header{
+    transition:transform var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease); }
+  #screen-detalle .dt-back-link:active, #screen-detalle .dt-acc-header:active{ transform:scale(0.985); }
 
-  @media (prefers-reduced-motion: reduce){
-    #screen-detalle .dt-shimmer::after{ display:none; }
-  }
 </style>
 <script type="importmap">
 {
@@ -426,508 +652,581 @@
 </head>
 <body>
 
+<!-- SPRITE DE ÍCONOS STD (Arquitectura §Recursos compartidos): recurso global,
+     consumido por D y DT vía <use href="#ic-nombre">. Grilla 24×24, trazo 1.5,
+     linecap/linejoin round, sin relleno, currentColor. Los íconos marcados
+     [NUEVO] no están en el set STD actual (hoja, flor, raiz, gota, sol,
+     calendario, reloj, ubicacion, mapa, regla, capas, material, libro, lupa,
+     museo, autor, info, pregunta, flecha, estrella): se dibujaron siguiendo la
+     especificación y se proponen para incorporación al STD. -->
+<svg style="display:none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- STD existentes usados -->
+    <symbol id="ic-hoja" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 19C5 11 11 5 19 5c0 8-6 14-14 14Z"/>
+      <path d="M5 19 15 9"/>
+    </symbol>
+    <symbol id="ic-flor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="2.2"/>
+      <path d="M12 9.8C12 6 10 4 12 4s0 2 0 5.8"/>
+      <path d="M14.2 12C18 12 20 10 20 12s-2 0-5.8 0"/>
+      <path d="M12 14.2C12 18 14 20 12 20s0-2 0-5.8"/>
+      <path d="M9.8 12C6 12 4 14 4 12s2 0 5.8 0"/>
+    </symbol>
+    <symbol id="ic-raiz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v8"/>
+      <path d="M12 11c-3 2-4 6-5 10"/>
+      <path d="M12 11c3 2 4 6 5 10"/>
+      <path d="M12 11v10"/>
+    </symbol>
+    <!-- [NUEVO] anillos concéntricos (Anatomía · Tronco) -->
+    <symbol id="ic-anillos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <circle cx="12" cy="12" r="6"/>
+      <circle cx="12" cy="12" r="9"/>
+    </symbol>
+    <!-- [NUEVO] flechas circulares (Anatomía · Sistema circulatorio) -->
+    <symbol id="ic-circulacion" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/>
+      <path d="M17.6 3.2 17.8 7l-3.7-.6"/>
+    </symbol>
+    <!-- [NUEVO] propágulo (Adaptaciones · Propágulo) -->
+    <symbol id="ic-propagulo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3c2 5 2 13 0 18-2-5-2-13 0-18Z"/>
+      <path d="M12 21v1.5"/>
+    </symbol>
+    <!-- [NUEVO] ondas / agua (Adaptaciones · Dispersión) -->
+    <symbol id="ic-ondas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9c1.5-2 3-2 4.5 0S10.5 11 12 9s3-2 4.5 0 3 2 4.5 0"/>
+      <path d="M3 15c1.5-2 3-2 4.5 0S10.5 17 12 15s3-2 4.5 0 3 2 4.5 0"/>
+    </symbol>
+    <!-- [NUEVO] costa / mangle sobre olas (Ecosistema · Protección costera) -->
+    <symbol id="ic-costa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 18c1.5-2 3-2 4.5 0S10.5 20 12 18s3-2 4.5 0 3 2 4.5 0"/>
+      <path d="M12 14V7"/>
+      <path d="M12 8C10.5 6 8.5 6 7 5.5"/>
+      <path d="M12 8c1.5-2 3.5-2 5-2.5"/>
+    </symbol>
+    <!-- [NUEVO] fauna / pez (Ecosistema · Refugio de fauna) -->
+    <symbol id="ic-fauna" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 12c3-4 9-4 12 0-3 4-9 4-12 0Z"/>
+      <path d="M16 12 20.5 9v6L16 12Z"/>
+      <path d="M7.5 11h.01"/>
+    </symbol>
+    <!-- [NUEVO] carbono azul / nube con captura (Ecosistema · Carbono azul) -->
+    <symbol id="ic-carbono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 16.5a3.5 3.5 0 0 1 0-7 4.6 4.6 0 0 1 8.8-1.2A3.4 3.4 0 0 1 16.5 16.5Z"/>
+      <path d="M11.6 11.6v3.4"/>
+      <path d="M10.1 13.5 11.6 15l1.5-1.5"/>
+    </symbol>
+  </defs>
+</svg>
+
+
 <div class="app-root">
 
-  <!-- ============================================================
-       SPRITE DE ÍCONOS STD — recurso compartido D + DT (Arquitectura
-       de Archivo Único). Set STD usado: hoja, flor, raiz, info.
-       Set nuevo propuesto para esta pieza (no en el set inicial):
-       anillos-concentricos, flechas-circulares, ondas-agua,
-       pez-cangrejo, nube-co2, mangle-olas. Dibujados con la misma
-       especificación (grilla 24×24, trazo 1.5px, stroke-linecap:round,
-       sin relleno, currentColor) — se proponen para incorporación al
-       set STD (ver nota en Notion / bitácora).
-  ============================================================ -->
-  <svg style="display:none">
-    <!-- hoja (set STD) -->
-    <symbol id="ic-hoja" viewBox="0 0 24 24">
-      <path d="M5 19C5 12 9 5 20 4C19 15 12 19 5 19Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M6 18C9 14 12 10 17 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </symbol>
-    <!-- flor (set STD) -->
-    <symbol id="ic-flor" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <circle cx="12" cy="6.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <circle cx="12" cy="17.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <circle cx="6.5" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <circle cx="17.5" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-    </symbol>
-    <!-- raiz (set STD) -->
-    <symbol id="ic-raiz" viewBox="0 0 24 24">
-      <path d="M12 3V11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M12 11C12 11 8 12 6.5 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M12 11C12 11 16 12 17.5 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M12 14C12 14 9.5 15 8.5 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M12 14C12 14 14.5 15 15.5 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </symbol>
-    <!-- info (set STD) -->
-    <symbol id="ic-info" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M12 11V16.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <circle cx="12" cy="7.7" r="0.9" fill="currentColor" stroke="none"/>
-    </symbol>
-    <!-- anillos-concentricos (nuevo, propuesto) -->
-    <symbol id="ic-anillos-concentricos" viewBox="0 0 24 24">
-      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <circle cx="12" cy="12" r="5.8" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-    </symbol>
-    <!-- flechas-circulares (nuevo, propuesto) -->
-    <symbol id="ic-flechas-circulares" viewBox="0 0 24 24">
-      <path d="M4.5 12C4.5 7.9 7.9 4.5 12 4.5C15 4.5 17.6 6.2 18.8 8.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M19.5 12C19.5 16.1 16.1 19.5 12 19.5C9 19.5 6.4 17.8 5.2 15.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M15.8 6.6L18.9 8.9L20.6 5.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M8.2 17.4L5.1 15.1L3.4 18.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </symbol>
-    <!-- ondas-agua (nuevo, propuesto) -->
-    <symbol id="ic-ondas-agua" viewBox="0 0 24 24">
-      <path d="M3 9.5C4.5 8 6 8 7.5 9.5C9 11 10.5 11 12 9.5C13.5 8 15 8 16.5 9.5C18 11 19.5 11 21 9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M3 14.5C4.5 13 6 13 7.5 14.5C9 16 10.5 16 12 14.5C13.5 13 15 13 16.5 14.5C18 16 19.5 16 21 14.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </symbol>
-    <!-- pez-cangrejo (nuevo, propuesto) -->
-    <symbol id="ic-pez-cangrejo" viewBox="0 0 24 24">
-      <path d="M4 9.5C6.5 7.5 9.5 7.5 11.5 9.5C9.5 11.5 6.5 11.5 4 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-      <path d="M11.5 9.5L14 7.8V11.2L11.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-      <circle cx="16.5" cy="16" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <path d="M14.3 14.2L12.7 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M18.7 14.2L20.3 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M14.5 17.5L12.5 18.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M18.5 17.5L20.5 18.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </symbol>
-    <!-- nube-co2 (nuevo, propuesto) -->
-    <symbol id="ic-nube-co2" viewBox="0 0 24 24">
-      <path d="M6.5 16C4.6 16 3 14.4 3 12.5C3 10.7 4.4 9.2 6.2 9C6.7 6.7 8.7 5 11 5C13.5 5 15.5 6.9 15.8 9.3C17.6 9.5 19 11 19 12.8C19 14.6 17.5 16 15.7 16H6.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-      <path d="M8.5 19.5H10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M12.5 19.5H16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </symbol>
-    <!-- mangle-olas (nuevo, propuesto) -->
-    <symbol id="ic-mangle-olas" viewBox="0 0 24 24">
-      <path d="M9 16V8C9 8 7.5 7 7.5 5.2C7.5 4 8.3 3.2 9 3.2C9.7 3.2 10 4 10 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M9 12C9 12 11 11 11 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M9 14.5C9 14.5 6.8 13.7 6.8 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M2.5 18C3.7 16.7 5 16.7 6.2 18C7.4 19.3 8.7 19.3 9.9 18C11.1 16.7 12.4 16.7 13.6 18C14.8 19.3 16.1 19.3 17.3 18C18.5 16.7 19.8 16.7 21 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </symbol>
-  </svg>
+<div class="app-screen" id="screen-display">
+<div class="screen">
 
-  <!-- ============================================================
-       D — #screen-display
-  ============================================================ -->
-  <div class="app-screen" id="screen-display">
-    <div class="screen">
+  <header>
+    <div class="logo">
+      <!-- Logo del cliente: siempre PNG con transparencia, subido a assets/logo.png.
+           El logo ya comunica la identidad de marca por sí solo — no se repite el
+           nombre del cliente como texto al lado (a diferencia de versiones anteriores
+           del STD que mostraban logo + nombre en 3 líneas). -->
+      <img class="logo-mark" src="assets/logo.png" alt="Logo">
+    </div>
+    <div class="back-link" onclick="volverAlEscaner()">
+      <span class="arrow">&#8592;</span>
+      <span>volver al escáner</span>
+    </div>
+  </header>
 
-      <header>
-        <div class="logo">
-          <img class="logo-mark" src="assets/logo.png" alt="Logo UEES" onerror="this.style.display='none'">
-        </div>
-        <div class="back-link" onclick="volverAlEscaner()">
-          <span class="arrow">&#8592;</span>
-          <span>volver al escáner</span>
-        </div>
-      </header>
-
-      <div class="title-block">
-        <button class="badge" id="badgeBtn" type="button">Casi amenazado <span class="badge-info-icon">i</span></button>
-        <h1>Mangle rojo</h1>
-        <div class="rule"></div>
-        <div class="classification-line">
-          <svg class="ic"><use href="#ic-hoja"/></svg>
-          <span>Familia Rhizophoraceae</span>
-        </div>
-        <div class="subtitle">Rhizophora samoensis</div>
-      </div>
-
-      <div class="info-overlay" id="infoOverlay">
-        <div class="info-box">
-          <button class="info-close" id="infoClose" type="button">&times;</button>
-          <div class="info-box-badge">Casi amenazado</div>
-          <p>Contenido en preparación.</p>
-        </div>
-      </div>
-
-      <div id="hotspotPopupsContainer"></div>
-
-      <div class="viewer-wrap">
-        <div id="viewer3d">
-          <div class="viewer-shimmer shimmer" id="viewerShimmer"></div>
-          <div class="loading-msg" id="loadingMsg">Cargando modelo 3D…</div>
-        </div>
-
-        <svg class="shadow-plane" viewBox="0 0 300 130" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <radialGradient id="shadowGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#000000" stop-opacity="1"/>
-              <stop offset="65%" stop-color="#000000" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <ellipse cx="150" cy="71" rx="145" ry="27.6" fill="url(#shadowGradient)"/>
-        </svg>
-
-        <svg class="rotate-arc-ring" viewBox="0 0 300 130" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <marker id="ringArrowStart" viewBox="0 0 12 12" refX="6" refY="6" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M1 1 L11 6 L1 11 L4 6 Z" fill="currentColor"/>
-            </marker>
-            <marker id="ringArrowEnd" viewBox="0 0 12 12" refX="6" refY="6" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M1 1 L11 6 L1 11 L4 6 Z" fill="currentColor"/>
-            </marker>
-          </defs>
-          <path d="M 64.4 54.7 A 121 23.1 0 0 0 29 71 A 121 23.1 0 0 0 150 94.1 A 121 23.1 0 0 0 271 71 A 121 23.1 0 0 0 235.6 54.7"
-                fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.65"
-                marker-start="url(#ringArrowStart)" marker-end="url(#ringArrowEnd)"/>
-        </svg>
-
-        <div class="rotate-hint-text">
-          <div class="hand-icon-wrap"></div>
-          <span>Desliza para rotar</span>
-        </div>
-
-        <div id="hotspots3d"></div>
-      </div>
-
-      <button class="cta-detail" onclick="showDetalle()">
-        <div class="cta-shine"></div>
-        <div class="cta-title">Explorar la especie</div>
-        <div class="cta-arrow">&#8250;</div>
-      </button>
-
+  <div class="title-block">
+    <button class="badge" id="badgeBtn" type="button">Casi amenazado <span class="badge-info-icon">i</span></button>
+    <h1>Mangle rojo</h1>
+    <div class="rule"></div>
+    <!-- BT Nota 1 — extensión de clasificación (aún no formalizada en el STD del D):
+         nombre científico en itálica + línea "Familia X" con ícono de hoja. -->
+    <div class="classification">
+      <div class="classification-sci">Rhizophora samoensis</div>
+      <div class="classification-fam"><svg class="fam-ic" aria-hidden="true"><use href="#ic-hoja"/></svg><span>Familia Rhizophoraceae</span></div>
     </div>
   </div>
 
-  <!-- ============================================================
-       DT — #screen-detalle
-  ============================================================ -->
-  <div class="app-screen" id="screen-detalle">
-
-    <div class="dt-header">
-      <div class="dt-back-link" onclick="showDisplay()">
-        <span class="dt-arrow">&#8592;</span>
-        <span>Volver a la pieza</span>
-      </div>
-      <img class="dt-logo-mark" src="assets/logo.png" alt="Logo UEES" onerror="this.style.display='none'">
-    </div>
-
-    <div class="dt-title-block">
-      <h1 class="dt-h1">Mangle rojo</h1>
-      <div class="dt-rule"></div>
-    </div>
-
-    <div class="dt-tabs-nav">
-      <button class="dt-tab-btn active" data-tab="anatomia" onclick="showTab('anatomia')" type="button">Anatomía</button>
-      <button class="dt-tab-btn" data-tab="adaptaciones" onclick="showTab('adaptaciones')" type="button">Adaptaciones</button>
-      <button class="dt-tab-btn" data-tab="ecosistema" onclick="showTab('ecosistema')" type="button">Ecosistema</button>
-    </div>
-
-    <div class="dt-content-area">
-
-      <!-- ===================== TAB: ANATOMÍA ===================== -->
-      <!-- Sin boxes académicos (BT Nota 4): solo widget + 3 ilustraciones.
-           Callouts (corteza/floema/cambium/xilema/duramen/anillos) ya
-           horneados en la imagen "Tronco" — no se replican como componentes. -->
-      <div class="dt-tab-panel active" id="tab-anatomia" data-tab-panel="anatomia">
-        <div class="dt-widget" id="widget-anatomia">
-          <div class="dt-widget-media-wrap">
-            <img class="dt-widget-media dt-shimmer" id="anatomia-media-img" alt="">
-            <div class="dt-widget-media-placeholder" id="anatomia-media-placeholder" style="display:none;"></div>
-          </div>
-          <div class="dt-widget-body">
-            <div class="dt-widget-name" id="anatomia-name"></div>
-            <div class="dt-widget-desc" id="anatomia-desc"></div>
-            <div class="dt-selector-segmented" id="anatomia-selector"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ===================== TAB: ADAPTACIONES ===================== -->
-      <div class="dt-tab-panel" id="tab-adaptaciones" data-tab-panel="adaptaciones">
-        <div class="dt-text-block">
-          <div class="dt-section-title">Adaptaciones</div>
-          <div class="dt-paragraph">El mangle rojo tiene adaptaciones únicas que le permiten vivir y prosperar en ambientes costeros.</div>
-        </div>
-        <div class="dt-widget" id="widget-adaptaciones">
-          <div class="dt-widget-media-wrap">
-            <img class="dt-widget-media dt-shimmer" id="adaptaciones-media-img" alt="">
-            <div class="dt-widget-media-placeholder" id="adaptaciones-media-placeholder" style="display:none;"></div>
-          </div>
-          <div class="dt-widget-body">
-            <div class="dt-widget-name" id="adaptaciones-name"></div>
-            <div class="dt-widget-desc" id="adaptaciones-desc"></div>
-          </div>
-        </div>
-        <div class="dt-selector-stepper" id="adaptaciones-selector"></div>
-      </div>
-
-      <!-- ===================== TAB: ECOSISTEMA ===================== -->
-      <!-- Hero con callouts horneados en la imagen + 3 boxes académicos.
-           Sin widget (confirmado explícitamente en el BT). -->
-      <div class="dt-tab-panel" id="tab-ecosistema" data-tab-panel="ecosistema">
-        <div class="dt-hero-group">
-          <img class="dt-hero-img dt-shimmer" id="ecosistema-hero-img" src="assets/ecosistema-hero.jpg" alt="Ecosistema del mangle rojo">
-          <div class="dt-hero-img-placeholder" id="ecosistema-hero-placeholder" style="display:none;">[ imagen — ecosistema-hero ]</div>
-        </div>
-        <div class="dt-academic-boxes">
-          <div class="dt-academic-box">
-            <svg class="dt-ic"><use href="#ic-mangle-olas"/></svg>
-            <div class="dt-academic-box-body">
-              <div class="dt-academic-box-title">Protección costera</div>
-              <div class="dt-academic-box-text">Sus raíces retienen sedimentos y ayudan a amortiguar el oleaje.</div>
-            </div>
-          </div>
-          <div class="dt-academic-box">
-            <svg class="dt-ic"><use href="#ic-pez-cangrejo"/></svg>
-            <div class="dt-academic-box-body">
-              <div class="dt-academic-box-title">Refugio de fauna</div>
-              <div class="dt-academic-box-text">Las raíces sirven de vivero para peces juveniles, cangrejos, moluscos y aves.</div>
-            </div>
-          </div>
-          <div class="dt-academic-box">
-            <svg class="dt-ic"><use href="#ic-nube-co2"/></svg>
-            <div class="dt-academic-box-body">
-              <div class="dt-academic-box-title">Carbono azul</div>
-              <div class="dt-academic-box-text">Los manglares almacenan carbono en su biomasa y en sus suelos anegados.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  <!-- Info box del badge: oculto por defecto, aparece al tocar el badge. -->
+  <div class="info-overlay" id="infoOverlay">
+    <div class="info-box">
+      <button class="info-close" id="infoClose" type="button">&times;</button>
+      <div class="info-box-badge">Casi amenazado</div>
+      <div class="info-box-cat">NT &#8211; Near Threatened</div>
+      <p>[ PENDIENTE &#8212; texto de justificación del estado de conservación (sin contenido en la referencia, BT Nota 6) ]</p>
     </div>
   </div>
 
-</div>
+  <!-- Popups de hotspots: generados dinámicamente desde JS según HOTSPOTS_3D (ver
+       abajo) — la cantidad real depende del BT de cada pieza, nunca se escriben a
+       mano en este HTML. Cada uno tiene título + imagen (con fallback a placeholder
+       si el asset todavía no fue subido) + texto descriptivo. -->
+  <div id="hotspotPopupsContainer"></div>
+
+  <div class="viewer-wrap">
+    <div id="viewer3d">
+      <!-- Estado de carga: placeholder elíptico con shimmer en la zona del suelo
+           + % de progreso. Ambos se eliminan cuando el GLB termina de cargar
+           (con éxito o con error). -->
+      <div class="viewer-shimmer shimmer" id="viewerShimmer"></div>
+      <div class="loading-msg" id="loadingMsg">Cargando modelo 3D…</div>
+    </div>
+
+    <!-- Sombra y anillo viven en DOS SVG separados, pero con el MISMO viewBox
+         ("0 0 300 130") y las MISMAS coordenadas numéricas (centro real del
+         círculo en 150,71). Esto garantiza que comparten exactamente el mismo
+         origen por construcción matemática. Su tamaño y posición en pantalla
+         NO se fijan por CSS: los calcula el JS (regla E3 de la Ley de Encuadre)
+         proyectando a pantalla el punto (0,0,0) del mundo — el plano del suelo
+         donde apoya la base del modelo — al cargar y en cada resize, y derivando
+         el ancho del footprint proyectado de la base. Se separan en dos SVG (no
+         uno) únicamente para poder darles z-index distintos: la sombra debe
+         quedar DEBAJO del modelo 3D, el anillo ENCIMA — si fueran el mismo SVG,
+         comparten z-index y no se puede intercalar el canvas entre ambos. -->
+
+    <!-- SVG 1: sombra, z-index bajo (ver CSS .shadow-plane), debajo del canvas. -->
+    <svg class="shadow-plane" viewBox="0 0 300 130" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="shadowGradient" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#000000" stop-opacity="1"/>
+          <stop offset="65%" stop-color="#000000" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <ellipse cx="150" cy="71" rx="145" ry="27.6" fill="url(#shadowGradient)"/>
+    </svg>
+
+    <!-- SVG 2: anillo, z-index alto, encima del canvas. Mismo viewBox/coordenadas
+         que el SVG de la sombra, por eso ambos quedan centrados en el mismo punto. -->
+    <svg class="rotate-arc-ring" viewBox="0 0 300 130" preserveAspectRatio="xMidYMid meet">
+      <!-- Anillo de rotación: CINTA rellena de ancho VARIABLE (un único contorno
+           relleno, no un trazo constante), según "Geometría del anillo" de
+           Display_Instrucciones. Arco sólido de -45° a 225° (gap de 90° arriba/lejos),
+           grosor máximo en los extremos que decae linealmente a ~0 en el punto más
+           cercano a la cámara (abajo, 0,-R). Flechas en los extremos orientadas por
+           la tangente real de la elipse. Misma elipse base (centro 150,71 / rx 121 /
+           ry 23.1) que la sombra, para compartir origen por construcción. -->
+  <path d="M 235.78 53.49 L 237.27 53.78 L 238.73 54.07 L 240.17 54.37 L 241.58 54.67 L 242.96 54.98 L 244.31 55.29 L 245.63 55.61 L 246.93 55.93 L 248.20 56.26 L 249.43 56.59 L 250.64 56.93 L 251.82 57.27 L 252.96 57.61 L 254.08 57.96 L 255.17 58.31 L 256.22 58.67 L 257.24 59.03 L 258.23 59.39 L 259.19 59.76 L 260.12 60.13 L 261.01 60.50 L 261.87 60.88 L 262.70 61.26 L 263.50 61.65 L 264.26 62.04 L 264.99 62.43 L 265.69 62.83 L 266.35 63.23 L 266.98 63.63 L 267.57 64.04 L 268.14 64.46 L 268.66 64.88 L 269.16 65.30 L 269.62 65.74 L 270.04 66.17 L 270.43 66.62 L 270.79 67.07 L 271.11 67.54 L 271.39 68.01 L 271.63 68.49 L 271.83 68.98 L 271.99 69.47 L 272.11 69.98 L 272.18 70.49 L 272.20 71.00 L 272.18 71.51 L 272.11 72.02 L 271.99 72.53 L 271.83 73.02 L 271.63 73.51 L 271.39 73.99 L 271.11 74.46 L 270.79 74.93 L 270.43 75.38 L 270.04 75.83 L 269.62 76.26 L 269.16 76.70 L 268.66 77.12 L 268.14 77.54 L 267.57 77.96 L 266.98 78.37 L 266.35 78.77 L 265.69 79.17 L 264.99 79.57 L 264.26 79.96 L 263.50 80.35 L 262.70 80.74 L 261.87 81.12 L 261.01 81.50 L 260.12 81.87 L 259.19 82.24 L 258.23 82.61 L 257.24 82.97 L 256.22 83.33 L 255.17 83.69 L 254.08 84.04 L 252.96 84.39 L 251.82 84.73 L 250.64 85.07 L 249.43 85.41 L 248.20 85.74 L 246.93 86.07 L 245.63 86.39 L 244.31 86.71 L 242.96 87.02 L 241.58 87.33 L 240.17 87.63 L 238.73 87.93 L 237.27 88.22 L 235.78 88.51 L 234.27 88.77 L 232.72 89.03 L 231.16 89.28 L 229.56 89.52 L 227.95 89.76 L 226.31 89.99 L 224.65 90.22 L 222.96 90.44 L 221.26 90.66 L 219.53 90.87 L 217.78 91.07 L 216.01 91.27 L 214.22 91.46 L 212.42 91.65 L 210.59 91.83 L 208.75 92.00 L 206.88 92.17 L 205.01 92.33 L 203.11 92.49 L 201.20 92.64 L 199.27 92.78 L 197.33 92.92 L 195.38 93.05 L 193.41 93.17 L 191.42 93.29 L 189.43 93.40 L 187.42 93.50 L 185.41 93.60 L 183.38 93.69 L 181.34 93.77 L 179.29 93.85 L 177.24 93.92 L 175.17 93.98 L 173.10 94.04 L 171.02 94.09 L 168.94 94.13 L 166.85 94.16 L 164.75 94.19 L 162.65 94.21 L 160.55 94.23 L 158.44 94.23 L 156.33 94.23 L 154.22 94.23 L 152.11 94.21 L 150.00 94.19 L 147.89 94.21 L 145.78 94.23 L 143.67 94.23 L 141.56 94.23 L 139.45 94.23 L 137.35 94.21 L 135.25 94.19 L 133.15 94.16 L 131.06 94.13 L 128.98 94.09 L 126.90 94.04 L 124.83 93.98 L 122.76 93.92 L 120.71 93.85 L 118.66 93.77 L 116.62 93.69 L 114.59 93.60 L 112.58 93.50 L 110.57 93.40 L 108.58 93.29 L 106.59 93.17 L 104.62 93.05 L 102.67 92.92 L 100.73 92.78 L 98.80 92.64 L 96.89 92.49 L 94.99 92.33 L 93.12 92.17 L 91.25 92.00 L 89.41 91.83 L 87.58 91.65 L 85.78 91.46 L 83.99 91.27 L 82.22 91.07 L 80.47 90.87 L 78.74 90.66 L 77.04 90.44 L 75.35 90.22 L 73.69 89.99 L 72.05 89.76 L 70.44 89.52 L 68.84 89.28 L 67.28 89.03 L 65.73 88.77 L 64.22 88.51 L 62.73 88.22 L 61.27 87.93 L 59.83 87.63 L 58.42 87.33 L 57.04 87.02 L 55.69 86.71 L 54.37 86.39 L 53.07 86.07 L 51.80 85.74 L 50.57 85.41 L 49.36 85.07 L 48.18 84.73 L 47.04 84.39 L 45.92 84.04 L 44.83 83.69 L 43.78 83.33 L 42.76 82.97 L 41.77 82.61 L 40.81 82.24 L 39.88 81.87 L 38.99 81.50 L 38.13 81.12 L 37.30 80.74 L 36.50 80.35 L 35.74 79.96 L 35.01 79.57 L 34.31 79.17 L 33.65 78.77 L 33.02 78.37 L 32.43 77.96 L 31.86 77.54 L 31.34 77.12 L 30.84 76.70 L 30.38 76.26 L 29.96 75.83 L 29.57 75.38 L 29.21 74.93 L 28.89 74.46 L 28.61 73.99 L 28.37 73.51 L 28.17 73.02 L 28.01 72.53 L 27.89 72.02 L 27.82 71.51 L 27.80 71.00 L 27.82 70.49 L 27.89 69.98 L 28.01 69.47 L 28.17 68.98 L 28.37 68.49 L 28.61 68.01 L 28.89 67.54 L 29.21 67.07 L 29.57 66.62 L 29.96 66.17 L 30.38 65.74 L 30.84 65.30 L 31.34 64.88 L 31.86 64.46 L 32.43 64.04 L 33.02 63.63 L 33.65 63.23 L 34.31 62.83 L 35.01 62.43 L 35.74 62.04 L 36.50 61.65 L 37.30 61.26 L 38.13 60.88 L 38.99 60.50 L 39.88 60.13 L 40.81 59.76 L 41.77 59.39 L 42.76 59.03 L 43.78 58.67 L 44.83 58.31 L 45.92 57.96 L 47.04 57.61 L 48.18 57.27 L 49.36 56.93 L 50.57 56.59 L 51.80 56.26 L 53.07 55.93 L 54.37 55.61 L 55.69 55.29 L 57.04 54.98 L 58.42 54.67 L 59.83 54.37 L 61.27 54.07 L 62.73 53.78 L 64.22 53.49 L 64.67 55.84 L 63.19 56.13 L 61.75 56.42 L 60.33 56.72 L 58.94 57.02 L 57.57 57.32 L 56.24 57.63 L 54.94 57.94 L 53.66 58.26 L 52.41 58.58 L 51.20 58.91 L 50.01 59.24 L 48.86 59.57 L 47.74 59.91 L 46.65 60.25 L 45.59 60.59 L 44.56 60.94 L 43.57 61.28 L 42.61 61.64 L 41.68 61.99 L 40.79 62.35 L 39.93 62.71 L 39.11 63.07 L 38.32 63.43 L 37.57 63.80 L 36.85 64.16 L 36.17 64.53 L 35.53 64.90 L 34.92 65.26 L 34.35 65.63 L 33.82 66.00 L 33.32 66.36 L 32.87 66.73 L 32.45 67.09 L 32.06 67.45 L 31.72 67.80 L 31.41 68.15 L 31.14 68.50 L 30.91 68.83 L 30.71 69.16 L 30.55 69.49 L 30.42 69.80 L 30.32 70.11 L 30.25 70.41 L 30.21 70.71 L 30.20 71.00 L 30.21 71.29 L 30.25 71.59 L 30.32 71.89 L 30.42 72.20 L 30.55 72.51 L 30.71 72.84 L 30.91 73.17 L 31.14 73.50 L 31.41 73.85 L 31.72 74.20 L 32.06 74.55 L 32.45 74.91 L 32.87 75.27 L 33.32 75.64 L 33.82 76.00 L 34.35 76.37 L 34.92 76.74 L 35.53 77.10 L 36.17 77.47 L 36.85 77.84 L 37.57 78.20 L 38.32 78.57 L 39.11 78.93 L 39.93 79.29 L 40.79 79.65 L 41.68 80.01 L 42.61 80.36 L 43.57 80.72 L 44.56 81.06 L 45.59 81.41 L 46.65 81.75 L 47.74 82.09 L 48.86 82.43 L 50.01 82.76 L 51.20 83.09 L 52.41 83.42 L 53.66 83.74 L 54.94 84.06 L 56.24 84.37 L 57.57 84.68 L 58.94 84.98 L 60.33 85.28 L 61.75 85.58 L 63.19 85.87 L 64.67 86.16 L 66.16 86.46 L 67.68 86.76 L 69.23 87.06 L 70.80 87.35 L 72.39 87.63 L 74.01 87.91 L 75.66 88.19 L 77.32 88.46 L 79.01 88.72 L 80.72 88.98 L 82.46 89.23 L 84.21 89.48 L 85.98 89.72 L 87.78 89.95 L 89.59 90.18 L 91.42 90.40 L 93.27 90.62 L 95.14 90.83 L 97.02 91.03 L 98.93 91.23 L 100.84 91.42 L 102.77 91.61 L 104.72 91.79 L 106.68 91.96 L 108.66 92.12 L 110.64 92.28 L 112.64 92.44 L 114.65 92.58 L 116.67 92.72 L 118.71 92.85 L 120.75 92.98 L 122.80 93.10 L 124.86 93.21 L 126.93 93.31 L 129.00 93.41 L 131.08 93.50 L 133.17 93.59 L 135.26 93.67 L 137.36 93.74 L 139.46 93.80 L 141.56 93.86 L 143.67 93.90 L 145.78 93.95 L 147.89 93.98 L 150.00 94.01 L 152.11 93.98 L 154.22 93.95 L 156.33 93.90 L 158.44 93.86 L 160.54 93.80 L 162.64 93.74 L 164.74 93.67 L 166.83 93.59 L 168.92 93.50 L 171.00 93.41 L 173.07 93.31 L 175.14 93.21 L 177.20 93.10 L 179.25 92.98 L 181.29 92.85 L 183.33 92.72 L 185.35 92.58 L 187.36 92.44 L 189.36 92.28 L 191.34 92.12 L 193.32 91.96 L 195.28 91.79 L 197.23 91.61 L 199.16 91.42 L 201.07 91.23 L 202.98 91.03 L 204.86 90.83 L 206.73 90.62 L 208.58 90.40 L 210.41 90.18 L 212.22 89.95 L 214.02 89.72 L 215.79 89.48 L 217.54 89.23 L 219.28 88.98 L 220.99 88.72 L 222.68 88.46 L 224.34 88.19 L 225.99 87.91 L 227.61 87.63 L 229.20 87.35 L 230.77 87.06 L 232.32 86.76 L 233.84 86.46 L 235.33 86.16 L 236.81 85.87 L 238.25 85.58 L 239.67 85.28 L 241.06 84.98 L 242.43 84.68 L 243.76 84.37 L 245.06 84.06 L 246.34 83.74 L 247.59 83.42 L 248.80 83.09 L 249.99 82.76 L 251.14 82.43 L 252.26 82.09 L 253.35 81.75 L 254.41 81.41 L 255.44 81.06 L 256.43 80.72 L 257.39 80.36 L 258.32 80.01 L 259.21 79.65 L 260.07 79.29 L 260.89 78.93 L 261.68 78.57 L 262.43 78.20 L 263.15 77.84 L 263.83 77.47 L 264.47 77.10 L 265.08 76.74 L 265.65 76.37 L 266.18 76.00 L 266.68 75.64 L 267.13 75.27 L 267.55 74.91 L 267.94 74.55 L 268.28 74.20 L 268.59 73.85 L 268.86 73.50 L 269.09 73.17 L 269.29 72.84 L 269.45 72.51 L 269.58 72.20 L 269.68 71.89 L 269.75 71.59 L 269.79 71.29 L 269.80 71.00 L 269.79 70.71 L 269.75 70.41 L 269.68 70.11 L 269.58 69.80 L 269.45 69.49 L 269.29 69.16 L 269.09 68.83 L 268.86 68.50 L 268.59 68.15 L 268.28 67.80 L 267.94 67.45 L 267.55 67.09 L 267.13 66.73 L 266.68 66.36 L 266.18 66.00 L 265.65 65.63 L 265.08 65.26 L 264.47 64.90 L 263.83 64.53 L 263.15 64.16 L 262.43 63.80 L 261.68 63.43 L 260.89 63.07 L 260.07 62.71 L 259.21 62.35 L 258.32 61.99 L 257.39 61.64 L 256.43 61.28 L 255.44 60.94 L 254.41 60.59 L 253.35 60.25 L 252.26 59.91 L 251.14 59.57 L 249.99 59.24 L 248.80 58.91 L 247.59 58.58 L 246.34 58.26 L 245.06 57.94 L 243.76 57.63 L 242.43 57.32 L 241.06 57.02 L 239.67 56.72 L 238.25 56.42 L 236.81 56.13 L 235.33 55.84 Z" fill="currentColor" opacity="0.7"/>
+  <polygon points="228.19,53.26 236.42,50.15 234.70,59.18" fill="currentColor"/>
+  <polygon points="71.81,53.26 65.30,59.18 63.58,50.15" fill="currentColor"/>
+    </svg>
+
+      <!-- Texto + ícono de mano (imagen real provista por el cliente), debajo del anillo. -->
+      <div class="rotate-hint-text">
+        <div class="hand-icon-wrap"></div>
+        <span>Desliza para rotar</span>
+      </div>
+
+    <!-- Los hotspots ya no se posicionan a mano en HTML/CSS: se generan dinámicamente
+         desde JS, anclados a coordenadas 3D reales del modelo (ver HOTSPOTS_3D abajo),
+         y se reproyectan a 2D en cada frame para que viajen con la rotación y el zoom. -->
+    <div id="hotspots3d"></div>
+  </div>
+
+  <button class="cta-detail" type="button" onclick="showDetalle()">
+    <div class="cta-shine"></div>
+    <div class="cta-title">Explorar la especie</div>
+    <div class="cta-arrow">&#8250;</div>
+  </button>
+
+</div><!-- .screen -->
+</div><!-- #screen-display -->
+
+<div class="app-screen" id="screen-detalle">
+<div class="dt-screen">
+
+  <!-- 1. Header: back-link (izq) + logo (der), sin divisor -->
+  <div class="dt-header">
+    <div class="dt-back-link" onclick="showDisplay()">
+      <span class="dt-arrow">&#8592;</span>
+      <span>Volver a la pieza</span>
+    </div>
+    <div class="dt-logo">
+      <img class="dt-logo-mark" src="assets/logo.png" alt="Logo"
+           onerror="this.style.visibility='hidden'">
+    </div>
+  </div>
+
+  <!-- 2. Title block: h1 + rule (sin subtítulo — BT) -->
+  <div class="dt-title-block">
+    <h1 class="dt-h1" id="dtH1">Mangle rojo</h1>
+    <div class="dt-rule" id="dtRule"></div>
+  </div>
+
+  <!-- 3. Tabs nav -->
+  <div class="dt-tabs-nav" id="dtTabsNav">
+    <button class="dt-tab active" type="button" data-tab="0">Anatomía</button>
+    <button class="dt-tab" type="button" data-tab="1">Adaptaciones</button>
+    <button class="dt-tab" type="button" data-tab="2">Ecosistema</button>
+  </div>
+
+  <!-- 4. Content area -->
+  <div class="dt-content-area">
+
+    <!-- ===================== TAB 0 · ANATOMÍA ===================== -->
+    <!-- Único grupo: widget con selector SEGMENTADO (3 variantes, sin boxes). -->
+    <div class="dt-tab-panel active" data-panel="0">
+      <div class="dt-widget" data-widget="anatomia">
+        <img class="dt-widget-media" data-role="media" src="assets/anatomia-tronco.jpg"
+             alt="" onerror="dtPlaceholder(this)">
+        <div class="dt-widget-name" data-role="name">Tronco</div>
+        <div class="dt-widget-desc" data-role="desc">Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.</div>
+        <div class="dt-widget-selector">
+          <div class="dt-seg" role="tablist">
+            <button class="dt-seg-btn active" type="button" data-index="0">
+              <svg class="dt-ic"><use href="#ic-anillos"/></svg><span>Tronco</span>
+            </button>
+            <button class="dt-seg-btn" type="button" data-index="1">
+              <svg class="dt-ic"><use href="#ic-hoja"/></svg><span>Hoja</span>
+            </button>
+            <button class="dt-seg-btn" type="button" data-index="2">
+              <svg class="dt-ic"><use href="#ic-circulacion"/></svg><span>Circulatorio</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== TAB 1 · ADAPTACIONES ===================== -->
+    <!-- Orden BT: bloque de texto (intro) -> widget con selector STEPPER (4 variantes). -->
+    <div class="dt-tab-panel" data-panel="1">
+      <div class="dt-text-block">
+        <div class="dt-section-title">Adaptaciones</div>
+        <div class="dt-paragraph">El mangle rojo tiene adaptaciones únicas que le permiten vivir y prosperar en ambientes costeros.</div>
+      </div>
+      <div class="dt-widget" data-widget="adaptaciones">
+        <img class="dt-widget-media" data-role="media" src="assets/adaptaciones-flor.jpg"
+             alt="" onerror="dtPlaceholder(this)">
+        <div class="dt-widget-name" data-role="name">Flor</div>
+        <div class="dt-widget-desc" data-role="desc">[ PENDIENTE &#8212; descripción de la etapa "Flor" (sin contenido en la referencia, BT) ]</div>
+        <div class="dt-widget-selector">
+          <div class="dt-stepper">
+            <div class="dt-stepper-line"></div>
+            <div class="dt-stepper-dots">
+              <button class="dt-step active" type="button" data-index="0">
+                <span class="dt-step-dot"><svg class="dt-ic"><use href="#ic-flor"/></svg></span>
+                <span class="dt-step-label">Flor</span>
+              </button>
+              <button class="dt-step" type="button" data-index="1">
+                <span class="dt-step-dot"><svg class="dt-ic"><use href="#ic-propagulo"/></svg></span>
+                <span class="dt-step-label">Propágulo</span>
+              </button>
+              <button class="dt-step" type="button" data-index="2">
+                <span class="dt-step-dot"><svg class="dt-ic"><use href="#ic-ondas"/></svg></span>
+                <span class="dt-step-label">Dispersión</span>
+              </button>
+              <button class="dt-step" type="button" data-index="3">
+                <span class="dt-step-dot"><svg class="dt-ic"><use href="#ic-raiz"/></svg></span>
+                <span class="dt-step-label">Enraizamiento</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== TAB 2 · ECOSISTEMA ===================== -->
+    <!-- Grupo visual: hero (callouts horneados, sin epígrafe) -> grupo textual:
+         3 boxes académicos como acordeón (3+ boxes => preset acordeon-academico). -->
+    <div class="dt-tab-panel" data-panel="2">
+      <div class="dt-hero-group">
+        <img class="dt-hero-img" src="assets/ecosistema-hero.jpg" alt=""
+             onerror="dtPlaceholder(this)">
+      </div>
+      <div class="dt-academic-boxes" id="dtAccordion">
+        <div class="dt-acc-item open" data-acc="0">
+          <button class="dt-acc-header" type="button">
+            <svg class="dt-ic"><use href="#ic-costa"/></svg>
+            <span class="dt-acc-title">Protección costera</span>
+            <svg class="dt-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dt-acc-body"><div class="dt-acc-body-inner"><div class="dt-acc-text">Sus raíces retienen sedimentos y ayudan a amortiguar el oleaje.</div></div></div>
+        </div>
+        <div class="dt-acc-item" data-acc="1">
+          <button class="dt-acc-header" type="button">
+            <svg class="dt-ic"><use href="#ic-fauna"/></svg>
+            <span class="dt-acc-title">Refugio de fauna</span>
+            <svg class="dt-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dt-acc-body"><div class="dt-acc-body-inner"><div class="dt-acc-text">Las raíces sirven de vivero para peces juveniles, cangrejos, moluscos y aves.</div></div></div>
+        </div>
+        <div class="dt-acc-item" data-acc="2">
+          <button class="dt-acc-header" type="button">
+            <svg class="dt-ic"><use href="#ic-carbono"/></svg>
+            <span class="dt-acc-title">Carbono azul</span>
+            <svg class="dt-acc-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="dt-acc-body"><div class="dt-acc-body-inner"><div class="dt-acc-text">Los manglares almacenan carbono en su biomasa y en sus suelos anegados.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .dt-content-area -->
+</div><!-- .dt-screen -->
+</div><!-- #screen-detalle -->
+
+
+</div><!-- .app-root -->
 
 <script>
-  /* ============================================================
-     ZOOM/GESTOS — LEY 5
-  ============================================================ */
+/* =====================================================================
+   NAVEGACIÓN ARCHIVO ÚNICO + LÓGICA DE LA PANTALLA DE DETALLE (DT)
+   Pantalla_Detalle_Instrucciones v3. Sin cambio de URL real entre D y DT
+   (la única navegación real es volverAlEscaner()).
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  var screenD  = document.getElementById('screen-display');
+  var screenDT = document.getElementById('screen-detalle');
+  var tabsNav  = document.getElementById('dtTabsNav');
+  var tabs     = Array.prototype.slice.call(document.querySelectorAll('#screen-detalle .dt-tab'));
+  var panels   = Array.prototype.slice.call(document.querySelectorAll('#screen-detalle .dt-tab-panel'));
+  var currentTabIndex = 0;
+
+  /* ---------- Contenido verbatim del BT para las variantes de widget ---------- */
+  var WIDGET_DATA = {
+    anatomia: [
+      { name:'Tronco',              img:'assets/anatomia-tronco.jpg',
+        desc:'Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.' },
+      { name:'Hoja (celular)',      img:'assets/anatomia-hoja.jpg',
+        desc:'Estructura celular de la hoja, adaptada para minimizar la pérdida de agua y tolerar la salinidad.' },
+      { name:'Sistema circulatorio',img:'assets/anatomia-sistema-circulatorio.jpg',
+        desc:'Recorrido del agua y los nutrientes desde las raíces hasta las hojas a través del tronco.' }
+    ],
+    adaptaciones: [
+      { name:'Flor',          img:'assets/adaptaciones-flor.jpg',
+        desc:'[ PENDIENTE \u2014 sin contenido visible en la referencia (BT) ]' },
+      { name:'Propágulo',     img:'assets/adaptaciones-propagulo.jpg',
+        desc:'El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.' },
+      { name:'Dispersión',    img:'assets/adaptaciones-dispersion.jpg',
+        desc:'[ PENDIENTE \u2014 sin contenido en la referencia (BT) ]' },
+      { name:'Enraizamiento', img:'assets/adaptaciones-enraizamiento.jpg',
+        desc:'[ PENDIENTE \u2014 sin contenido en la referencia (BT) ]' }
+    ]
+  };
+
+  /* ---------- Placeholder gris para assets pendientes (BT) ---------- */
+  window.dtPlaceholder = function (img) {
+    if (img.dataset.ph) return;               // evita bucle si el SVG también falla
+    img.dataset.ph = '1';
+    var name = (img.getAttribute('src') || 'asset').split('/').pop();
+    var w = 640, h = 400;
+    var svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">' +
+      '<rect width="100%" height="100%" fill="#ECECEC"/>' +
+      '<rect x="0.5" y="0.5" width="' + (w - 1) + '" height="' + (h - 1) + '" fill="none" stroke="#CFCFCF"/>' +
+      '<text x="50%" y="50%" fill="#9A9A9A" font-family="Inter,Arial,sans-serif" font-size="22" ' +
+      'text-anchor="middle" dominant-baseline="middle">' + name + '</text></svg>';
+    img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  };
+
+  /* ---------- NAVEGACIÓN ENTRE PANTALLAS (Arquitectura §Navegación) ---------- */
+  window.showDetalle = function () {
+    screenD.classList.add('slide-out');
+    screenDT.classList.add('slide-in');
+    // El DT estaba fuera de canvas: activar el tab actual para medir/animar bien.
+    activateTab(currentTabIndex, true);
+  };
+  window.showDisplay = function () {
+    screenD.classList.remove('slide-out');
+    screenDT.classList.remove('slide-in');
+  };
+  window.volverAlEscaner = function () {
+    // Única navegación real del archivo (displays/[pieza]/index.html -> escáner raíz).
+    window.location.href = '../../index.html?volver=1';
+  };
+
+  /* ---------- JERARQUÍA DE SACRIFICIO (fit por panel) ----------
+     Reduce en orden estricto 6 variables; cada una se agota antes de pasar a la
+     siguiente; se detiene apenas el panel deja de desbordar. */
+  var SCALE_VARS = [
+    { v:'--dt-gap-scale',            floor:0.40 },
+    { v:'--dt-pad-v-scale',          floor:0.50 },
+    { v:'--dt-pad-h-scale',          floor:0.50 },
+    { v:'--dt-image-scale',          floor:0.90 },
+    { v:'--dt-font-scale-secondary', floor:0.85 },
+    { v:'--dt-font-scale-primary',   floor:0.90 }
+  ];
+  var STEP = 0.05;
+
+  function fits(panel) { return panel.scrollHeight <= panel.clientHeight + 0.5; }
+
+  function fitPanel(panel) {
+    if (!panel) return;
+    var i, s;
+    for (i = 0; i < SCALE_VARS.length; i++) panel.style.setProperty(SCALE_VARS[i].v, '1');
+    if (fits(panel)) return;
+    for (i = 0; i < SCALE_VARS.length; i++) {
+      var floor = SCALE_VARS[i].floor;
+      s = 1;
+      while (s > floor + 1e-9) {
+        s = Math.max(floor, s - STEP);
+        panel.style.setProperty(SCALE_VARS[i].v, s.toFixed(3));
+        if (fits(panel)) return;
+      }
+    }
+  }
+
+  /* ---------- ACTIVACIÓN DE TABS ---------- */
+  function activateTab(i, force) {
+    if (i === currentTabIndex && !force) { /* re-fit igual */ }
+    currentTabIndex = i;
+    tabs.forEach(function (t, idx) { t.classList.toggle('active', idx === i); });
+    panels.forEach(function (p, idx) { p.classList.toggle('active', idx === i); });
+    var panel = panels[i];
+
+    // Entrada escalonada por grupo (reinicia la animación).
+    panel.classList.remove('dt-animate');
+    void panel.offsetWidth;                    // reflow para reiniciar keyframes
+    panel.classList.add('dt-animate');
+
+    // Medir tras dos frames (layout asentado) y correr el fit.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { fitPanel(panel); });
+    });
+  }
+
+  tabsNav.addEventListener('click', function (e) {
+    var btn = e.target.closest('.dt-tab');
+    if (!btn) return;
+    activateTab(parseInt(btn.getAttribute('data-tab'), 10), false);
+  });
+
+  /* ---------- SWITCH DE VARIANTES DE WIDGET (segmentado + stepper) ---------- */
+  function bindWidget(widgetEl, key, btnSelector, activeClass) {
+    var data = WIDGET_DATA[key];
+    var media = widgetEl.querySelector('[data-role="media"]');
+    var nameEl = widgetEl.querySelector('[data-role="name"]');
+    var descEl = widgetEl.querySelector('[data-role="desc"]');
+    var btns = Array.prototype.slice.call(widgetEl.querySelectorAll(btnSelector));
+
+    function select(idx) {
+      var d = data[idx];
+      if (!d) return;
+      btns.forEach(function (b, k) { b.classList.toggle(activeClass, k === idx); });
+      delete media.dataset.ph;                 // permitir placeholder de la nueva img
+      media.src = d.img;
+      nameEl.textContent = d.name;
+      descEl.textContent = d.desc;
+      // El texto/alto cambió: re-fit del panel activo.
+      var panel = widgetEl.closest('.dt-tab-panel');
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { fitPanel(panel); });
+      });
+    }
+    btns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        select(parseInt(b.getAttribute('data-index'), 10));
+      });
+    });
+  }
+
+  var wAnat = document.querySelector('[data-widget="anatomia"]');
+  if (wAnat) bindWidget(wAnat, 'anatomia', '.dt-seg-btn', 'active');
+  var wAdap = document.querySelector('[data-widget="adaptaciones"]');
+  if (wAdap) bindWidget(wAdap, 'adaptaciones', '.dt-step', 'active');
+
+  /* ---------- ACORDEÓN ACADÉMICO (single-open; no re-fitea) ---------- */
+  var accordion = document.getElementById('dtAccordion');
+  if (accordion) {
+    accordion.addEventListener('click', function (e) {
+      var header = e.target.closest('.dt-acc-header');
+      if (!header) return;
+      var item = header.parentElement;
+      var wasOpen = item.classList.contains('open');
+      accordion.querySelectorAll('.dt-acc-item').forEach(function (it) { it.classList.remove('open'); });
+      if (!wasOpen) item.classList.add('open');
+    });
+  }
+
+  /* ---------- Ancho del divisor del título DT (mide el h1, como en el D) ---------- */
+  function measureDtRule() {
+    var h1 = document.getElementById('dtH1');
+    var rule = document.getElementById('dtRule');
+    if (!h1 || !rule) return;
+    var span = document.createElement('span');
+    span.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;' +
+      'font-family:' + getComputedStyle(h1).fontFamily + ';font-weight:' + getComputedStyle(h1).fontWeight +
+      ';font-size:' + getComputedStyle(h1).fontSize + ';';
+    span.textContent = h1.textContent;
+    document.body.appendChild(span);
+    var w = span.getBoundingClientRect().width;
+    document.body.removeChild(span);
+    rule.style.setProperty('--dt-rule-width', (w * 1.1) + 'px'); // 110% del ancho del texto
+    rule.style.width = 'var(--dt-rule-width)';
+  }
+
+  /* ---------- Re-fit ante resize / fuentes / carga de imágenes ---------- */
+  var rafPending = false;
+  function scheduleRefit() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function () {
+      rafPending = false;
+      fitPanel(panels[currentTabIndex]);
+    });
+  }
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { measureDtRule(); scheduleRefit(); }, 120);
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { measureDtRule(); scheduleRefit(); });
+  }
+  document.querySelectorAll('#screen-detalle img').forEach(function (img) {
+    img.addEventListener('load', scheduleRefit);
+  });
+
+  /* ---------- Init: medir regla + fit del tab 0 (aunque el DT esté fuera de canvas) ---------- */
+  function init() {
+    measureDtRule();
+    activateTab(0, true);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+
+<script>
+  // Bloqueo adicional de zoom vía JS: la meta tag de viewport y touch-action CSS
+  // a veces no son suficientes en navegadores modernos (iOS 10+/Chrome 61+ ignoran
+  // parcialmente user-scalable=no por accesibilidad). Esto cubre el caso de gestos
+  // de pellizco con 2+ dedos en cualquier parte de la página.
   document.addEventListener('touchmove', (e) => {
     if (e.touches.length > 1) e.preventDefault();
   }, { passive: false });
 
+  // Bloqueo de doble-tap-para-zoom: si dos toques ocurren muy cerca en el tiempo,
+  // se previene el comportamiento default del segundo.
   let lastTouchEnd = 0;
   document.addEventListener('touchend', (e) => {
     const now = Date.now();
     if (now - lastTouchEnd <= 300) e.preventDefault();
     lastTouchEnd = now;
   }, { passive: false });
-
-  /* ============================================================
-     NAVEGACIÓN D ↔ DT (Arquitectura de Archivo Único)
-  ============================================================ */
-  const screenDisplay = document.getElementById('screen-display');
-  const screenDetalle = document.getElementById('screen-detalle');
-
-  function showDetalle() {
-    screenDisplay.classList.add('slide-out');
-    screenDetalle.classList.add('slide-in');
-    requestAnimationFrame(() => runFitRoutine(getActiveTabPanel()));
-  }
-  function showDisplay() {
-    screenDisplay.classList.remove('slide-out');
-    screenDetalle.classList.remove('slide-in');
-  }
-  function volverAlEscaner() {
-    window.location.href = '../../index.html?volver=1';
-  }
-
-  /* ============================================================
-     TABS DEL DT
-  ============================================================ */
-  function showTab(tabName) {
-    document.querySelectorAll('.dt-tab-btn').forEach((btn) => {
-      btn.classList.toggle('active', btn.dataset.tab === tabName);
-    });
-    document.querySelectorAll('.dt-tab-panel').forEach((panel) => {
-      panel.classList.toggle('active', panel.dataset.tabPanel === tabName);
-    });
-    const panel = document.querySelector(`.dt-tab-panel[data-tab-panel="${tabName}"]`);
-    requestAnimationFrame(() => runFitRoutine(panel));
-  }
-  function getActiveTabPanel() {
-    return document.querySelector('.dt-tab-panel.active');
-  }
-
-  /* ============================================================
-     RUTINA DE CHECKEO — Jerarquía de Sacrificio
-     (Pantalla_Detalle_Instrucciones.pdf)
-     Reduce, en orden estricto y agotando cada variable antes de
-     pasar a la siguiente: gap → pad-v → pad-h → image-scale →
-     font-secondary → font-primary. Se detiene apenas el overflow
-     se resuelve. Corre por tab, nunca global.
-  ============================================================ */
-  const FIT_STEPS = [
-    { varName: '--dt-gap-scale', from: 2, to: 2, unit: 'vh' }, // gap ya en su mínimo (2vh) por default — no hay margen extra a recortar en este layout
-    { varName: '--dt-pad-v-scale', from: 1.5, to: 0.9, unit: 'vh' },
-    { varName: '--dt-pad-h-scale', from: 3, to: 1.8, unit: 'vw' },
-    { varName: '--dt-image-scale', from: 1, to: 0.9, unit: '' },
-    { varName: '--dt-font-scale-secondary', from: 1, to: 0.85, unit: '' },
-    { varName: '--dt-font-scale-primary', from: 1, to: 0.85, unit: '' },
-  ];
-  const FIT_ITERATIONS = 10;
-
-  function panelOverflows(panel) {
-    return panel.scrollHeight > panel.clientHeight + 1;
-  }
-
-  function runFitRoutine(panel) {
-    if (!panel) return;
-    // reset a valores ideales antes de medir
-    FIT_STEPS.forEach((step) => {
-      panel.style.setProperty(step.varName, step.from + step.unit);
-    });
-    if (!panelOverflows(panel)) return;
-
-    for (const step of FIT_STEPS) {
-      for (let i = 1; i <= FIT_ITERATIONS; i++) {
-        const t = i / FIT_ITERATIONS;
-        const value = step.from + (step.to - step.from) * t;
-        panel.style.setProperty(step.varName, value + step.unit);
-        if (!panelOverflows(panel)) return;
-      }
-    }
-  }
-
-  function runFitOnAllPanels() {
-    document.querySelectorAll('.dt-tab-panel').forEach((panel) => runFitRoutine(panel));
-  }
-
-  let fitResizeTimer = 0;
-  function debouncedFit() {
-    clearTimeout(fitResizeTimer);
-    fitResizeTimer = setTimeout(runFitOnAllPanels, 150);
-  }
-  window.addEventListener('resize', debouncedFit);
-  window.addEventListener('load', () => runFitRoutine(getActiveTabPanel()));
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => runFitRoutine(getActiveTabPanel()));
-  }
-
-  /* ============================================================
-     WIDGET DE SELECCIÓN — Anatomía (segmentado) y Adaptaciones (stepper)
-     Contenido único fuente de verdad, análogo a HOTSPOTS_3D del D:
-     nada de esto se duplica a mano en el HTML.
-  ============================================================ */
-  const ANATOMIA_VARIANTS = [
-    { id: 'tronco', name: 'Tronco', desc: 'Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.', image: 'assets/anatomia-tronco.jpg', icon: 'ic-anillos-concentricos', label: 'Tronco' },
-    { id: 'hoja', name: 'Hoja (celular)', desc: 'Estructura celular de la hoja, adaptada para minimizar la pérdida de agua y tolerar la salinidad.', image: 'assets/anatomia-hoja.jpg', icon: 'ic-hoja', label: 'Hoja' },
-    { id: 'circulatorio', name: 'Sistema circulatorio', desc: 'Recorrido del agua y los nutrientes desde las raíces hasta las hojas a través del tronco.', image: 'assets/anatomia-sistema-circulatorio.jpg', icon: 'ic-flechas-circulares', label: 'Circulación' },
-  ];
-
-  const ADAPTACIONES_VARIANTS = [
-    { id: 'flor', name: 'Flor', desc: 'Contenido en preparación.', image: 'assets/adaptaciones-flor.jpg', icon: 'ic-flor', label: 'Flor' },
-    { id: 'propagulo', name: 'Propágulo', desc: 'El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.', image: 'assets/adaptaciones-propagulo.jpg', icon: 'ic-mangle-olas', label: 'Propágulo' },
-    { id: 'dispersion', name: 'Dispersión', desc: 'Contenido en preparación.', image: 'assets/adaptaciones-dispersion.jpg', icon: 'ic-ondas-agua', label: 'Dispersión' },
-    { id: 'enraizamiento', name: 'Enraizamiento', desc: 'Contenido en preparación.', image: 'assets/adaptaciones-enraizamiento.jpg', icon: 'ic-raiz', label: 'Enraizamiento' },
-  ];
-
-  function setWidgetMedia(imgEl, placeholderEl, src, altLabel) {
-    imgEl.classList.add('dt-shimmer');
-    imgEl.style.display = 'none';
-    placeholderEl.style.display = 'none';
-    imgEl.onload = () => {
-      imgEl.classList.remove('dt-shimmer');
-      imgEl.style.display = 'block';
-      placeholderEl.style.display = 'none';
-    };
-    imgEl.onerror = () => {
-      imgEl.classList.remove('dt-shimmer');
-      imgEl.style.display = 'none';
-      placeholderEl.style.display = 'flex';
-      placeholderEl.textContent = `[ imagen — ${altLabel} ]`;
-    };
-    imgEl.alt = altLabel;
-    imgEl.src = src;
-  }
-
-  function selectAnatomiaVariant(idx) {
-    const v = ANATOMIA_VARIANTS[idx];
-    document.getElementById('anatomia-name').textContent = v.name;
-    document.getElementById('anatomia-desc').textContent = v.desc;
-    setWidgetMedia(
-      document.getElementById('anatomia-media-img'),
-      document.getElementById('anatomia-media-placeholder'),
-      v.image, v.name
-    );
-    document.querySelectorAll('#anatomia-selector .dt-segmented-btn').forEach((btn, i) => {
-      btn.classList.toggle('active', i === idx);
-    });
-    requestAnimationFrame(() => runFitRoutine(document.getElementById('tab-anatomia')));
-  }
-
-  function buildAnatomiaSelector() {
-    const wrap = document.getElementById('anatomia-selector');
-    ANATOMIA_VARIANTS.forEach((v, idx) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'dt-segmented-btn';
-      btn.innerHTML = `<svg class="dt-ic"><use href="#${v.icon}"/></svg><span class="dt-seg-label"></span>`;
-      btn.querySelector('.dt-seg-label').textContent = v.label;
-      btn.addEventListener('click', () => selectAnatomiaVariant(idx));
-      wrap.appendChild(btn);
-    });
-    selectAnatomiaVariant(0);
-  }
-
-  function selectAdaptacionesVariant(idx) {
-    const v = ADAPTACIONES_VARIANTS[idx];
-    document.getElementById('adaptaciones-name').textContent = v.name;
-    document.getElementById('adaptaciones-desc').textContent = v.desc;
-    setWidgetMedia(
-      document.getElementById('adaptaciones-media-img'),
-      document.getElementById('adaptaciones-media-placeholder'),
-      v.image, v.name
-    );
-    document.querySelectorAll('#adaptaciones-selector .dt-stepper-item').forEach((item, i) => {
-      item.classList.toggle('active', i === idx);
-    });
-    requestAnimationFrame(() => runFitRoutine(document.getElementById('tab-adaptaciones')));
-  }
-
-  function buildAdaptacionesSelector() {
-    const wrap = document.getElementById('adaptaciones-selector');
-    ADAPTACIONES_VARIANTS.forEach((v, idx) => {
-      const item = document.createElement('div');
-      item.className = 'dt-stepper-item';
-      item.innerHTML = `
-        <div class="dt-stepper-row">
-          <div class="dt-stepper-connector dt-connector-left"></div>
-          <div class="dt-stepper-dot"><svg class="dt-ic"><use href="#${v.icon}"/></svg></div>
-          <div class="dt-stepper-connector dt-connector-right"></div>
-        </div>
-        <div class="dt-stepper-label"></div>
-      `;
-      item.querySelector('.dt-stepper-label').textContent = v.label;
-      item.addEventListener('click', () => selectAdaptacionesVariant(idx));
-      wrap.appendChild(item);
-    });
-    selectAdaptacionesVariant(0);
-  }
-
-  buildAnatomiaSelector();
-  buildAdaptacionesSelector();
-
-  // Hero de Ecosistema: mismo patrón de shimmer + fallback que el resto de imágenes.
-  (function setupEcosistemaHero() {
-    const img = document.getElementById('ecosistema-hero-img');
-    const placeholder = document.getElementById('ecosistema-hero-placeholder');
-    img.classList.add('dt-shimmer');
-    img.onload = () => {
-      img.classList.remove('dt-shimmer');
-      placeholder.style.display = 'none';
-    };
-    img.onerror = () => {
-      img.classList.remove('dt-shimmer');
-      img.style.display = 'none';
-      placeholder.style.display = 'flex';
-    };
-  })();
 </script>
 
 <script>
-  /* ============================================================
-     MANEJO DE ERRORES (Arquitectura de Archivo Único)
-     Todo error de JS y promesa rechazada se capturan y muestran
-     dentro de #loadingMsg. Textos SIEMPRE con textContent/nodos DOM,
-     nunca innerHTML con strings externos.
-  ============================================================ */
+  // Captura cualquier error de JS (incluyendo errores de carga de módulos ES,
+  // que en Safari móvil pueden fallar silenciosamente sin pasar por los catch normales)
+  // y lo muestra en pantalla, ya que no podemos abrir la consola del navegador fácil en un celular.
+  // Todos los mensajes de error del visor pasan por este helper. Los textos se
+  // arman SIEMPRE con textContent/nodos DOM — nunca inyectando strings externos
+  // (mensajes de excepción, la URL del modelo) vía innerHTML (ver Manejo de
+  // Errores, Arquitectura_de_Archivo_Unico.pdf). También retira el shimmer de
+  // carga, que solo tiene sentido mientras hay una descarga en curso.
   function showViewerError(mainText, detailText) {
     const shimmer = document.getElementById('viewerShimmer');
     if (shimmer) shimmer.remove();
@@ -952,6 +1251,8 @@
     showViewerError('Promesa rechazada: ' + ((e.reason && e.reason.message) || e.reason || 'desconocido'));
   });
 
+  // Badge "Pieza complementaria" → abre/cierra el info box con la descripción,
+  // que se sacó de la pantalla principal para mantenerla más limpia.
   const badgeBtn = document.getElementById('badgeBtn');
   const infoOverlay = document.getElementById('infoOverlay');
   const infoClose = document.getElementById('infoClose');
@@ -959,8 +1260,31 @@
   badgeBtn?.addEventListener('click', () => infoOverlay.classList.add('open'));
   infoClose?.addEventListener('click', () => infoOverlay.classList.remove('open'));
   infoOverlay?.addEventListener('click', (e) => {
-    if (e.target === infoOverlay) infoOverlay.classList.remove('open');
+    if (e.target === infoOverlay) infoOverlay.classList.remove('open'); // cerrar tocando fuera de la caja
   });
+
+  // Divisor del título (.rule): su ancho = 110% del ancho REAL del texto del h1.
+  // En CSS puro no se puede tomar el ancho del texto (el h1 es block y ocupa todo
+  // el contenedor), así que lo medimos con un Range sobre el contenido del h1 y
+  // seteamos --rule-width. Se recalcula en load, en resize y al resolverse las
+  // fuentes (document.fonts.ready), debounced — mismas condiciones que las otras
+  // rutinas del sistema. El centrado lo mantiene margin:auto del propio .rule.
+  (function(){
+    const h1 = document.querySelector('.title-block h1');
+    const root = document.documentElement;
+    if (!h1) return;
+    let t = 0;
+    function measureRule(){
+      const range = document.createRange();
+      range.selectNodeContents(h1);
+      const w = range.getBoundingClientRect().width;
+      if (w > 0) root.style.setProperty('--rule-width', (w * 1.1) + 'px');
+    }
+    function schedule(){ clearTimeout(t); t = setTimeout(measureRule, 120); }
+    window.addEventListener('resize', schedule);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureRule);
+    measureRule();
+  })();
 </script>
 
 <script type="module">
@@ -971,7 +1295,8 @@
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
-  // MODEL_URL de esta pieza (BT_Mangle_Rojo.pdf)
+  // URL del modelo 3D real — COMPLETAR antes de desplegar este D. Vacío por
+  // defecto en la base: cada D pisa este valor con el .glb real de su pieza.
   const MODEL_URL = 'assets/mangle_model.glb';
 
   if (!MODEL_URL) {
@@ -986,6 +1311,10 @@
   const h = mount.clientHeight;
 
   const scene = new THREE.Scene();
+  // Parámetros no negociables de cámara (Display_Instrucciones): fov 45,
+  // near 0.1, far 100, distancia fija z=4. La ALTURA de la cámara no es fija:
+  // la regla E2 de la Ley de Encuadre la eleva a la mitad de la altura final
+  // del modelo (ver applyFraming), mirando siempre horizontal — nunca inclinada.
   const CAMERA_DISTANCE = 4;
   const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
   camera.position.set(0, 0, CAMERA_DISTANCE);
@@ -997,12 +1326,15 @@
 
   scene.add(new THREE.AmbientLight(0xffffff, 1.6));
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
-  dirLight.position.set(3, 5, 4);
+  dirLight.position.set(3, 5, 4); // ángulo normal de 3/4 — ya no necesita ser cenital, no hay sombra que cuidar
   scene.add(dirLight);
   const fillLight = new THREE.DirectionalLight(0xffffff, 0.9);
   fillLight.position.set(-3, 1, -2);
   scene.add(fillLight);
 
+  // Environment map generado por código (sin imagen externa): metales con metalness
+  // alto necesitan algo que reflejar, o se ven planos/oscuros sin importar las luces.
+  // RoomEnvironment da un entorno neutro tipo "habitación" que sirve para esto.
   const pmremGenerator = new THREE.PMREMGenerator(renderer);
   const envScene = new THREE.Scene();
   envScene.background = new THREE.Color(0xf0f0f0);
@@ -1019,7 +1351,14 @@
   const modelGroup = new THREE.Group();
   scene.add(modelGroup);
 
-  // ---------- LEY DE ENCUADRE — E4: base robusta por percentil ----------
+  // ---------- LEY DE ENCUADRE — geometría de base (E4) ----------
+  // E4 — Base robusta por percentil: la "base real" del modelo no es box.min.y
+  // sino el percentil 1 de las coordenadas Y de todos los vértices (en espacio
+  // local del modelo, antes de escalar/posicionar). Motivo: un único vértice
+  // espurio de un export sucio no debe definir el plano de apoyo de toda la
+  // pieza. Si una pieza requiriera corrección manual, el GLB se considera
+  // defectuoso y se re-exporta desde Blender — la corrección nunca es un
+  // parámetro del D.
   function computeRobustBaseY(model, box) {
     const ys = [];
     const v = new THREE.Vector3();
@@ -1030,15 +1369,26 @@
       if (!posAttr) return;
       for (let i = 0; i < posAttr.count; i++) {
         v.fromBufferAttribute(posAttr, i);
-        v.applyMatrix4(node.matrixWorld);
+        v.applyMatrix4(node.matrixWorld); // matrixWorld acá es relativo a "model" (todavía no agregado a modelGroup/scene)
         ys.push(v.y);
       }
     });
-    if (ys.length === 0) return box.min.y;
+    if (ys.length === 0) return box.min.y; // sin geometría legible: caer al bounding box
     const sorted = Float64Array.from(ys).sort();
     return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.01))];
   }
 
+  // Footprint de la base: centro XZ y radio máximo de los vértices ubicados en
+  // la banda inferior del 8% de la altura, medida DESDE LA BASE ROBUSTA (E4).
+  // El centro se usa para el centrado horizontal del modelo; el radio, para
+  // derivar el ancho del anillo (footprint proyectado — ver positionGroundOverlays).
+  // Motivo del centrado por footprint: en piezas de geometría asimétrica (ej.
+  // una mano con dedos extendidos hacia un costado), el centro del bounding box
+  // completo puede caer lejos de donde el objeto realmente "pisa" el suelo, y
+  // centrar por ahí deja la pieza visualmente descentrada aunque matemáticamente
+  // esté bien centrada. thresholdFraction=0.08 fue validado como suficiente para
+  // capturar la base sin incluir geometría del cuerpo principal en piezas ya
+  // probadas (bandeja, mano escultórica).
   function computeBaseFootprint(model, box, baseY, thresholdFraction = 0.08) {
     const yThreshold = baseY + (box.max.y - baseY) * thresholdFraction;
     const bandX = [], bandZ = [];
@@ -1060,6 +1410,8 @@
     });
 
     if (bandX.length === 0) {
+      // Fallback si no se encontró geometría en la franja (caso raro): usar el
+      // centro y radio del bounding box completo antes que fallar.
       const c = box.getCenter(new THREE.Vector3());
       const s = box.getSize(new THREE.Vector3());
       return { x: c.x, z: c.z, radius: Math.max(s.x, s.z) / 2 };
@@ -1078,16 +1430,20 @@
     return { x: cx, z: cz, radius: Math.sqrt(maxR2) };
   }
 
-  // ---------- Perfiles de Composición ----------
+  // ---------- LEY DE ENCUADRE — Perfiles de Composición ----------
+  // El visor clasifica automáticamente cada pieza según su proporción
+  // P = size.y / max(size.x, size.z) y ajusta las fracciones de encuadre:
+  //   vertical    (P > 1.4)        → 0.70 ancho / 0.84 alto
+  //   equilibrado (0.7 ≤ P ≤ 1.4)  → 0.70 ancho / 0.83 alto
+  //   horizontal  (P < 0.7)        → 0.66 ancho / 0.74 alto, anillo con radio ×1.1
+  // El BT puede pisar el perfil explícitamente vía COMPOSITION_PROFILE_OVERRIDE
+  // ('vertical' | 'equilibrado' | 'horizontal'); por defecto es automático.
   const COMPOSITION_PROFILES = {
-    vertical:    { widthFraction: 0.63, heightFraction: 0.82, ringFactor: 1.0 },
-    equilibrado: { widthFraction: 0.63, heightFraction: 0.78, ringFactor: 1.0 },
-    horizontal:  { widthFraction: 0.58, heightFraction: 0.70, ringFactor: 1.1 },
+    vertical:    { widthFraction: 0.70, heightFraction: 0.84, ringFactor: 1.0 },
+    equilibrado: { widthFraction: 0.70, heightFraction: 0.83, ringFactor: 1.0 },
+    horizontal:  { widthFraction: 0.66, heightFraction: 0.74, ringFactor: 1.1 },
   };
-  // BT Nota 9: un árbol con raíces por encima y por debajo de la línea de agua
-  // puede no tener base plana convencional — perfil automático por ahora;
-  // revisar override cuando llegue el .glb real (ver Nota 9 del BT).
-  const COMPOSITION_PROFILE_OVERRIDE = '';
+  const COMPOSITION_PROFILE_OVERRIDE = ''; // vacío = automático; el BT puede pisarlo
 
   function resolveCompositionProfile(size) {
     if (COMPOSITION_PROFILE_OVERRIDE && COMPOSITION_PROFILES[COMPOSITION_PROFILE_OVERRIDE]) {
@@ -1099,15 +1455,29 @@
     return COMPOSITION_PROFILES.equilibrado;
   }
 
+  // Datos geométricos del modelo en su espacio LOCAL (sin escala), calculados
+  // una sola vez al cargar. El encuadre (applyFraming) los reutiliza en cada
+  // resize sin volver a recorrer la geometría.
   let loadedModel = null;
-  let modelGeom = null;
-  let currentScale = 0;
-  let currentModelHeight = 0;
+  let modelGeom = null;       // { size, baseY, topY, footprint:{x,z,radius}, profile }
+  let currentScale = 0;       // escala vigente (para re-escalar anclajes de hotspots en resize)
+  let currentModelHeight = 0; // altura final del modelo ya escalado (base robusta → tope)
 
+  // ---------- LEY DE ENCUADRE — E1 / E2 / E3 ----------
+  // El modelo, la cámara y el sistema sombra+anillo se vinculan matemáticamente
+  // entre sí. Ningún elemento del encuadre se posiciona a ojo ni con constantes
+  // manuales por pieza. Se ejecuta al terminar la carga del modelo y en cada
+  // resize (debounced).
   function applyFraming() {
     if (!loadedModel || !modelGeom) return;
     const { size, baseY, topY, footprint, profile } = modelGeom;
 
+    // E1 — Escala por doble restricción: se calcula dos veces y gana la menor.
+    // Restringir solo el ancho haría que piezas altas y angostas (árboles,
+    // esculturas verticales) excedan el alto del canvas y se corten. Las
+    // fracciones de ancho/alto las define el Perfil de Composición (0.63/0.78
+    // default). Dimensión visible a distancia d = 2·d·tan(fov/2) (× aspect
+    // para el ancho) — fórmula del frustum de una cámara perspectiva.
     const vFov = (camera.fov * Math.PI) / 180;
     const visibleHeight = 2 * Math.tan(vFov / 2) * CAMERA_DISTANCE;
     const visibleWidth = visibleHeight * camera.aspect;
@@ -1117,15 +1487,30 @@
 
     loadedModel.scale.setScalar(scale);
 
+    // APOYO EXACTO EN EL PLANO DEL SUELO (prioridad alta, no negociable): la
+    // base robusta del modelo (E4) cae exactamente en y=0, el mismo plano donde
+    // viven la sombra y el anillo de rotación. CENTRADO HORIZONTAL POR EL
+    // FOOTPRINT DE LA BASE, no por el centro geométrico de toda la silueta:
+    // puede dejar partes lejanas del objeto (ej. dedos extendidos) más cerca de
+    // un borde de pantalla que del otro — trade-off aceptado: la base estable y
+    // centrada bajo el anillo tiene prioridad sobre la simetría lateral.
     loadedModel.position.y = -baseY * scale;
     loadedModel.position.x = -footprint.x * scale;
     loadedModel.position.z = -footprint.z * scale;
 
     const modelHeight = (topY - baseY) * scale;
 
+    // E2 — Cámara a media altura, nunca inclinada: se eleva a la mitad de la
+    // altura final del modelo y mira horizontal (lookAt a su misma altura).
+    // Prohibido inclinarla: la inclinación hace converger las líneas verticales
+    // de la pieza, efecto inaceptable en piezas de museo. Con la cámara fija en
+    // y=0, todo modelo apoyado quedaría por encima del centro del canvas.
     camera.position.set(0, modelHeight / 2, CAMERA_DISTANCE);
     camera.lookAt(0, modelHeight / 2, 0);
 
+    // Los anclajes de hotspots ya calculados viven en el espacio de modelGroup
+    // y escalan linealmente con el modelo: en un resize alcanza con
+    // re-escalarlos, sin repetir el raycasting.
     if (currentScale > 0 && scale !== currentScale) {
       const ratio = scale / currentScale;
       Object.values(hotspotAnchorsLocal).forEach((a) => a.multiplyScalar(ratio));
@@ -1137,19 +1522,33 @@
     positionGroundOverlays();
   }
 
-  const RING_CENTER_Y_FRACTION = 71 / 300;
-  const RING_DIAMETER_FRACTION = 242 / 300;
+  // E3 — Anclaje proyectado de sombra y anillo: el centro de la elipse de ambos
+  // SVG (punto 150,71 de su viewBox de 300×130) se hace coincidir con la
+  // proyección a pantalla del punto del mundo (0,0,0) — donde apoya la base del
+  // modelo. Prohibido anclar estos SVG con porcentajes CSS (bottom:8% y
+  // similares) o con constantes de corrección vertical manual.
+  const RING_CENTER_Y_FRACTION = 71 / 300;  // cy de la elipse respecto del ancho del elemento SVG
+  const RING_DIAMETER_FRACTION = 242 / 300; // diámetro del anillo (2×rx=242) respecto del ancho del elemento SVG
+  const RING_RADIUS_BOOST = 1.10;           // el anillo se dibuja 10% más grande que el footprint proyectado (además del ringFactor del perfil); el clamp 55–96% se respeta igual
 
   function positionGroundOverlays() {
     if (!modelGeom || currentScale <= 0) return;
 
+    // Ancho del anillo derivado del FOOTPRINT PROYECTADO de la base (banda
+    // inferior del 8%), no del bounding box completo: en piezas verticales (un
+    // árbol), un anillo dimensionado por el ancho total de la copa quedaría
+    // gigante respecto del tronco que realmente pisa el suelo.
     const rWorld = modelGeom.footprint.radius * currentScale;
     const leftPt = projectToScreen(new THREE.Vector3(-rWorld, 0, 0));
     const rightPt = projectToScreen(new THREE.Vector3(rWorld, 0, 0));
     const footprintPx = Math.abs(rightPt.x - leftPt.x);
 
+    // El diámetro visible del anillo circunscribe el footprint proyectado
+    // (× el factor del perfil — 1.1 en horizontal), y el ancho total del
+    // elemento SVG se deriva de esa proporción fija de su viewBox.
+    // Clamp: mínimo 55% y máximo 96% del ancho del visor.
     const viewerWidth = mount.clientWidth;
-    const idealWidth = (footprintPx * modelGeom.profile.ringFactor) / RING_DIAMETER_FRACTION;
+    const idealWidth = (footprintPx * modelGeom.profile.ringFactor * RING_RADIUS_BOOST) / RING_DIAMETER_FRACTION;
     const svgWidth = Math.max(viewerWidth * 0.55, Math.min(viewerWidth * 0.96, idealWidth));
 
     const origin = projectToScreen(new THREE.Vector3(0, 0, 0));
@@ -1164,8 +1563,10 @@
 
   const loader = new GLTFLoader();
 
-  // Decodificadores permanentes: DRACOLoader + KTX2Loader (Sketchfab / modelos
-  // optimizados externamente). Sin costo si el GLB no los usa.
+  // Soporte permanente para .glb comprimidos — muy común en modelos bajados
+  // de Sketchfab u optimizados con herramientas externas. Un visor GLB
+  // genérico trae estos decodificadores incluidos por default; GLTFLoader
+  // solo, no. No tiene costo si el .glb en cuestión no usa ninguno de los dos.
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
   loader.setDRACOLoader(dracoLoader);
@@ -1182,16 +1583,24 @@
     }
   }, 15000);
 
-  // Material — BT: Madera/orgánico, metalness 0, roughness 0.75 (tabla 4.4 STD).
+  // Material de la pieza — COMPLETAR según el BT (ver tabla 4.4 del STD: metal
+  // pulido/brillante 0.7-0.9 / 0.1-0.3, metal patinado 0.2-0.4 / 0.5-0.7,
+  // cerámica/piedra/madera ~0 / 0.7-0.9). Valores neutros de partida: ni muy
+  // metálico ni muy rugoso, para que un D sin BT de material aplicado todavía
+  // no se vea con un acabado completamente errado.
   const MATERIAL_CONFIG = {
-    metalness: 0,
-    roughness: 0.75,
+    metalness: 0,      // BT — madera / orgánico (tabla de Materiales)
+    roughness: 0.75,   // BT
   };
 
+  // GLTFLoader (a partir de cierta versión de three.js) dejó de soportar la extensión
+  // KHR_materials_pbrSpecularGlossiness: carga la geometría perfecto, pero ignora la
+  // textura difusa de ese material (se ve gris plano). Esta función la aplica a mano,
+  // leyendo el JSON crudo del GLTF que el parser ya descargó y decodificó.
   async function applySpecGlossTextureManually(gltf) {
     const json = gltf.parser.json;
     if (!json.extensionsUsed || !json.extensionsUsed.includes('KHR_materials_pbrSpecularGlossiness')) {
-      return;
+      return; // El modelo no usa esta extensión, no hay nada que parchear.
     }
 
     for (let matIndex = 0; matIndex < (json.materials || []).length; matIndex++) {
@@ -1199,16 +1608,24 @@
       const specGloss = matDef.extensions && matDef.extensions.KHR_materials_pbrSpecularGlossiness;
       if (!specGloss || specGloss.diffuseTexture == null) continue;
 
+      // parser.getDependency('texture', index) descarga y decodifica la textura
+      // referenciada, devolviendo un THREE.Texture ya listo para usar.
       const diffuseTex = await gltf.parser.getDependency('texture', specGloss.diffuseTexture.index);
       diffuseTex.colorSpace = THREE.SRGBColorSpace;
 
+      // Aplicamos esta textura a todos los meshes que usan este material por índice.
       gltf.scene.traverse((node) => {
         if (node.isMesh && node.material) {
           const materials = Array.isArray(node.material) ? node.material : [node.material];
           materials.forEach((mat) => {
+            // GLTFLoader nombra los materiales según el glTF original, así que
+            // comparamos por nombre (más confiable acá que por índice interno de three.js).
             if (mat.name === matDef.name) {
               mat.map = diffuseTex;
-              mat.color.set(0xffffff);
+              mat.color.set(0xffffff); // blanco para no tintar la textura
+              // GLTFLoader, al no entender esta extensión, deja metalness/roughness
+              // en valores por defecto que oscurecen la textura real. Los tomamos
+              // de MATERIAL_CONFIG (arriba), que es lo único que el BT debe tocar.
               mat.metalness = MATERIAL_CONFIG.metalness;
               mat.roughness = MATERIAL_CONFIG.roughness;
               mat.needsUpdate = true;
@@ -1219,35 +1636,54 @@
     }
   }
 
-  // ---------- HOTSPOTS ANCLADOS EN 3D (BT_Mangle_Rojo.pdf) ----------
-  // Posiciones estimadas contra el modelo real al producir (BT: "estimar
-  // contra el modelo 3D real al producir") — valores de partida razonables
-  // según la referencia visual (raíces=base, hojas=copa opuesta, flor/propágulo=copa).
-  // A ajustar con el .glb real una vez provisto por el cliente.
+  // ---------- HOTSPOTS ANCLADOS EN 3D ----------
+  // Coordenadas en el espacio LOCAL del modelo, definidas como fracciones del
+  // tamaño del modelo (0 a 1 en cada eje) en vez de unidades absolutas — así
+  // funcionan igual sin importar la escala real de cada GLB que carguemos a futuro.
+  // x: 0 = izquierda, 1 = derecha. y: 0 = abajo, 1 = arriba. z: 0 = atrás, 1 = adelante.
+  // Cada hotspot se define por una dirección angular desde el centro del modelo
+  // (azimuth: ángulo horizontal en grados, 0=adelante, 90=derecha, etc.;
+  // heightFraction: 0=base del modelo, 1=tope del modelo) en vez de coordenadas
+  // de bounding box — esto permite anclar el punto a la SUPERFICIE REAL de la
+  // pieza vía raycasting, en vez de caer "en el aire" dentro de una caja rectangular
+  // que no sigue la forma curva del objeto.
+  // HOTSPOTS_3D es la ÚNICA fuente de verdad para los hotspots de este D — tanto
+  // su posición sobre el modelo (azimuthDeg/heightFraction) como el contenido de
+  // su popup (popupTitle/popupText/popupImage). El BT de cada pieza define esta
+  // lista completa; nada de esto se duplica a mano en el HTML.
+  // Posiciones derivadas del análisis de vértices del .glb real (world-space,
+  // tras aplicar el wrapper Sketchfab Z-up->Y-up). Perfil automático: Equilibrado
+  // (P=1.11). raíces = banda de base; hojas = copa; flor/propágulo = cluster real
+  // del pod. Fáciles de afinar contra el modelo en producción.
   const HOTSPOTS_3D = [
-    { id: 'hotspot-1', azimuthDeg: 35, heightFraction: 0.20, label: 'Raíces fúlcreas',
+    { id: 'hotspot-1', azimuthDeg: 15,  heightFraction: 0.15, label: 'Raíces fúlcreas',
       popupTitle: 'Raíces fúlcreas',
       popupText: 'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.',
       popupImage: 'assets/hotspot-1.jpg' },
-    { id: 'hotspot-2', azimuthDeg: 315, heightFraction: 0.70, label: 'Hojas opuestas',
+    { id: 'hotspot-2', azimuthDeg: 40,  heightFraction: 0.72, label: 'Hojas opuestas',
       popupTitle: 'Hojas opuestas',
-      popupText: 'Contenido en preparación.',
+      popupText: '[ PENDIENTE \u2014 solo el label es visible en la referencia (BT) ]',
       popupImage: 'assets/hotspot-2.jpg' },
-    { id: 'hotspot-3', azimuthDeg: 100, heightFraction: 0.69, label: 'Flor y propágulo',
+    { id: 'hotspot-3', azimuthDeg: 345, heightFraction: 0.58, label: 'Flor y propágulo',
       popupTitle: 'Flor y propágulo',
-      popupText: 'Contenido en preparación.',
+      popupText: '[ PENDIENTE \u2014 sin texto en la referencia (BT) ]',
       popupImage: 'assets/hotspot-3.jpg' },
   ];
 
   const hotspotContainer = document.getElementById('hotspots3d');
-  const hotspotElements = {};
-  let modelBoxForHotspots = null;
+  const hotspotElements = {}; // { numberEl, anchorEl, lineEl }
+  let modelBoxForHotspots = null; // se completa una vez que el modelo carga (ver loader.load abajo)
   let modelCenterForHotspots = null;
 
+  // SVG compartido para todas las líneas de los hotspots — un solo elemento
+  // que cubre todo el viewer-wrap, con una línea por hotspot dentro.
   const hotspotSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   hotspotSvg.setAttribute('style', 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;');
   hotspotContainer.appendChild(hotspotSvg);
 
+  // Genera dinámicamente un popup por cada hotspot definido en HOTSPOTS_3D —
+  // misma estructura visual que el popup de badge (overlay + info-box + cierre),
+  // pero la cantidad real depende de cuántos hotspots tenga este D en particular.
   function createHotspotPopups() {
     const container = document.getElementById('hotspotPopupsContainer');
     HOTSPOTS_3D.forEach((h) => {
@@ -1265,9 +1701,16 @@
         </div>
       `;
 
+      // Contenido vía textContent (no innerHTML) para los campos de texto: evita
+      // que un BT con caracteres especiales en el título/descripción rompa el markup.
       overlay.querySelector('.hotspot-popup-title').textContent = h.popupTitle || '';
       overlay.querySelector('p').textContent = h.popupText || '';
 
+      // Estado de carga de la imagen: el placeholder arranca visible con
+      // shimmer mientras el archivo descarga; al cargar, la imagen lo
+      // reemplaza. Si falla (asset todavía no subido a assets/), el
+      // placeholder queda estático con su etiqueta (textContent, nunca
+      // innerHTML con strings externos).
       const img = overlay.querySelector('.hotspot-popup-image');
       const placeholder = overlay.querySelector('.hotspot-popup-image-placeholder');
       img.style.display = 'none';
@@ -1296,15 +1739,18 @@
 
   function createHotspotElements() {
     HOTSPOTS_3D.forEach((h, idx) => {
+      // Línea recta del punto de anclaje al número.
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('stroke', 'var(--gold-soft)');
       line.setAttribute('stroke-width', '1.5');
       hotspotSvg.appendChild(line);
 
+      // Punto esférico en la superficie del modelo (mismo color que la línea).
       const anchor = document.createElement('div');
       anchor.className = 'hotspot-anchor';
       hotspotContainer.appendChild(anchor);
 
+      // Círculo numerado al final de la línea — siempre visible, nunca se oculta.
       const number = document.createElement('div');
       number.className = 'hotspot-number';
       number.textContent = String(idx + 1);
@@ -1332,6 +1778,10 @@
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
 
+      // Geometría de base en espacio local, calculada UNA sola vez (E4): base
+      // robusta por percentil 1 + footprint (centro XZ y radio) de la banda
+      // inferior del 8% medida desde esa base. El encuadre (applyFraming) los
+      // reutiliza en cada resize sin volver a recorrer los vértices.
       const baseY = computeRobustBaseY(model, box);
       const footprint = computeBaseFootprint(model, box, baseY);
 
@@ -1340,8 +1790,14 @@
 
       modelGroup.add(model);
 
+      // Encuadre completo E1–E3: escala por doble restricción según el Perfil
+      // de Composición, base apoyada en y=0 y centrada por footprint, cámara a
+      // media altura, y proyección del suelo para posicionar sombra y anillo.
       applyFraming();
 
+      // Recalculamos el bounding box ya con la escala y posición finales aplicadas,
+      // en el espacio local de modelGroup — este es el que usan los hotspots para
+      // ubicarse sin importar la escala original del GLB.
       modelBoxForHotspots = new THREE.Box3().setFromObject(model);
       modelCenterForHotspots = modelBoxForHotspots.getCenter(new THREE.Vector3());
       computeHotspotAnchors(model);
@@ -1366,6 +1822,10 @@
     }
   );
 
+  // Rotación por arrastre (mouse y táctil) — SOLO horizontal (eje Y). Se eliminó
+  // la rotación vertical a pedido: simplifica la interacción, reduce el costo de
+  // cálculo (un eje menos que recalcular en cada frame), y evita ver el modelo
+  // desde ángulos raros (por abajo/arriba) que no aportan a una pieza de museo.
   let isDragging = false;
   let prevX = 0;
   let rotY = 0;
@@ -1392,9 +1852,29 @@
   }, { passive: true });
   renderer.domElement.addEventListener('touchend', onUp);
 
+  // Zoom eliminado a propósito: el modelo ya ocupa un porcentaje fijo y considerable
+  // de la pantalla desde el principio (es el protagonista), así que no hace falta
+  // acercarlo más. Esto también evita el desplazamiento desprolijo de los hotspots
+  // hacia afuera que ocurría al hacer zoom, y reduce código/superficie de bugs.
+
+  // ---------- HOTSPOTS ANCLADOS EN 3D (declaración movida arriba, antes de loader.load,
+  // para que modelBoxForHotspots exista cuando el callback de carga la usa) ----------
+
+  // Proyecta cada hotspot de coordenadas 3D (relativas al modelo) a coordenadas
+  // 2D de pantalla, considerando la rotación y el zoom actuales de la cámara.
+  // Esto es lo que hace que "viajen con la pieza" en vez de quedar fijos en pantalla.
+
+  // Distancia (en unidades de mundo, con el modelo ya escalado por el encuadre)
+  // que el número se aleja del punto de anclaje en la superficie. Suficiente
+  // para despegarse visualmente de la pieza sin alejarse demasiado.
   const HOTSPOT_LINE_LENGTH = 0.55;
+
+  // Margen de seguridad en píxeles para que el número nunca quede pegado
+  // al borde exacto del visor — siempre dentro de la pantalla con este respiro.
   const SCREEN_CLAMP_MARGIN = 18;
 
+  // Proyección mundo→pantalla (px relativos al mount). La usan los hotspots en
+  // cada frame y el anclaje de sombra+anillo (regla E3) al cargar y en resize.
   function projectToScreen(vec3) {
     const halfW = mount.clientWidth / 2;
     const halfH = mount.clientHeight / 2;
@@ -1406,32 +1886,61 @@
     };
   }
 
-  const hotspotAnchorsLocal = {};
+  // Anclajes reales calculados UNA VEZ cuando el modelo carga (no en cada frame:
+  // la geometría local no cambia, solo rota — recalcular el raycast en cada frame
+  // sería trabajo innecesario). Se completan en computeHotspotAnchors(), llamada
+  // desde loader.load() después de centrar/escalar el modelo.
+  const hotspotAnchorsLocal = {}; // { id: THREE.Vector3 en espacio local de modelGroup }
 
+  // Calcula el punto de anclaje real de cada hotspot sobre la superficie del
+  // modelo vía raycasting, una sola vez al cargar (en resize los anclajes se
+  // re-escalan linealmente dentro de applyFraming, sin repetir el raycast).
   function computeHotspotAnchors(model) {
     const anchorRaycaster = new THREE.Raycaster();
     const box = new THREE.Box3().setFromObject(model);
     const sphere = new THREE.Sphere();
     box.getBoundingSphere(sphere);
+    // Radio de partida para el rayo: bien afuera del modelo, para garantizar
+    // que el rayo hacia el centro siempre atraviese la superficie real. La
+    // esfera envolvente se usa ÚNICAMENTE para este radio de origen (E5).
     const rayOriginDistance = sphere.radius * 2.5;
 
     HOTSPOTS_3D.forEach((h) => {
       const azimuthRad = (h.azimuthDeg * Math.PI) / 180;
+      // E5 — la altura se resuelve sobre el BOUNDING BOX, no sobre la esfera
+      // envolvente: y = base + (tope − base) × heightFraction. Tras el encuadre,
+      // la base robusta (E4) apoya en y=0 y el tope queda en currentModelHeight,
+      // así que el contrato del BT (0 = base del modelo, 1 = tope) se cumple
+      // exacto. Calcularlo sobre la esfera lo rompía en toda pieza no esférica
+      // (en un cuenco ancho, 0 caía por debajo de la base física y 1 por encima
+      // del tope).
       const y = currentModelHeight * h.heightFraction;
 
+      // Punto de partida del rayo: bien afuera del modelo, en la dirección angular
+      // indicada, a la altura deseada.
       const origin = new THREE.Vector3(
         sphere.center.x + Math.sin(azimuthRad) * rayOriginDistance,
         y,
         sphere.center.z + Math.cos(azimuthRad) * rayOriginDistance
       );
+      // Importante: el rayo apunta al CENTRO GEOMÉTRICO REAL (sphere.center, sin fijar
+      // la altura Y), no a un punto horizontal a la misma altura del origen. Para formas
+      // anchas y poco altas (como un bowl/cuenco), un rayo puramente horizontal puede
+      // pasar por encima o por debajo de la geometría real sin tocarla nunca, especialmente
+      // cerca de la base o el borde superior. Apuntando al centro real, el rayo entra en
+      // ángulo y siempre cruza el volumen del objeto sin importar la altura relativa.
       const direction = sphere.center.clone().sub(origin).normalize();
 
       anchorRaycaster.set(origin, direction);
       const intersects = anchorRaycaster.intersectObject(model, true);
 
       if (intersects.length > 0) {
+        // Primer punto de impacto = superficie real exterior del modelo, en
+        // coordenadas LOCALES de modelGroup (donde vive el resto de la lógica).
         hotspotAnchorsLocal[h.id] = model.parent.worldToLocal(intersects[0].point.clone());
       } else {
+        // Fallback si el rayo no pega contra nada (geometría con huecos, etc.):
+        // usamos un punto en la superficie de la esfera envolvente, mejor que nada.
         const fallback = sphere.center.clone().add(
           new THREE.Vector3(Math.sin(azimuthRad), 0, Math.cos(azimuthRad)).multiplyScalar(sphere.radius)
         );
@@ -1467,18 +1976,34 @@
       const clampedX = Math.max(SCREEN_CLAMP_MARGIN, Math.min(w - SCREEN_CLAMP_MARGIN, numberScreen.x));
       const clampedY = Math.max(SCREEN_CLAMP_MARGIN, Math.min(hgt - SCREEN_CLAMP_MARGIN, numberScreen.y));
 
+      // El número SIEMPRE se muestra, incluso "detrás" del modelo — solo se oculta
+      // si queda literalmente detrás de la cámara (caso raro, rotación extrema).
       els.number.style.display = numberScreen.behindCamera ? 'none' : 'flex';
       els.number.style.left = `${clampedX}px`;
       els.number.style.top = `${clampedY}px`;
 
+      // Estimación de "lado visible" SIN raycasting: comparamos la dirección hacia
+      // afuera del anclaje (worldOutward) con la dirección hacia la cámara. Si apuntan
+      // en sentidos parecidos (dot product positivo), el punto mira hacia el espectador;
+      // si apuntan en sentidos opuestos, está del lado de atrás. Esto es una sola resta
+      // y un producto escalar — miles de veces más barato que lanzar un rayo contra
+      // toda la malla, y para el propósito de "atenuar cuando está del otro lado" da
+      // un resultado visualmente indistinguible del raycasting real.
       const toCameraDir = camera.position.clone().sub(worldAnchor).normalize();
-      const facingDot = worldOutward.dot(toCameraDir);
+      const facingDot = worldOutward.dot(toCameraDir); // 1 = de frente, -1 = de espaldas
 
+      // En vez de ocultar abruptamente, atenuamos la opacidad de forma gradual:
+      // visible al 100% cuando mira de frente, ~25% cuando está del otro lado.
+      // Esto da la sensación de "está ahí pero del otro lado" sin el costo de
+      // calcular oclusión geométrica real, y sin el "parpadeo" de mostrar/ocultar.
+      // (facingDot+1)/2 da 0 cuando está de espaldas y 1 cuando está de frente.
+      // Aplicamos una potencia <1 para "empujar" los valores intermedios y altos
+      // más cerca de 1 (más opaco de frente), sin subir el piso mínimo de atrás.
       const facing01 = (facingDot + 1) / 2;
       const opacity = numberScreen.behindCamera ? 0 : Math.max(0.25, Math.pow(facing01, 0.5));
       els.anchor.style.opacity = opacity;
       els.line.style.opacity = opacity * 0.8;
-      els.number.style.opacity = Math.max(0.55, opacity);
+      els.number.style.opacity = Math.max(0.55, opacity); // el número se atenúa menos: siempre debe notarse
 
       els.anchor.style.display = 'block';
       els.anchor.style.left = `${anchorScreen.x}px`;
@@ -1492,8 +2017,15 @@
     });
   }
 
+
+  // El renderizado 3D (rotación visual) corre a 60fps siempre, vía renderer.render().
+  // Pero recalcular las posiciones de los hotspots (que implica varios raycasting
+  // costosos contra la malla real) NO necesita esa frecuencia para verse fluido al
+  // ojo humano — lo limitamos a ~15 veces por segundo, reduciendo el costo total
+  // en más de 4x sin pérdida visual perceptible. Esta era la causa principal del
+  // lag al rotar y del consumo elevado de batería.
   let lastHotspotUpdate = 0;
-  const HOTSPOT_UPDATE_INTERVAL = 1000 / 30;
+  const HOTSPOT_UPDATE_INTERVAL = 1000 / 30; // ahora que no hay raycasting, el cálculo es barato — podemos subir a 30fps sin impacto real en batería
 
   function animate(timestamp) {
     requestAnimationFrame(animate);
@@ -1505,6 +2037,17 @@
   }
   animate();
 
+  // Resize (rotación de pantalla / cambio de viewport): se actualizan cámara y
+  // renderer Y se re-ejecuta el encuadre completo E1–E3 — incluida la
+  // reproyección del suelo para sombra y anillo — debounced, para no recorrer
+  // el cálculo decenas de veces durante una misma rotación del dispositivo.
+  // Todo ocurre JUNTO dentro del callback debounced, leyendo las dimensiones
+  // reales del mount en ese momento: si cámara/canvas y encuadre se
+  // actualizaran en momentos distintos (evento vs debounce), un reflow
+  // intermedio puede dejarlos inconsistentes y el modelo queda desfasado del
+  // anillo. Se observa el propio mount con ResizeObserver (además del resize
+  // de window) porque cubre también cambios de layout que no despachan
+  // 'resize' al documento.
   let resizeTimer = 0;
   function handleViewportChange() {
     clearTimeout(resizeTimer);
