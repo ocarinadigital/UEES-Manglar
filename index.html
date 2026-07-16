@@ -1,120 +1,124 @@
 <!DOCTYPE html>
 <!--
-  DISPLAYS/MANGLE-ROJO/INDEX.HTML — Tipo 2 (Display AR), Ocarina Digital
-  Cliente: UEES · Pieza: Mangle rojo (Rhizophora samoensis)
+  MANGLE ROJO (Rhizophora samoensis) — UEES Manglar
+  Tipo 2 (Display AR) — Ocarina Digital
+  Archivo único D+DT. Repo: ocarinadigital/UEES-Manglar (estructura plana).
+  Generado contra BT_Mangle_Rojo.pdf + STD v2 (Julio 2026).
 
-  Este archivo combina el D (#screen-display) y el Detalle (#screen-detalle)
-  en un único archivo, según Arquitectura_de_Archivo_Unico.pdf. Parte
-  verbatim de display-base.html para #screen-display (Ley de Encuadre E1-E5,
-  sistema de capas del visor, popups, manejo de errores) y de
-  Pantalla_Detalle_Instrucciones.pdf para #screen-detalle.
-
-  DECISIONES DE ESTA SESIÓN (confirmadas por Lucas):
-  - Badge SIN segunda línea "NT – Near Threatened" (se mantiene el patrón
-    de badge de una sola línea, como en sesiones anteriores).
-  - CTA con fondo bordó sólido (var(--gold)) y texto blanco.
-  - Ícono del badge: se mantiene el "i" info default del STD (no se usa
-    ícono de hoja ni de huella).
-
-  PENDIENTES SEÑALADOS EXPLÍCITAMENTE (no inventados):
-  - MODEL_URL vacío: falta el .glb real (lo provee el cliente).
-  - Textos de popup de Hotspot 2, Hotspot 3, variantes "Flor", "Dispersión"
-    y "Enraizamiento" del widget de Adaptaciones, y texto de justificación
-    del badge: todos marcados con "[PENDIENTE]" dentro del contenido.
-  - Posiciones de hotspots (azimuthDeg/heightFraction): estimadas de forma
-    preliminar (mismo criterio de la sesión anterior: raíces=base,
-    hojas=copa opuesta, flor/propágulo=zona alta) — A REVERIFICAR con
-    análisis real de vértices una vez que el GLB del cliente esté cargado
-    en Blender.
-  - Íconos nuevos propuestos al set STD (no estaban en el set inicial):
-    ic-anillos-concentricos, ic-flechas-circulares, ic-propagulo, ic-ondas,
-    ic-mangle-olas, ic-pez-cangrejo, ic-nube-co2. Se agregan acá al sprite
-    del archivo, siguiendo la especificación de dibujo (grilla 24x24, trazo
-    1.5px, sin relleno, currentColor) — quedan propuestos para el set STD.
-  - Ruta de "volver al escáner": este BT indica carpeta destino
-    "displays/mangle-rojo/", por lo que se usa el default STD
-    "../../index.html?volver=1". OJO: la memoria de proyecto indica que el
-    repo UEES-Manglar tiene estructura PLANA (sin subcarpeta displays/) —
-    revisar y ajustar esta ruta antes de deployar si el archivo termina
-    viviendo en otra profundidad real dentro del repo.
+  Decisiones de sesión aplicadas sobre el BT:
+  - Segunda línea "NT – Near Threatened" bajo el badge: SE MANTIENE AFUERA
+    (decisión de sesión anterior, ratificada en esta).
+  - CTA: bordó sólido (--gold) de fondo + texto blanco (no el default STD de
+    fondo --card / texto --gold).
+  - Ícono del badge: "i" info default del STD (no huella, no hoja).
+  - Línea de clasificación nueva (Nota 1 del BT): el nombre científico
+    "Rhizophora samoensis" ocupa el slot de .subtitle ya exist671ente (itálica);
+    la única línea NUEVA es "Familia Rhizophoraceae" con ícono "hoja" del
+    sprite STD, ubicada entre el .rule y el .subtitle.
+  - Selectores de Anatomía (segmentado) y Adaptaciones (stepper): uso directo
+    de los presets ya formalizados en Pantalla_Detalle_Instrucciones.pdf
+    (Catálogo de Selectores) — no son excepciones puntuales.
+  - Contenido PENDIENTE sin dato real en el BT (popup de badge, popup Hotspot
+    2 y 3, descripciones de Flor/Dispersión/Enraizamiento): texto neutro
+    "Contenido en preparación." — nunca se inventó contenido académico.
+  - Íconos sin equivalente en el set STD inicial (anillos concéntricos, flechas
+    circulares, ondas de agua, pez+cangrejo, nube CO2, mangle+olas) se dibujaron
+    siguiendo la especificación de dibujo (grilla 24×24, trazo 1.5px,
+    stroke-linecap:round, sin relleno, currentColor) y quedan propuestos para
+    incorporación al set STD.
 -->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mangle rojo — UEES — Ocarina Digital</title>
+<title>Mangle Rojo — UEES Manglar</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* ===== TOKENS COMPARTIDOS (LEY 8) — únicos para D y DT ===== */
+  /* ============================================================
+     PALETA STD — Tipo 2 (Display AR)
+     Bordó institucional UEES ocupa el slot de acento (--gold), no
+     es un dorado real: nombre de variable heredado del STD, el
+     valor es el bordó de marca (aproximado a ojo — BT Nota 7,
+     pendiente de confirmar contra manual real).
+     Fondo blanco puro explícito (BT Nota 8) — no se matchea el tono
+     azulado de las ilustraciones de referencia.
+  ============================================================ */
   :root{
+    --bg:#FFFFFF;
+    --bg-transparent:transparent;
+    --ink:#1C1B1A;
+    --gold:#7A1E39;
+    --gold-soft:#D9C7C2;
+    --card:#FAFAFA;
+
+    --dt-bg:#FFFFFF;
+    --dt-ink:#1C1B1A;
+    --dt-gold:#7A1E39;
+    --dt-gold-soft:#D9C7C2;
+    --dt-card:#FAFAFA;
+
+    /* LEY 9 — tonos derivados de paleta (fallback literal en línea anterior,
+       compatibilidad iOS < 16.2). Valores literales actualizados junto a la
+       paleta bordó de esta pieza. */
+    --accent-08:#F4EDEC;
+    --accent-08: color-mix(in srgb, var(--gold) 8%, var(--bg));
+    --accent-16:#EADBD9;
+    --accent-16: color-mix(in srgb, var(--gold) 16%, var(--bg));
+
+    --dt-accent-08:#F4EDEC;
+    --dt-accent-08: color-mix(in srgb, var(--dt-gold) 8%, var(--dt-bg));
+    --dt-accent-16:#EADBD9;
+    --dt-accent-16: color-mix(in srgb, var(--dt-gold) 16%, var(--dt-bg));
+
+    /* LEY 8 — Sistema de Movimiento único */
     --motion-fast:150ms;
     --motion-base:240ms;
     --motion-slow:320ms;
     --motion-ease:cubic-bezier(0.4, 0, 0.2, 1);
   }
-
   *{ box-sizing:border-box; margin:0; padding:0; }
-  html, body{ height:100%; }
-  /* LEY 3: color sólido explícito y LITERAL en <body> (no var(), body no
-     tiene acceso a las variables declaradas dentro de #screen-display /
-     #screen-detalle — ver Arquitectura_de_Archivo_Unico.pdf). */
-  body{
-    background-color:#FFFFFF;
-    color:#1C1B1A;
-    font-family:'Inter',sans-serif;
-    -webkit-font-smoothing:antialiased;
-    touch-action:manipulation;
-    overflow:hidden;
-  }
+  html, body{ height:100%; overflow:hidden; touch-action:manipulation; }
   *{ touch-action:manipulation; }
 
-  /* LEY 1: contenedor raíz fijo al viewport real. LEY 3: también lleva
-     background-color literal (respaldo detrás de las dos pantallas). */
-  .app-root{
-    position:fixed; inset:0;
-    background-color:#FFFFFF;
-    overflow:hidden;
-  }
+  /* LEY 3 — color sólido explícito en <body>, igual a --bg. Nunca gradiente. */
+  body{ background:#FFFFFF; color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
 
-  /* Arquitectura de Archivo Único — reglas de las dos pantallas */
+  /* ============================================================
+     ARQUITECTURA DE ARCHIVO ÚNICO — app-root + dos app-screen
+  ============================================================ */
+  .app-root{ position:fixed; inset:0; overflow:hidden; }
+
   .app-screen{
     position:absolute; inset:0; overflow:hidden;
     transition:transform var(--motion-slow) var(--motion-ease);
+    max-width:480px; margin:0 auto;
   }
   #screen-display{ transform:translateX(0%); }
-  #screen-detalle{ transform:translateX(100%); }
+  #screen-detalle{ transform:translateX(100%); background:var(--dt-bg); }
   #screen-display.slide-out{ transform:translateX(-30%); }
   #screen-detalle.slide-in{ transform:translateX(0%); }
 
-  /* Sprite de íconos STD: oculto, vive una sola vez al inicio del body. */
-  #std-icon-sprite{ display:none; }
-
-  /* ======================================================================
-     #screen-display — EL D (paleta UEES / Mangle rojo)
-     ====================================================================== */
-  #screen-display{
-    --bg:#FFFFFF;
-    --bg-transparent:transparent;
-    --ink:#1C1B1A;
-    --gold:#7A1E39;       /* bordó institucional UEES — ocupa el slot de acento */
-    --gold-soft:#D9C7C2;
-    --card:#FAFAFA;
-    /* LEY 9 — tonos derivados, con fallback literal precedente (iOS < 16.2) */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
   }
 
-  /* LEY 2: el hijo estructural que ocupa "toda la pantalla" hereda con
-     height:100% (nunca vh/dvh) — el fixed+inset real ya lo resuelve el
-     .app-root de nivel superior. max-width + margin conservan el centrado
-     horizontal en pantallas anchas. */
+  /* ============================================================
+     #screen-display — TODO el CSS de esta pantalla anidado bajo
+     su ID (Arquitectura_De_Archivo_Unico.pdf — Prefijo de CSS obligatorio)
+  ============================================================ */
+  #screen-display{
+    display:flex; flex-direction:column;
+  }
   #screen-display .screen{
-    position:relative; height:100%; max-width:480px; margin:0 auto;
+    position:fixed; inset:0; max-width:480px; margin:0 auto;
     background:var(--bg); display:flex; flex-direction:column; overflow:hidden;
   }
 
   #screen-display header{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
   #screen-display .logo{ display:flex; align-items:center; }
   #screen-display .logo-mark{ height:9vw; max-height:42px; width:auto; display:block; }
-  #screen-display .back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--gold); font-size:2.5vw; line-height:1.2; cursor:pointer; white-space:nowrap; }
+  #screen-display .back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--gold); font-size:2.5vw; line-height:1.2; cursor:pointer; white-space:nowrap; transition:transform var(--motion-fast) var(--motion-ease); }
+  #screen-display .back-link:active{ transform:scale(0.97); }
   #screen-display .back-link .arrow{ font-size:4.5vw; margin:0; line-height:1; }
 
   #screen-display .title-block{ padding:0.8vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
@@ -125,7 +129,9 @@
     font-size:2.5vw; font-family:'Inter', sans-serif; font-weight:600;
     letter-spacing:0.14em; text-transform:uppercase;
     padding:0.5vh 3.5vw; border-radius:100px; margin-bottom:0.8vh; cursor:pointer;
+    transition:transform var(--motion-fast) var(--motion-ease);
   }
+  #screen-display .badge:active{ transform:scale(0.97); }
   #screen-display .badge-info-icon{
     width:3.2vw; height:3.2vw; min-width:13px; min-height:13px; border-radius:50%;
     border:1px solid var(--gold-soft); display:flex; align-items:center; justify-content:center;
@@ -133,21 +139,20 @@
   }
 
   #screen-display h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.8vw; line-height:1.05; margin-bottom:0.6vh; }
-  #screen-display .rule{ width:36px; height:1px; background:var(--gold-soft); margin:0 auto 0.7vh auto; }
+  #screen-display .rule{ width:36px; height:1px; background:var(--gold-soft); margin:0 auto 0.6vh auto; }
 
-  /* Subtítulo/clasificación (BT): nombre científico en itálica — se
-     mantiene el slot .subtitle del STD, pero con estilo itálico en vez del
-     uppercase default (regla de nomenclatura binomial, nunca en mayúscula). */
-  #screen-display .subtitle{ font-style:italic; font-size:2.7vw; color:var(--gold); font-weight:600; letter-spacing:0.02em; margin-bottom:0.5vh; }
+  /* Línea de clasificación nueva (BT Nota 1): "Familia Rhizophoraceae" con
+     ícono hoja. Vive entre .rule y .subtitle — extensión tipográfica nueva,
+     no contemplada aún en Display_Instrucciones.pdf. Reutiliza el token
+     tipográfico del subtítulo para no introducir un tamaño nuevo por pieza. */
+  #screen-display .classification-line{
+    display:flex; align-items:center; justify-content:center; gap:1vw;
+    font-size:2.4vw; letter-spacing:0.08em; color:var(--gold); font-weight:600;
+    margin-bottom:0.5vh;
+  }
+  #screen-display .classification-line .ic{ width:3vw; height:3vw; min-width:12px; min-height:12px; flex-shrink:0; }
 
-  /* Línea de clasificación adicional (Nota 1 del BT — extensión tipográfica
-     nueva, no contemplada aún en Display_Instrucciones.pdf): ícono + texto
-     de familia botánica, debajo del nombre científico. Se propone para
-     formalización futura del STD si el resultado visual se aprueba. */
-  #screen-display .family-line{ display:flex; align-items:center; justify-content:center; gap:1.3vw; font-size:2.3vw; color:var(--ink); opacity:0.62; margin-bottom:0.9vh; }
-  #screen-display .family-line svg{ width:3.2vw; height:3.2vw; min-width:13px; min-height:13px; flex-shrink:0; }
-
-  #screen-display .description{ font-size:2.8vw; line-height:1.4; color:rgba(28,27,26,0.75); max-width:90%; margin:0 auto; }
+  #screen-display .subtitle{ font-size:2.6vw; letter-spacing:0.05em; color:var(--gold); font-weight:600; font-style:italic; margin-bottom:0.8vh; text-transform:none; }
 
   #screen-display .info-overlay{
     display:none; position:fixed; inset:0; background:rgba(28,27,25,0.45); z-index:50;
@@ -159,24 +164,23 @@
     padding:6vh 6vw 5vh 6vw; max-width:380px; width:100%; box-shadow:0 12px 36px rgba(0,0,0,0.25);
   }
   #screen-display .info-box-badge{
-    display:inline-block; border:1px solid var(--gold-soft); color:var(--gold); font-size:2.6vw;
-    font-weight:600; letter-spacing:0.14em; text-transform:uppercase; padding:0.6vh 4vw;
-    border-radius:100px; margin-bottom:2vh;
+    display:inline-block; border:1px solid var(--gold-soft); color:var(--gold);
+    font-size:2.6vw; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
+    padding:0.6vh 4vw; border-radius:100px; margin-bottom:2vh;
   }
   #screen-display .hotspot-popup-title{ font-family:'Cormorant Garamond',serif; font-size:4.6vw; font-weight:600; color:var(--ink); margin-bottom:1.5vh; }
   #screen-display .hotspot-popup-image{ width:100%; height:32vh; object-fit:cover; border-radius:10px; margin-bottom:1.5vh; display:block; }
-  #screen-display .hotspot-popup-image-placeholder{
-    width:100%; height:32vh; background:#E4E1DA; border-radius:10px; align-items:center; justify-content:center;
-    color:#9B968C; font-size:2.8vw; margin-bottom:1.5vh;
-  }
+  #screen-display .hotspot-popup-image-placeholder{ width:100%; height:32vh; background:#E4E1DA; border-radius:10px; align-items:center; justify-content:center; color:#9B968C; font-size:2.8vw; margin-bottom:1.5vh; }
   #screen-display .info-box p{ font-size:3.4vw; line-height:1.55; color:var(--ink); }
   #screen-display .info-close{
     position:absolute; top:14px; right:14px; width:7vw; height:7vw; max-width:30px; max-height:30px;
     border-radius:50%; border:1px solid var(--gold-soft); background:transparent; color:var(--gold);
     font-size:4vw; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:transform var(--motion-fast) var(--motion-ease);
   }
+  #screen-display .info-close:active{ transform:scale(0.97); }
 
-  #screen-display .viewer-wrap{ position:relative; margin:1vh 0 0 0; height:50%; flex-shrink:0; overflow:hidden; }
+  #screen-display .viewer-wrap{ position:relative; margin:1vh 0 0 0; flex:1 1 auto; min-height:45%; overflow:hidden; }
   #screen-display #viewer3d{ width:100%; height:85%; position:absolute; top:0; left:0; z-index:2; }
   #screen-display #viewer3d canvas{ touch-action:none; cursor:grab; display:block; }
 
@@ -184,25 +188,25 @@
   #screen-display .error-msg{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:3vw; color:#b33; text-align:center; padding:0 10vw; }
 
   #screen-display .viewer-shimmer{
-    position:absolute; left:50%; bottom:8%; transform:translateX(-50%); width:60%; height:14%;
-    border-radius:50%; background:#E4E1DA; z-index:1; pointer-events:none;
+    position:absolute; left:50%; bottom:8%; transform:translateX(-50%);
+    width:60%; height:14%; border-radius:50%; background:#E4E1DA; z-index:1; pointer-events:none;
   }
   #screen-display .shimmer{ position:relative; overflow:hidden; }
   #screen-display .shimmer::after{
     content:''; position:absolute; inset:0;
     background:linear-gradient(100deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%);
-    transform:translateX(-100%);
-    animation:shimmerSweep var(--motion-slow) var(--motion-ease) infinite;
+    transform:translateX(-100%); animation:shimmerSweep var(--motion-slow) var(--motion-ease) infinite;
   }
   @keyframes shimmerSweep{ to{ transform:translateX(100%); } }
 
   #screen-display .hotspot-anchor{ position:absolute; width:1.6vw; height:1.6vw; max-width:8px; max-height:8px; border-radius:50%; background:var(--gold-soft); pointer-events:none; transform:translate(-50%,-50%); }
   #screen-display .hotspot-number{
     position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%;
-    background:#2A1116; border:1.4px solid var(--gold); color:#F2D9C9; display:flex; align-items:center;
+    background:#1C2333; border:1.4px solid var(--gold); color:#EAD9D2; display:flex; align-items:center;
     justify-content:center; font-size:3.2vw; font-weight:700; cursor:pointer; transform:translate(-50%,-50%);
-    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    box-shadow:0 2px 6px rgba(0,0,0,0.25); transition:transform var(--motion-fast) var(--motion-ease);
   }
+  #screen-display .hotspot-number:active{ transform:translate(-50%,-50%) scale(0.97); }
   #screen-display .hotspot-number::after{
     content:''; position:absolute; inset:0; border-radius:50%; border:1.4px solid var(--gold-soft);
     animation: hotspotBreathe 2.4s var(--motion-ease) infinite;
@@ -218,158 +222,197 @@
     gap:1.8vw; color:var(--gold); font-size:2.6vw; white-space:nowrap; z-index:4;
   }
   #screen-display .hand-icon-wrap{
-    width:7vw; max-width:30px; height:7vw; max-height:30px; flex-shrink:0; background-color:var(--gold); opacity:0.85;
-    -webkit-mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png');
-    mask-image:url('https://raw.githubusercontent.com/ocarinadigital/ocarina-test-assets/main/Icono_Rotar.png');
-    -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    width:7vw; max-width:30px; height:7vw; max-height:30px; flex-shrink:0;
+    background-color:var(--gold); opacity:0.85;
+    -webkit-mask-image:url('assets/Icono_Rotar.png'); mask-image:url('assets/Icono_Rotar.png');
+    -webkit-mask-size:contain; mask-size:contain;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
     -webkit-mask-position:center; mask-position:center;
   }
 
-  /* CTA — DECISIÓN DE ESTA SESIÓN: fondo bordó sólido + texto blanco
-     (en vez del default STD --card/--gold). Sin subtítulo (Nota 10 del BT:
-     el STD actual del CTA ya no tiene ese campo). */
+  /* CTA — decisión de sesión: bordó sólido de fondo + texto blanco
+     (no el default STD de fondo --card / texto --gold). Sin subtítulo
+     (BT Nota 10 — el STD actual del CTA ya no tiene ese campo). */
   #screen-display .cta-detail{
-    margin:0 6vw 1.2vh 6vw; background:var(--gold); border:1px solid var(--gold);
+    margin:0 6vw 1.6vh 6vw; background:var(--gold); border:1px solid var(--gold);
     border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center;
     justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0;
     font-family:'Inter',sans-serif; position:relative; overflow:hidden;
+    transition:transform var(--motion-fast) var(--motion-ease);
   }
+  #screen-display .cta-detail:active{ transform:scale(0.97); }
   #screen-display .cta-title{ text-align:center; font-size:4.4vw; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#FFFFFF; }
   #screen-display .cta-arrow{ color:#FFFFFF; opacity:0.85; font-size:4.5vw; flex-shrink:0; }
+
   #screen-display .cta-shine{
     position:absolute; top:0; left:-40%; width:26%; height:100%;
-    background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%);
+    background:linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%);
     transform:skewX(-20deg); pointer-events:none;
     animation:ctaShineSweep 5s var(--motion-ease) infinite;
   }
   @keyframes ctaShineSweep{ 0%{ left:-40%; } 18%{ left:140%; } 100%{ left:140%; } }
 
-  #screen-display .badge, #screen-display .back-link, #screen-display .info-close,
-  #screen-display .cta-detail, #screen-display .hotspot-number{
-    transition:transform var(--motion-fast) var(--motion-ease);
-  }
-  #screen-display .badge:active, #screen-display .back-link:active,
-  #screen-display .info-close:active, #screen-display .cta-detail:active{ transform:scale(0.97); }
-  #screen-display .hotspot-number:active{ transform:translate(-50%,-50%) scale(0.97); }
-
-  /* ======================================================================
-     #screen-detalle — EL DT (Pantalla_Detalle_Instrucciones.pdf)
-     Todo el CSS anidado bajo #screen-detalle; todas las clases con
-     prefijo dt- (evita colisión de nombres con #screen-display).
-     ====================================================================== */
-  #screen-detalle{
-    --dt-bg:#FFFFFF;
-    --dt-ink:#1C1B1A;
-    --dt-gold:#7A1E39;
-    --dt-gold-soft:#D9C7C2;
-    --dt-card:#FAFAFA;
-    background-color:#FFFFFF; /* LEY 10: el DT conserva SIEMPRE su fondo opaco propio */
-    display:flex; flex-direction:column; font-family:'Inter',sans-serif; color:var(--dt-ink);
-  }
-
-  #screen-detalle .dt-header{ display:flex; align-items:center; justify-content:space-between; padding:1.8vh 6vw 0 6vw; flex-shrink:0; }
-  #screen-detalle .dt-back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--dt-gold); font-size:2.5vw; cursor:pointer; white-space:nowrap; transition:transform var(--motion-fast) var(--motion-ease); }
-  #screen-detalle .dt-back-link:active{ transform:scale(0.97); }
-  #screen-detalle .dt-back-link .dt-arrow{ font-size:4.5vw; line-height:1; }
-  #screen-detalle .dt-logo-mark{ height:8vw; max-height:36px; width:auto; display:block; }
-
-  #screen-detalle .dt-title-block{ padding:0.8vh 7vw 1.4vh 7vw; text-align:center; flex-shrink:0; }
-  #screen-detalle .dt-h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.4vw; line-height:1.05; }
-  #screen-detalle .dt-rule{ width:36px; height:1px; background:var(--dt-gold-soft); margin:0.7vh auto 0 auto; }
-
-  #screen-detalle .dt-tabs-nav{ display:flex; flex-direction:row; border-bottom:1px solid var(--dt-gold-soft); flex-shrink:0; }
-  #screen-detalle .dt-tab-btn{
-    flex:1; text-align:center; padding:1.6vh 1vw 1.3vh 1vw; font-size:3vw; font-weight:600;
-    color:var(--dt-ink); opacity:0.48; background:transparent; border:none; border-bottom:2px solid transparent;
-    cursor:pointer; transition:opacity var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
-    font-family:'Inter',sans-serif;
-  }
-  #screen-detalle .dt-tab-btn:active{ transform:scale(0.97); }
-  #screen-detalle .dt-tab-btn.dt-active{ opacity:1; color:var(--dt-gold); border-bottom-color:var(--dt-gold); }
-
-  /* Área de contenido: overflow:hidden + min-height:0 permitidos SOLO acá
-     (contenedor sin contenido apilable propio) y en .dt-tab-panel (donde
-     corre la rutina de fit). Ningún grupo interno los lleva. */
-  #screen-detalle .dt-content-area{ flex:1; min-height:0; overflow:hidden; position:relative; }
-  #screen-detalle .dt-tab-panel{
-    position:absolute; inset:0; display:none; flex-direction:column; overflow:hidden;
-    padding:2vh 6vw 2.2vh 6vw; gap:2vh; justify-content:space-between;
-  }
-  #screen-detalle .dt-tab-panel.dt-active{ display:flex; }
-
-  /* ---- Widget interactivo (Grupo visual) ---- */
-  #screen-detalle .dt-widget{ display:flex; flex-direction:column; border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden; flex-shrink:0; }
-  #screen-detalle .dt-widget-image-wrap{ width:100%; aspect-ratio:4/3; overflow:hidden; background:#ECEAE6; position:relative; }
-  #screen-detalle .dt-widget-image{ width:100%; height:100%; object-fit:cover; display:block; }
-  #screen-detalle .dt-widget-image-placeholder{ width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9B968C; font-size:2.4vw; text-align:center; padding:0 4vw; }
-  #screen-detalle .dt-widget-body{ padding:1.6vh 4vw 1.4vh 4vw; display:flex; flex-direction:column; gap:0.7vh; }
-  #screen-detalle .dt-widget-name{ font-family:'Cormorant Garamond',serif; font-size:3.6vw; font-weight:600; color:var(--dt-ink); }
-  /* Descripción de widget: SIN padding lateral propio (ya lo hereda del body) — spec: se extiende al máximo. */
-  #screen-detalle .dt-widget-desc{ font-size:2.4vw; line-height:1.5; color:rgba(28,27,26,0.78); }
-  #screen-detalle .dt-widget-selectors{ border-top:1px solid var(--dt-gold-soft); }
-
-  /* Catálogo de Selectores — Segmentado (Anatomía) */
-  #screen-detalle .dt-selector-segmented{ display:flex; width:100%; }
-  #screen-detalle .dt-seg-btn{
-    flex:1; display:flex; flex-direction:column; align-items:center; gap:0.5vh; padding:1.3vh 1vw;
-    font-size:2.3vw; color:var(--dt-ink); background:transparent; border:none; border-right:0.5px solid var(--dt-gold-soft);
-    cursor:pointer; transition:background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
-    font-family:'Inter',sans-serif; text-align:center;
-  }
-  #screen-detalle .dt-seg-btn:last-child{ border-right:none; }
-  #screen-detalle .dt-seg-btn.dt-active{ background:#EADBDF; background:color-mix(in srgb, var(--dt-gold) 16%, var(--dt-bg)); color:var(--dt-gold); }
-  #screen-detalle .dt-seg-btn svg{ width:4.2vw; height:4.2vw; min-width:16px; min-height:16px; }
-  #screen-detalle .dt-seg-btn:active{ transform:scale(0.97); }
-
-  /* Catálogo de Selectores — Stepper horizontal (Adaptaciones) */
-  #screen-detalle .dt-selector-stepper{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.6vh 4vw 1.2vh 4vw; position:relative; }
-  #screen-detalle .dt-step{ display:flex; flex-direction:column; align-items:center; gap:0.6vh; flex:1; position:relative; cursor:pointer; }
-  #screen-detalle .dt-step:active{ transform:scale(0.97); }
-  #screen-detalle .dt-step-connector{ position:absolute; top:3vw; left:-50%; width:100%; height:1px; background:var(--dt-gold-soft); z-index:1; }
-  #screen-detalle .dt-step-dot{
-    width:6vw; height:6vw; max-width:26px; max-height:26px; border-radius:50%; border:1px solid var(--dt-gold-soft);
-    display:flex; align-items:center; justify-content:center; background:var(--dt-card); position:relative; z-index:2;
-    color:var(--dt-gold); transition:background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
-  }
-  #screen-detalle .dt-step-dot svg{ width:3.4vw; height:3.4vw; min-width:13px; min-height:13px; }
-  #screen-detalle .dt-step.dt-active .dt-step-dot{ background:var(--dt-gold); border-color:var(--dt-gold); color:#FFFFFF; }
-  #screen-detalle .dt-step-label{ font-size:2.1vw; text-align:center; color:var(--dt-ink); opacity:0.65; }
-  #screen-detalle .dt-step.dt-active .dt-step-label{ opacity:1; color:var(--dt-gold); font-weight:600; }
-
-  /* ---- Bloque de texto (Grupo textual) ---- */
-  #screen-detalle .dt-text-block{ display:flex; flex-direction:column; gap:0.9vh; flex-shrink:0; }
-  #screen-detalle .dt-text-title{ font-family:'Cormorant Garamond',serif; font-size:3.7vw; font-weight:700; color:var(--dt-ink); }
-  #screen-detalle .dt-text-body{ font-size:2.6vw; line-height:1.55; color:rgba(28,27,26,0.8); }
-
-  /* ---- Hero + (sin epígrafe en este caso: BT no define datos de epígrafe
-     para Ecosistema, solo imagen hero) ---- */
-  #screen-detalle .dt-hero-group{ display:flex; flex-direction:column; gap:0; flex-shrink:0; }
-  #screen-detalle .dt-hero-img{ width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:14px; border:1px solid var(--dt-gold-soft); display:block; background:#ECEAE6; }
-  #screen-detalle .dt-hero-img-placeholder{
-    width:100%; aspect-ratio:16/10; border-radius:14px; border:1px solid var(--dt-gold-soft); background:#ECEAE6;
-    display:flex; align-items:center; justify-content:center; color:#9B968C; font-size:2.4vw; text-align:center; padding:0 6vw;
-  }
-
-  /* ---- Boxes académicos (Grupo complementario / textual) — preset
-     acordeon-academico, default con 3+ boxes en un mismo tab ---- */
-  #screen-detalle .dt-academic-boxes{ display:flex; flex-direction:column; border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden; flex-shrink:0; }
-  #screen-detalle .dt-academic-box{ border-bottom:0.5px solid var(--dt-gold-soft); }
-  #screen-detalle .dt-academic-box:last-child{ border-bottom:none; }
-  #screen-detalle .dt-academic-box-header{ display:flex; align-items:center; gap:2.2vw; padding:1.6vh 4vw; cursor:pointer; }
-  #screen-detalle .dt-academic-box-header:active{ transform:scale(0.99); }
-  #screen-detalle .dt-academic-box-header svg{ width:4.6vw; height:4.6vw; min-width:18px; min-height:18px; color:var(--dt-gold); flex-shrink:0; }
-  #screen-detalle .dt-academic-box-title{ flex:1; font-size:2.7vw; font-weight:600; color:var(--dt-ink); }
-  #screen-detalle .dt-academic-box-chevron{ width:3.4vw; height:3.4vw; min-width:12px; min-height:12px; color:var(--dt-ink); opacity:0.5; transition:transform var(--motion-base) var(--motion-ease); flex-shrink:0; }
-  #screen-detalle .dt-academic-box.dt-open .dt-academic-box-chevron{ transform:rotate(180deg); }
-  #screen-detalle .dt-academic-box-content{ max-height:0; overflow:hidden; transition:max-height var(--motion-base) var(--motion-ease); }
-  #screen-detalle .dt-academic-box.dt-open .dt-academic-box-content{ max-height:240px; }
-  #screen-detalle .dt-academic-box-text{ padding:0 4vw 1.6vh 4vw; font-size:2.4vw; line-height:1.5; color:rgba(28,27,26,0.8); }
-
-  /* LEY 8 — anulación total del movimiento bajo prefers-reduced-motion. */
   @media (prefers-reduced-motion: reduce){
-    *, *::before, *::after{ animation:none !important; transition:none !important; }
     #screen-display .cta-shine{ display:none; }
     #screen-display .shimmer::after{ display:none; }
+  }
+
+  /* ============================================================
+     #screen-detalle — TODO el CSS de esta pantalla anidado bajo su
+     ID, y TODAS sus clases con prefijo dt- (Arquitectura de Archivo
+     Único — Prefijo de CSS obligatorio)
+  ============================================================ */
+  #screen-detalle{
+    background:var(--dt-bg); color:var(--dt-ink); font-family:'Inter',sans-serif;
+    display:flex; flex-direction:column;
+  }
+
+  #screen-detalle .dt-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1.5vh 6vw 0 6vw; flex-shrink:0;
+  }
+  #screen-detalle .dt-back-link{
+    display:flex; flex-direction:row; align-items:center; gap:1.2vw;
+    color:var(--dt-gold); font-size:2.5vw; line-height:1.2; cursor:pointer; white-space:nowrap;
+    transition:transform var(--motion-fast) var(--motion-ease);
+  }
+  #screen-detalle .dt-back-link:active{ transform:scale(0.97); }
+  #screen-detalle .dt-back-link .dt-arrow{ font-size:4.5vw; margin:0; line-height:1; }
+  #screen-detalle .dt-logo-mark{ height:8vw; max-height:36px; width:auto; display:block; }
+
+  #screen-detalle .dt-title-block{ padding:1vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
+  #screen-detalle .dt-h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:6.4vw; line-height:1.05; margin-bottom:0.6vh; }
+  #screen-detalle .dt-rule{ width:36px; height:1px; background:var(--dt-gold-soft); margin:0 auto; }
+
+  #screen-detalle .dt-tabs-nav{
+    display:flex; flex-shrink:0; margin-top:1.4vh; border-bottom:1px solid var(--dt-gold-soft);
+    padding:0 4vw;
+  }
+  #screen-detalle .dt-tab-btn{
+    flex:1; background:none; border:none; font-family:'Inter',sans-serif; font-weight:600;
+    font-size:3vw; color:rgba(28,27,26,0.5); padding:1.2vh 1vw 1.2vh 1vw; cursor:pointer;
+    border-bottom:2px solid transparent; margin-bottom:-1px;
+    transition:transform var(--motion-fast) var(--motion-ease), color var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
+  }
+  #screen-detalle .dt-tab-btn:active{ transform:scale(0.97); }
+  #screen-detalle .dt-tab-btn.active{ color:var(--dt-gold); border-bottom-color:var(--dt-gold); }
+
+  #screen-detalle .dt-content-area{ flex:1 1 auto; min-height:0; overflow:hidden; position:relative; }
+
+  #screen-detalle .dt-tab-panel{
+    display:none; flex-direction:column; overflow:hidden; height:100%;
+    padding:2vh 6vw 2vh 6vw; gap:2vh; justify-content:space-between;
+
+    /* variables de fit — controladas por la rutina de checkeo JS */
+    --dt-gap-scale:2vh;
+    --dt-pad-v-scale:1.5vh;
+    --dt-pad-h-scale:3vw;
+    --dt-image-scale:1;
+    --dt-font-scale-secondary:1;
+    --dt-font-scale-primary:1;
+  }
+  #screen-detalle .dt-tab-panel.active{ display:flex; }
+  #screen-detalle .dt-tab-panel{ gap:var(--dt-gap-scale); }
+
+  /* Regla operativa (Aislamiento de overflow en el DT): todo hijo directo de
+     .dt-tab-panel es flex-shrink:0 sin excepción. overflow/min-height quedan
+     reservados a .dt-tab-panel y .dt-content-area — nunca a un grupo interno. */
+  #screen-detalle .dt-tab-panel > *{ flex-shrink:0; }
+
+  /* --- Grupo Visual: Widget interactivo (selector) --- */
+  #screen-detalle .dt-widget{
+    display:flex; flex-direction:column; border:1px solid var(--dt-gold-soft); border-radius:14px;
+    overflow:hidden;
+  }
+  #screen-detalle .dt-widget-media-wrap{ width:100%; position:relative; background:#EDEAE6; }
+  #screen-detalle .dt-widget-media{
+    width:100%; aspect-ratio:16/10; object-fit:cover; display:block;
+    transform:scale(var(--dt-image-scale)); transform-origin:center;
+  }
+  #screen-detalle .dt-widget-media-placeholder{
+    width:100%; aspect-ratio:16/10; background:#E4E1DA; display:flex; align-items:center;
+    justify-content:center; color:#9B968C; font-size:calc(2.4vw * var(--dt-font-scale-secondary));
+    text-align:center; padding:2vw;
+  }
+  #screen-detalle .dt-widget-body{ padding:calc(1.5vh * var(--dt-pad-v-scale) / 1.5vh) calc(3vw * var(--dt-pad-h-scale) / 3vw); display:flex; flex-direction:column; gap:0.8vh; }
+  #screen-detalle .dt-widget-name{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:calc(3.6vw * var(--dt-font-scale-primary)); color:var(--dt-ink); }
+  #screen-detalle .dt-widget-desc{ font-size:calc(2.4vw * var(--dt-font-scale-secondary)); line-height:1.5; color:rgba(28,27,26,0.78); padding:0; }
+
+  /* Selector Segmentado — preset del Catálogo de Selectores */
+  #screen-detalle .dt-selector-segmented{
+    display:flex; border:1px solid var(--dt-gold-soft); border-radius:10px; overflow:hidden;
+    margin-top:0.4vh;
+  }
+  #screen-detalle .dt-segmented-btn{
+    flex:1; background:transparent; border:none; border-right:0.5px solid var(--dt-gold-soft);
+    font-family:'Inter',sans-serif; font-size:calc(3vw * var(--dt-font-scale-primary)); font-weight:600;
+    color:var(--dt-ink); padding:1.3vh 1.5vw; cursor:pointer; display:flex; flex-direction:column;
+    align-items:center; gap:0.6vh; transition:transform var(--motion-fast) var(--motion-ease), background var(--motion-base) var(--motion-ease), color var(--motion-base) var(--motion-ease);
+  }
+  #screen-detalle .dt-segmented-btn:last-child{ border-right:none; }
+  #screen-detalle .dt-segmented-btn:active{ transform:scale(0.97); }
+  #screen-detalle .dt-segmented-btn .dt-ic{ width:4.2vw; height:4.2vw; min-width:16px; min-height:16px; }
+  #screen-detalle .dt-segmented-btn.active{ background:var(--dt-accent-16); color:var(--dt-gold); }
+  #screen-detalle .dt-segmented-btn span.dt-seg-label{ font-size:2.4vw; line-height:1.15; text-align:center; }
+
+  /* Selector Stepper — preset del Catálogo de Selectores */
+  #screen-detalle .dt-selector-stepper{
+    display:flex; align-items:flex-start; margin-top:0.6vh;
+  }
+  #screen-detalle .dt-stepper-item{
+    display:flex; flex-direction:column; align-items:center; flex:1; gap:0.8vh; position:relative;
+    cursor:pointer; transition:transform var(--motion-fast) var(--motion-ease);
+  }
+  #screen-detalle .dt-stepper-item:active{ transform:scale(0.97); }
+  #screen-detalle .dt-stepper-row{ display:flex; align-items:center; width:100%; }
+  #screen-detalle .dt-stepper-connector{
+    flex:1; height:1px; background:var(--dt-gold-soft); margin-top:calc(-1 * 0.1vh);
+  }
+  #screen-detalle .dt-stepper-item:first-child .dt-stepper-connector.dt-connector-left{ visibility:hidden; }
+  #screen-detalle .dt-stepper-item:last-child .dt-stepper-connector.dt-connector-right{ visibility:hidden; }
+  #screen-detalle .dt-stepper-dot{
+    width:7vw; height:7vw; max-width:30px; max-height:30px; border-radius:50%;
+    border:1px solid var(--dt-gold-soft); background:var(--dt-bg); display:flex; align-items:center;
+    justify-content:center; flex-shrink:0; transition:background var(--motion-base) var(--motion-ease), border-color var(--motion-base) var(--motion-ease);
+  }
+  #screen-detalle .dt-stepper-dot .dt-ic{ width:3.6vw; height:3.6vw; min-width:14px; min-height:14px; color:var(--dt-gold); }
+  #screen-detalle .dt-stepper-item.active .dt-stepper-dot{ background:var(--dt-gold); border-color:var(--dt-gold); }
+  #screen-detalle .dt-stepper-item.active .dt-stepper-dot .dt-ic{ color:#FFFFFF; }
+  #screen-detalle .dt-stepper-label{ font-size:2.2vw; text-align:center; color:rgba(28,27,26,0.7); font-weight:600; }
+  #screen-detalle .dt-stepper-item.active .dt-stepper-label{ color:var(--dt-gold); }
+
+  /* --- Grupo Textual: bloque de texto intro --- */
+  #screen-detalle .dt-text-block{ display:flex; flex-direction:column; gap:0.8vh; }
+  #screen-detalle .dt-section-title{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:calc(3.7vw * var(--dt-font-scale-primary)); color:var(--dt-ink); }
+  #screen-detalle .dt-paragraph{ font-size:calc(2.6vw * var(--dt-font-scale-secondary)); line-height:1.55; color:rgba(28,27,26,0.8); }
+
+  /* --- Grupo Visual: hero-group (imagen + epígrafe como unidad) --- */
+  #screen-detalle .dt-hero-group{ display:flex; flex-direction:column; gap:0; border:1px solid var(--dt-gold-soft); border-radius:14px; overflow:hidden; }
+  #screen-detalle .dt-hero-img{ width:100%; aspect-ratio:16/10; object-fit:cover; display:block; transform:scale(var(--dt-image-scale)); transform-origin:center; }
+  #screen-detalle .dt-hero-img-placeholder{ width:100%; aspect-ratio:16/10; background:#E4E1DA; display:flex; align-items:center; justify-content:center; color:#9B968C; font-size:2.6vw; text-align:center; padding:2vw; }
+
+  /* --- Grupo Complementario: boxes académicos --- */
+  #screen-detalle .dt-academic-boxes{ display:flex; flex-direction:column; gap:1.2vh; }
+  #screen-detalle .dt-academic-box{
+    display:flex; align-items:flex-start; gap:2.2vw; border:1px solid var(--dt-gold-soft);
+    border-radius:12px; padding:calc(1.5vh) calc(3vw);
+  }
+  #screen-detalle .dt-academic-box .dt-ic{ width:5vw; height:5vw; min-width:20px; min-height:20px; color:var(--dt-gold); flex-shrink:0; margin-top:0.2vh; }
+  #screen-detalle .dt-academic-box-body{ display:flex; flex-direction:column; gap:0.4vh; }
+  #screen-detalle .dt-academic-box-title{ font-size:calc(2.7vw * var(--dt-font-scale-primary)); font-weight:700; color:var(--dt-ink); }
+  #screen-detalle .dt-academic-box-text{ font-size:calc(2.4vw * var(--dt-font-scale-secondary)); line-height:1.5; color:rgba(28,27,26,0.78); }
+
+  /* Estados de carga de imágenes (shimmer STD) */
+  #screen-detalle .dt-shimmer{ position:relative; overflow:hidden; }
+  #screen-detalle .dt-shimmer::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(100deg, transparent 25%, rgba(255,255,255,0.6) 50%, transparent 75%);
+    transform:translateX(-100%); animation:dtShimmerSweep var(--motion-slow) var(--motion-ease) infinite;
+  }
+  @keyframes dtShimmerSweep{ to{ transform:translateX(100%); } }
+
+  @media (prefers-reduced-motion: reduce){
+    #screen-detalle .dt-shimmer::after{ display:none; }
   }
 </style>
 <script type="importmap">
@@ -385,89 +428,96 @@
 
 <div class="app-root">
 
-  <!-- ===== Sprite de íconos STD — recurso compartido D + DT (único, al
-       inicio del body). Incluye el set inicial usado por esta pieza y los
-       íconos NUEVOS propuestos (comentados abajo), dibujados siguiendo la
-       especificación (grilla 24x24, trazo 1.5, sin relleno, currentColor). ===== -->
-  <svg id="std-icon-sprite" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <!-- Set inicial STD -->
-      <symbol id="ic-hoja" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4.5 19.5C4.5 10.5 10.5 4.5 19.5 4.5C19.5 13.5 13.5 19.5 4.5 19.5Z"/>
-        <path d="M4.5 19.5L14 10"/>
-      </symbol>
-      <symbol id="ic-flor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="2"/>
-        <circle cx="12" cy="6.3" r="2.3"/>
-        <circle cx="12" cy="17.7" r="2.3"/>
-        <circle cx="6.3" cy="12" r="2.3"/>
-        <circle cx="17.7" cy="12" r="2.3"/>
-      </symbol>
-      <symbol id="ic-raiz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3V10"/>
-        <path d="M12 10C9 11 8 14 7 20"/>
-        <path d="M12 10C11 12.5 11 16 12 20"/>
-        <path d="M12 10C15 11 16 14 17 20"/>
-      </symbol>
-
-      <!-- ===== Íconos NUEVOS propuestos (no estaban en el set inicial) ===== -->
-      <!-- ic-anillos-concentricos: corte transversal de tronco, para la
-           variante "Tronco" del widget de Anatomía. -->
-      <symbol id="ic-anillos-concentricos" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"/>
-        <circle cx="12" cy="12" r="6.2"/>
-        <circle cx="12" cy="12" r="9.3"/>
-      </symbol>
-      <!-- ic-flechas-circulares: sistema circulatorio (agua/nutrientes). -->
-      <symbol id="ic-flechas-circulares" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4.2 12a7.8 7.8 0 0 1 13.3-5.7"/>
-        <path d="M19.8 12a7.8 7.8 0 0 1-13.3 5.7"/>
-        <path d="M17.5 3.6v3.2h-3.2"/>
-        <path d="M6.5 20.4v-3.2h3.2"/>
-      </symbol>
-      <!-- ic-propagulo: propágulo del mangle (plántula alargada). -->
-      <symbol id="ic-propagulo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3.2c1.4 0 2.1 1.1 2.1 3.3 0 6-1 12-2.1 15.7-1.1-3.7-2.1-9.7-2.1-15.7 0-2.2.7-3.3 2.1-3.3Z"/>
-        <path d="M12 3.2V1.8"/>
-      </symbol>
-      <!-- ic-ondas: dispersión por agua. -->
-      <symbol id="ic-ondas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2.5 7.5c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
-        <path d="M2.5 12.5c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
-        <path d="M2.5 17.5c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
-      </symbol>
-      <!-- ic-mangle-olas: protección costera (Ecosistema). -->
-      <symbol id="ic-mangle-olas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 3.2v8.2"/>
-        <path d="M12 6.4c-2.1 0-3.1 1-3.1 2.9"/>
-        <path d="M12 8.6c2.1 0 3.1 1 3.1 2.9"/>
-        <path d="M2.5 18c2-2 4-2 6 0s4 2 6 0 4-2 6.5 0"/>
-        <path d="M8.2 21c1-4 2-7 3.8-9 1.8 2 2.8 5 3.8 9"/>
-      </symbol>
-      <!-- ic-pez-cangrejo: refugio de fauna (Ecosistema). -->
-      <symbol id="ic-pez-cangrejo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2.8 12.5c3.2-4.2 8.4-6.3 12.6-4.2 2 1 4 3.1 5.8 4.2-1.8 1.1-3.8 3.2-5.8 4.2-4.2 2.1-9.4-.1-12.6-4.2Z"/>
-        <path d="M15.4 10.6l3-2.5v8.8l-3-2.5"/>
-        <circle cx="7.3" cy="11.5" r="0.5"/>
-      </symbol>
-      <!-- ic-nube-co2: carbono azul (Ecosistema). -->
-      <symbol id="ic-nube-co2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M7 16.2a4 4 0 0 1 .5-8 5 5 0 0 1 9.6-1.4A4.4 4.4 0 0 1 16.9 16.2H7Z"/>
-        <path d="M12 16.2v4.6"/>
-        <path d="M9.6 18.6L12 21l2.4-2.4"/>
-      </symbol>
-    </defs>
+  <!-- ============================================================
+       SPRITE DE ÍCONOS STD — recurso compartido D + DT (Arquitectura
+       de Archivo Único). Set STD usado: hoja, flor, raiz, info.
+       Set nuevo propuesto para esta pieza (no en el set inicial):
+       anillos-concentricos, flechas-circulares, ondas-agua,
+       pez-cangrejo, nube-co2, mangle-olas. Dibujados con la misma
+       especificación (grilla 24×24, trazo 1.5px, stroke-linecap:round,
+       sin relleno, currentColor) — se proponen para incorporación al
+       set STD (ver nota en Notion / bitácora).
+  ============================================================ -->
+  <svg style="display:none">
+    <!-- hoja (set STD) -->
+    <symbol id="ic-hoja" viewBox="0 0 24 24">
+      <path d="M5 19C5 12 9 5 20 4C19 15 12 19 5 19Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M6 18C9 14 12 10 17 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <!-- flor (set STD) -->
+    <symbol id="ic-flor" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="12" cy="6.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="12" cy="17.5" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="6.5" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="17.5" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </symbol>
+    <!-- raiz (set STD) -->
+    <symbol id="ic-raiz" viewBox="0 0 24 24">
+      <path d="M12 3V11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M12 11C12 11 8 12 6.5 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M12 11C12 11 16 12 17.5 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M12 14C12 14 9.5 15 8.5 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M12 14C12 14 14.5 15 15.5 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <!-- info (set STD) -->
+    <symbol id="ic-info" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M12 11V16.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="12" cy="7.7" r="0.9" fill="currentColor" stroke="none"/>
+    </symbol>
+    <!-- anillos-concentricos (nuevo, propuesto) -->
+    <symbol id="ic-anillos-concentricos" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="5.8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+    </symbol>
+    <!-- flechas-circulares (nuevo, propuesto) -->
+    <symbol id="ic-flechas-circulares" viewBox="0 0 24 24">
+      <path d="M4.5 12C4.5 7.9 7.9 4.5 12 4.5C15 4.5 17.6 6.2 18.8 8.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M19.5 12C19.5 16.1 16.1 19.5 12 19.5C9 19.5 6.4 17.8 5.2 15.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M15.8 6.6L18.9 8.9L20.6 5.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8.2 17.4L5.1 15.1L3.4 18.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <!-- ondas-agua (nuevo, propuesto) -->
+    <symbol id="ic-ondas-agua" viewBox="0 0 24 24">
+      <path d="M3 9.5C4.5 8 6 8 7.5 9.5C9 11 10.5 11 12 9.5C13.5 8 15 8 16.5 9.5C18 11 19.5 11 21 9.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M3 14.5C4.5 13 6 13 7.5 14.5C9 16 10.5 16 12 14.5C13.5 13 15 13 16.5 14.5C18 16 19.5 16 21 14.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <!-- pez-cangrejo (nuevo, propuesto) -->
+    <symbol id="ic-pez-cangrejo" viewBox="0 0 24 24">
+      <path d="M4 9.5C6.5 7.5 9.5 7.5 11.5 9.5C9.5 11.5 6.5 11.5 4 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M11.5 9.5L14 7.8V11.2L11.5 9.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <circle cx="16.5" cy="16" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M14.3 14.2L12.7 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M18.7 14.2L20.3 12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M14.5 17.5L12.5 18.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M18.5 17.5L20.5 18.3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <!-- nube-co2 (nuevo, propuesto) -->
+    <symbol id="ic-nube-co2" viewBox="0 0 24 24">
+      <path d="M6.5 16C4.6 16 3 14.4 3 12.5C3 10.7 4.4 9.2 6.2 9C6.7 6.7 8.7 5 11 5C13.5 5 15.5 6.9 15.8 9.3C17.6 9.5 19 11 19 12.8C19 14.6 17.5 16 15.7 16H6.5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M8.5 19.5H10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M12.5 19.5H16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
+    <!-- mangle-olas (nuevo, propuesto) -->
+    <symbol id="ic-mangle-olas" viewBox="0 0 24 24">
+      <path d="M9 16V8C9 8 7.5 7 7.5 5.2C7.5 4 8.3 3.2 9 3.2C9.7 3.2 10 4 10 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M9 12C9 12 11 11 11 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M9 14.5C9 14.5 6.8 13.7 6.8 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M2.5 18C3.7 16.7 5 16.7 6.2 18C7.4 19.3 8.7 19.3 9.9 18C11.1 16.7 12.4 16.7 13.6 18C14.8 19.3 16.1 19.3 17.3 18C18.5 16.7 19.8 16.7 21 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </symbol>
   </svg>
 
-  <!-- ======================================================================
-       #screen-display — EL D
-       ====================================================================== -->
+  <!-- ============================================================
+       D — #screen-display
+  ============================================================ -->
   <div class="app-screen" id="screen-display">
     <div class="screen">
 
       <header>
         <div class="logo">
-          <img class="logo-mark" src="assets/logo.png" alt="Logo UEES">
+          <img class="logo-mark" src="assets/logo.png" alt="Logo UEES" onerror="this.style.display='none'">
         </div>
         <div class="back-link" onclick="volverAlEscaner()">
           <span class="arrow">&#8592;</span>
@@ -479,18 +529,18 @@
         <button class="badge" id="badgeBtn" type="button">Casi amenazado <span class="badge-info-icon">i</span></button>
         <h1>Mangle rojo</h1>
         <div class="rule"></div>
-        <div class="subtitle"><em>Rhizophora samoensis</em></div>
-        <div class="family-line">
-          <svg><use href="#ic-hoja"/></svg>
+        <div class="classification-line">
+          <svg class="ic"><use href="#ic-hoja"/></svg>
           <span>Familia Rhizophoraceae</span>
         </div>
+        <div class="subtitle">Rhizophora samoensis</div>
       </div>
 
       <div class="info-overlay" id="infoOverlay">
         <div class="info-box">
           <button class="info-close" id="infoClose" type="button">&times;</button>
           <div class="info-box-badge">Casi amenazado</div>
-          <p>[PENDIENTE — texto de justificación de la categoría de conservación a confirmar con el cliente]</p>
+          <p>Contenido en preparación.</p>
         </div>
       </div>
 
@@ -543,9 +593,9 @@
     </div>
   </div>
 
-  <!-- ======================================================================
-       #screen-detalle — EL DT
-       ====================================================================== -->
+  <!-- ============================================================
+       DT — #screen-detalle
+  ============================================================ -->
   <div class="app-screen" id="screen-detalle">
 
     <div class="dt-header">
@@ -553,125 +603,86 @@
         <span class="dt-arrow">&#8592;</span>
         <span>Volver a la pieza</span>
       </div>
-      <img class="dt-logo-mark" src="assets/logo.png" alt="Logo UEES">
+      <img class="dt-logo-mark" src="assets/logo.png" alt="Logo UEES" onerror="this.style.display='none'">
     </div>
 
     <div class="dt-title-block">
       <h1 class="dt-h1">Mangle rojo</h1>
       <div class="dt-rule"></div>
-      <!-- Sin subtítulo (confirmado por BT) -->
     </div>
 
     <div class="dt-tabs-nav">
-      <button class="dt-tab-btn dt-active" type="button" data-tab="anatomia">Anatomía</button>
-      <button class="dt-tab-btn" type="button" data-tab="adaptaciones">Adaptaciones</button>
-      <button class="dt-tab-btn" type="button" data-tab="ecosistema">Ecosistema</button>
+      <button class="dt-tab-btn active" data-tab="anatomia" onclick="showTab('anatomia')" type="button">Anatomía</button>
+      <button class="dt-tab-btn" data-tab="adaptaciones" onclick="showTab('adaptaciones')" type="button">Adaptaciones</button>
+      <button class="dt-tab-btn" data-tab="ecosistema" onclick="showTab('ecosistema')" type="button">Ecosistema</button>
     </div>
 
     <div class="dt-content-area">
 
-      <!-- ===== TAB: Anatomía — Widget interactivo, selector Segmentado ===== -->
-      <div class="dt-tab-panel dt-active" data-panel="anatomia" style="gap:2vh;">
-        <div class="dt-widget" id="widgetAnatomia">
-          <div class="dt-widget-image-wrap">
-            <img class="dt-widget-image" id="anatomiaImg" src="assets/anatomia-tronco.jpg" alt="Tronco">
+      <!-- ===================== TAB: ANATOMÍA ===================== -->
+      <!-- Sin boxes académicos (BT Nota 4): solo widget + 3 ilustraciones.
+           Callouts (corteza/floema/cambium/xilema/duramen/anillos) ya
+           horneados en la imagen "Tronco" — no se replican como componentes. -->
+      <div class="dt-tab-panel active" id="tab-anatomia" data-tab-panel="anatomia">
+        <div class="dt-widget" id="widget-anatomia">
+          <div class="dt-widget-media-wrap">
+            <img class="dt-widget-media dt-shimmer" id="anatomia-media-img" alt="">
+            <div class="dt-widget-media-placeholder" id="anatomia-media-placeholder" style="display:none;"></div>
           </div>
           <div class="dt-widget-body">
-            <div class="dt-widget-name" id="anatomiaNombre">Tronco</div>
-            <div class="dt-widget-desc" id="anatomiaDesc">Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.</div>
-          </div>
-          <div class="dt-widget-selectors">
-            <div class="dt-selector-segmented">
-              <button class="dt-seg-btn dt-active" type="button" data-variant="0">
-                <svg><use href="#ic-anillos-concentricos"/></svg>
-                <span>Tronco</span>
-              </button>
-              <button class="dt-seg-btn" type="button" data-variant="1">
-                <svg><use href="#ic-hoja"/></svg>
-                <span>Hoja (celular)</span>
-              </button>
-              <button class="dt-seg-btn" type="button" data-variant="2">
-                <svg><use href="#ic-flechas-circulares"/></svg>
-                <span>Sist. circulatorio</span>
-              </button>
-            </div>
+            <div class="dt-widget-name" id="anatomia-name"></div>
+            <div class="dt-widget-desc" id="anatomia-desc"></div>
+            <div class="dt-selector-segmented" id="anatomia-selector"></div>
           </div>
         </div>
       </div>
 
-      <!-- ===== TAB: Adaptaciones — Bloque de texto + Widget con Stepper ===== -->
-      <div class="dt-tab-panel" data-panel="adaptaciones" style="gap:2vh;">
+      <!-- ===================== TAB: ADAPTACIONES ===================== -->
+      <div class="dt-tab-panel" id="tab-adaptaciones" data-tab-panel="adaptaciones">
         <div class="dt-text-block">
-          <div class="dt-text-title">Adaptaciones</div>
-          <div class="dt-text-body">El mangle rojo tiene adaptaciones únicas que le permiten vivir y prosperar en ambientes costeros.</div>
+          <div class="dt-section-title">Adaptaciones</div>
+          <div class="dt-paragraph">El mangle rojo tiene adaptaciones únicas que le permiten vivir y prosperar en ambientes costeros.</div>
         </div>
-        <div class="dt-widget" id="widgetAdaptaciones">
-          <div class="dt-widget-image-wrap">
-            <img class="dt-widget-image" id="adaptacionesImg" src="assets/adaptaciones-flor.jpg" alt="Flor">
+        <div class="dt-widget" id="widget-adaptaciones">
+          <div class="dt-widget-media-wrap">
+            <img class="dt-widget-media dt-shimmer" id="adaptaciones-media-img" alt="">
+            <div class="dt-widget-media-placeholder" id="adaptaciones-media-placeholder" style="display:none;"></div>
           </div>
           <div class="dt-widget-body">
-            <div class="dt-widget-name" id="adaptacionesNombre">Flor</div>
-            <div class="dt-widget-desc" id="adaptacionesDesc">[PENDIENTE — sin contenido visible en la referencia]</div>
-          </div>
-          <div class="dt-widget-selectors">
-            <div class="dt-selector-stepper">
-              <div class="dt-step dt-active" data-variant="0">
-                <div class="dt-step-dot"><svg><use href="#ic-flor"/></svg></div>
-                <div class="dt-step-label">Flor</div>
-              </div>
-              <div class="dt-step" data-variant="1">
-                <div class="dt-step-connector"></div>
-                <div class="dt-step-dot"><svg><use href="#ic-propagulo"/></svg></div>
-                <div class="dt-step-label">Propágulo</div>
-              </div>
-              <div class="dt-step" data-variant="2">
-                <div class="dt-step-connector"></div>
-                <div class="dt-step-dot"><svg><use href="#ic-ondas"/></svg></div>
-                <div class="dt-step-label">Dispersión</div>
-              </div>
-              <div class="dt-step" data-variant="3">
-                <div class="dt-step-connector"></div>
-                <div class="dt-step-dot"><svg><use href="#ic-raiz"/></svg></div>
-                <div class="dt-step-label">Enraizamiento</div>
-              </div>
-            </div>
+            <div class="dt-widget-name" id="adaptaciones-name"></div>
+            <div class="dt-widget-desc" id="adaptaciones-desc"></div>
           </div>
         </div>
+        <div class="dt-selector-stepper" id="adaptaciones-selector"></div>
       </div>
 
-      <!-- ===== TAB: Ecosistema — Hero + Boxes académicos (acordeón) ===== -->
-      <div class="dt-tab-panel" data-panel="ecosistema" style="gap:2vh;">
+      <!-- ===================== TAB: ECOSISTEMA ===================== -->
+      <!-- Hero con callouts horneados en la imagen + 3 boxes académicos.
+           Sin widget (confirmado explícitamente en el BT). -->
+      <div class="dt-tab-panel" id="tab-ecosistema" data-tab-panel="ecosistema">
         <div class="dt-hero-group">
-          <img class="dt-hero-img" src="assets/ecosistema-hero.jpg" alt="Ecosistema del mangle rojo">
+          <img class="dt-hero-img dt-shimmer" id="ecosistema-hero-img" src="assets/ecosistema-hero.jpg" alt="Ecosistema del mangle rojo">
+          <div class="dt-hero-img-placeholder" id="ecosistema-hero-placeholder" style="display:none;">[ imagen — ecosistema-hero ]</div>
         </div>
-        <div class="dt-academic-boxes" id="academicBoxes">
-          <div class="dt-academic-box dt-open" data-box="0">
-            <div class="dt-academic-box-header" onclick="toggleAcademicBox(this)">
-              <svg><use href="#ic-mangle-olas"/></svg>
+        <div class="dt-academic-boxes">
+          <div class="dt-academic-box">
+            <svg class="dt-ic"><use href="#ic-mangle-olas"/></svg>
+            <div class="dt-academic-box-body">
               <div class="dt-academic-box-title">Protección costera</div>
-              <svg class="dt-academic-box-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="dt-academic-box-content">
               <div class="dt-academic-box-text">Sus raíces retienen sedimentos y ayudan a amortiguar el oleaje.</div>
             </div>
           </div>
-          <div class="dt-academic-box" data-box="1">
-            <div class="dt-academic-box-header" onclick="toggleAcademicBox(this)">
-              <svg><use href="#ic-pez-cangrejo"/></svg>
+          <div class="dt-academic-box">
+            <svg class="dt-ic"><use href="#ic-pez-cangrejo"/></svg>
+            <div class="dt-academic-box-body">
               <div class="dt-academic-box-title">Refugio de fauna</div>
-              <svg class="dt-academic-box-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="dt-academic-box-content">
               <div class="dt-academic-box-text">Las raíces sirven de vivero para peces juveniles, cangrejos, moluscos y aves.</div>
             </div>
           </div>
-          <div class="dt-academic-box" data-box="2">
-            <div class="dt-academic-box-header" onclick="toggleAcademicBox(this)">
-              <svg><use href="#ic-nube-co2"/></svg>
+          <div class="dt-academic-box">
+            <svg class="dt-ic"><use href="#ic-nube-co2"/></svg>
+            <div class="dt-academic-box-body">
               <div class="dt-academic-box-title">Carbono azul</div>
-              <svg class="dt-academic-box-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-            </div>
-            <div class="dt-academic-box-content">
               <div class="dt-academic-box-text">Los manglares almacenan carbono en su biomasa y en sus suelos anegados.</div>
             </div>
           </div>
@@ -684,27 +695,13 @@
 </div>
 
 <script>
-  /* ===== Navegación interna (Arquitectura_de_Archivo_Unico.pdf) ===== */
-  function showDetalle(){
-    document.getElementById('screen-display').classList.add('slide-out');
-    document.getElementById('screen-detalle').classList.add('slide-in');
-  }
-  function showDisplay(){
-    document.getElementById('screen-display').classList.remove('slide-out');
-    document.getElementById('screen-detalle').classList.remove('slide-in');
-  }
-  // Única excepción con cambio de URL real: vuelve al escáner MindAR raíz.
-  // NOTA: default STD para carpeta displays/[pieza]/ — revisar profundidad
-  // real si el repo UEES-Manglar mantiene su estructura plana (ver memoria
-  // de proyecto: sin subcarpeta displays/).
-  function volverAlEscaner(){
-    window.location.href = '../../index.html?volver=1';
-  }
-
-  /* ===== Bloqueo de zoom / gestos (LEY 5) ===== */
+  /* ============================================================
+     ZOOM/GESTOS — LEY 5
+  ============================================================ */
   document.addEventListener('touchmove', (e) => {
     if (e.touches.length > 1) e.preventDefault();
   }, { passive: false });
+
   let lastTouchEnd = 0;
   document.addEventListener('touchend', (e) => {
     const now = Date.now();
@@ -712,7 +709,225 @@
     lastTouchEnd = now;
   }, { passive: false });
 
-  /* ===== Manejo de errores (Arquitectura_de_Archivo_Unico.pdf) ===== */
+  /* ============================================================
+     NAVEGACIÓN D ↔ DT (Arquitectura de Archivo Único)
+  ============================================================ */
+  const screenDisplay = document.getElementById('screen-display');
+  const screenDetalle = document.getElementById('screen-detalle');
+
+  function showDetalle() {
+    screenDisplay.classList.add('slide-out');
+    screenDetalle.classList.add('slide-in');
+    requestAnimationFrame(() => runFitRoutine(getActiveTabPanel()));
+  }
+  function showDisplay() {
+    screenDisplay.classList.remove('slide-out');
+    screenDetalle.classList.remove('slide-in');
+  }
+  function volverAlEscaner() {
+    window.location.href = '../../index.html?volver=1';
+  }
+
+  /* ============================================================
+     TABS DEL DT
+  ============================================================ */
+  function showTab(tabName) {
+    document.querySelectorAll('.dt-tab-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === tabName);
+    });
+    document.querySelectorAll('.dt-tab-panel').forEach((panel) => {
+      panel.classList.toggle('active', panel.dataset.tabPanel === tabName);
+    });
+    const panel = document.querySelector(`.dt-tab-panel[data-tab-panel="${tabName}"]`);
+    requestAnimationFrame(() => runFitRoutine(panel));
+  }
+  function getActiveTabPanel() {
+    return document.querySelector('.dt-tab-panel.active');
+  }
+
+  /* ============================================================
+     RUTINA DE CHECKEO — Jerarquía de Sacrificio
+     (Pantalla_Detalle_Instrucciones.pdf)
+     Reduce, en orden estricto y agotando cada variable antes de
+     pasar a la siguiente: gap → pad-v → pad-h → image-scale →
+     font-secondary → font-primary. Se detiene apenas el overflow
+     se resuelve. Corre por tab, nunca global.
+  ============================================================ */
+  const FIT_STEPS = [
+    { varName: '--dt-gap-scale', from: 2, to: 2, unit: 'vh' }, // gap ya en su mínimo (2vh) por default — no hay margen extra a recortar en este layout
+    { varName: '--dt-pad-v-scale', from: 1.5, to: 0.9, unit: 'vh' },
+    { varName: '--dt-pad-h-scale', from: 3, to: 1.8, unit: 'vw' },
+    { varName: '--dt-image-scale', from: 1, to: 0.9, unit: '' },
+    { varName: '--dt-font-scale-secondary', from: 1, to: 0.85, unit: '' },
+    { varName: '--dt-font-scale-primary', from: 1, to: 0.85, unit: '' },
+  ];
+  const FIT_ITERATIONS = 10;
+
+  function panelOverflows(panel) {
+    return panel.scrollHeight > panel.clientHeight + 1;
+  }
+
+  function runFitRoutine(panel) {
+    if (!panel) return;
+    // reset a valores ideales antes de medir
+    FIT_STEPS.forEach((step) => {
+      panel.style.setProperty(step.varName, step.from + step.unit);
+    });
+    if (!panelOverflows(panel)) return;
+
+    for (const step of FIT_STEPS) {
+      for (let i = 1; i <= FIT_ITERATIONS; i++) {
+        const t = i / FIT_ITERATIONS;
+        const value = step.from + (step.to - step.from) * t;
+        panel.style.setProperty(step.varName, value + step.unit);
+        if (!panelOverflows(panel)) return;
+      }
+    }
+  }
+
+  function runFitOnAllPanels() {
+    document.querySelectorAll('.dt-tab-panel').forEach((panel) => runFitRoutine(panel));
+  }
+
+  let fitResizeTimer = 0;
+  function debouncedFit() {
+    clearTimeout(fitResizeTimer);
+    fitResizeTimer = setTimeout(runFitOnAllPanels, 150);
+  }
+  window.addEventListener('resize', debouncedFit);
+  window.addEventListener('load', () => runFitRoutine(getActiveTabPanel()));
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => runFitRoutine(getActiveTabPanel()));
+  }
+
+  /* ============================================================
+     WIDGET DE SELECCIÓN — Anatomía (segmentado) y Adaptaciones (stepper)
+     Contenido único fuente de verdad, análogo a HOTSPOTS_3D del D:
+     nada de esto se duplica a mano en el HTML.
+  ============================================================ */
+  const ANATOMIA_VARIANTS = [
+    { id: 'tronco', name: 'Tronco', desc: 'Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.', image: 'assets/anatomia-tronco.jpg', icon: 'ic-anillos-concentricos', label: 'Tronco' },
+    { id: 'hoja', name: 'Hoja (celular)', desc: 'Estructura celular de la hoja, adaptada para minimizar la pérdida de agua y tolerar la salinidad.', image: 'assets/anatomia-hoja.jpg', icon: 'ic-hoja', label: 'Hoja' },
+    { id: 'circulatorio', name: 'Sistema circulatorio', desc: 'Recorrido del agua y los nutrientes desde las raíces hasta las hojas a través del tronco.', image: 'assets/anatomia-sistema-circulatorio.jpg', icon: 'ic-flechas-circulares', label: 'Circulación' },
+  ];
+
+  const ADAPTACIONES_VARIANTS = [
+    { id: 'flor', name: 'Flor', desc: 'Contenido en preparación.', image: 'assets/adaptaciones-flor.jpg', icon: 'ic-flor', label: 'Flor' },
+    { id: 'propagulo', name: 'Propágulo', desc: 'El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.', image: 'assets/adaptaciones-propagulo.jpg', icon: 'ic-mangle-olas', label: 'Propágulo' },
+    { id: 'dispersion', name: 'Dispersión', desc: 'Contenido en preparación.', image: 'assets/adaptaciones-dispersion.jpg', icon: 'ic-ondas-agua', label: 'Dispersión' },
+    { id: 'enraizamiento', name: 'Enraizamiento', desc: 'Contenido en preparación.', image: 'assets/adaptaciones-enraizamiento.jpg', icon: 'ic-raiz', label: 'Enraizamiento' },
+  ];
+
+  function setWidgetMedia(imgEl, placeholderEl, src, altLabel) {
+    imgEl.classList.add('dt-shimmer');
+    imgEl.style.display = 'none';
+    placeholderEl.style.display = 'none';
+    imgEl.onload = () => {
+      imgEl.classList.remove('dt-shimmer');
+      imgEl.style.display = 'block';
+      placeholderEl.style.display = 'none';
+    };
+    imgEl.onerror = () => {
+      imgEl.classList.remove('dt-shimmer');
+      imgEl.style.display = 'none';
+      placeholderEl.style.display = 'flex';
+      placeholderEl.textContent = `[ imagen — ${altLabel} ]`;
+    };
+    imgEl.alt = altLabel;
+    imgEl.src = src;
+  }
+
+  function selectAnatomiaVariant(idx) {
+    const v = ANATOMIA_VARIANTS[idx];
+    document.getElementById('anatomia-name').textContent = v.name;
+    document.getElementById('anatomia-desc').textContent = v.desc;
+    setWidgetMedia(
+      document.getElementById('anatomia-media-img'),
+      document.getElementById('anatomia-media-placeholder'),
+      v.image, v.name
+    );
+    document.querySelectorAll('#anatomia-selector .dt-segmented-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === idx);
+    });
+    requestAnimationFrame(() => runFitRoutine(document.getElementById('tab-anatomia')));
+  }
+
+  function buildAnatomiaSelector() {
+    const wrap = document.getElementById('anatomia-selector');
+    ANATOMIA_VARIANTS.forEach((v, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'dt-segmented-btn';
+      btn.innerHTML = `<svg class="dt-ic"><use href="#${v.icon}"/></svg><span class="dt-seg-label"></span>`;
+      btn.querySelector('.dt-seg-label').textContent = v.label;
+      btn.addEventListener('click', () => selectAnatomiaVariant(idx));
+      wrap.appendChild(btn);
+    });
+    selectAnatomiaVariant(0);
+  }
+
+  function selectAdaptacionesVariant(idx) {
+    const v = ADAPTACIONES_VARIANTS[idx];
+    document.getElementById('adaptaciones-name').textContent = v.name;
+    document.getElementById('adaptaciones-desc').textContent = v.desc;
+    setWidgetMedia(
+      document.getElementById('adaptaciones-media-img'),
+      document.getElementById('adaptaciones-media-placeholder'),
+      v.image, v.name
+    );
+    document.querySelectorAll('#adaptaciones-selector .dt-stepper-item').forEach((item, i) => {
+      item.classList.toggle('active', i === idx);
+    });
+    requestAnimationFrame(() => runFitRoutine(document.getElementById('tab-adaptaciones')));
+  }
+
+  function buildAdaptacionesSelector() {
+    const wrap = document.getElementById('adaptaciones-selector');
+    ADAPTACIONES_VARIANTS.forEach((v, idx) => {
+      const item = document.createElement('div');
+      item.className = 'dt-stepper-item';
+      item.innerHTML = `
+        <div class="dt-stepper-row">
+          <div class="dt-stepper-connector dt-connector-left"></div>
+          <div class="dt-stepper-dot"><svg class="dt-ic"><use href="#${v.icon}"/></svg></div>
+          <div class="dt-stepper-connector dt-connector-right"></div>
+        </div>
+        <div class="dt-stepper-label"></div>
+      `;
+      item.querySelector('.dt-stepper-label').textContent = v.label;
+      item.addEventListener('click', () => selectAdaptacionesVariant(idx));
+      wrap.appendChild(item);
+    });
+    selectAdaptacionesVariant(0);
+  }
+
+  buildAnatomiaSelector();
+  buildAdaptacionesSelector();
+
+  // Hero de Ecosistema: mismo patrón de shimmer + fallback que el resto de imágenes.
+  (function setupEcosistemaHero() {
+    const img = document.getElementById('ecosistema-hero-img');
+    const placeholder = document.getElementById('ecosistema-hero-placeholder');
+    img.classList.add('dt-shimmer');
+    img.onload = () => {
+      img.classList.remove('dt-shimmer');
+      placeholder.style.display = 'none';
+    };
+    img.onerror = () => {
+      img.classList.remove('dt-shimmer');
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+    };
+  })();
+</script>
+
+<script>
+  /* ============================================================
+     MANEJO DE ERRORES (Arquitectura de Archivo Único)
+     Todo error de JS y promesa rechazada se capturan y muestran
+     dentro de #loadingMsg. Textos SIEMPRE con textContent/nodos DOM,
+     nunca innerHTML con strings externos.
+  ============================================================ */
   function showViewerError(mainText, detailText) {
     const shimmer = document.getElementById('viewerShimmer');
     if (shimmer) shimmer.remove();
@@ -729,6 +944,7 @@
       el.appendChild(detail);
     }
   }
+
   window.addEventListener('error', (e) => {
     showViewerError('Error JS: ' + (e.message || 'desconocido'), (e.filename || '') + ':' + (e.lineno || ''));
   });
@@ -736,237 +952,15 @@
     showViewerError('Promesa rechazada: ' + ((e.reason && e.reason.message) || e.reason || 'desconocido'));
   });
 
-  /* ===== Badge (D) ===== */
   const badgeBtn = document.getElementById('badgeBtn');
   const infoOverlay = document.getElementById('infoOverlay');
   const infoClose = document.getElementById('infoClose');
+
   badgeBtn?.addEventListener('click', () => infoOverlay.classList.add('open'));
   infoClose?.addEventListener('click', () => infoOverlay.classList.remove('open'));
-  infoOverlay?.addEventListener('click', (e) => { if (e.target === infoOverlay) infoOverlay.classList.remove('open'); });
-
-  /* ===== DT — Tabs ===== */
-  const tabButtons = document.querySelectorAll('.dt-tab-btn');
-  const tabPanels = document.querySelectorAll('.dt-tab-panel');
-  tabButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const target = btn.dataset.tab;
-      tabButtons.forEach((b) => b.classList.toggle('dt-active', b === btn));
-      tabPanels.forEach((p) => p.classList.toggle('dt-active', p.dataset.panel === target));
-      // Cada panel corre su rutina de fit al mostrarse por primera vez.
-      const panel = document.querySelector(`.dt-tab-panel[data-panel="${target}"]`);
-      if (panel) runFitRoutine(panel);
-    });
+  infoOverlay?.addEventListener('click', (e) => {
+    if (e.target === infoOverlay) infoOverlay.classList.remove('open');
   });
-
-  /* ===== DT — Widget Anatomía (selector Segmentado) ===== */
-  const ANATOMIA_VARIANTS = [
-    { nombre: 'Tronco', desc: 'Corte transversal del tronco, mostrando las capas de corteza, floema, cambium, xilema y duramen.', img: 'assets/anatomia-tronco.jpg' },
-    { nombre: 'Hoja (celular)', desc: 'Estructura celular de la hoja, adaptada para minimizar la pérdida de agua y tolerar la salinidad.', img: 'assets/anatomia-hoja.jpg' },
-    { nombre: 'Sistema circulatorio', desc: 'Recorrido del agua y los nutrientes desde las raíces hasta las hojas a través del tronco.', img: 'assets/anatomia-sistema-circulatorio.jpg' },
-  ];
-  document.querySelectorAll('#widgetAnatomia .dt-seg-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const idx = Number(btn.dataset.variant);
-      document.querySelectorAll('#widgetAnatomia .dt-seg-btn').forEach((b) => b.classList.toggle('dt-active', b === btn));
-      const v = ANATOMIA_VARIANTS[idx];
-      document.getElementById('anatomiaNombre').textContent = v.nombre;
-      document.getElementById('anatomiaDesc').textContent = v.desc;
-      document.getElementById('anatomiaImg').src = v.img;
-      runFitRoutine(document.querySelector('.dt-tab-panel[data-panel="anatomia"]'));
-    });
-  });
-
-  /* ===== DT — Widget Adaptaciones (selector Stepper) ===== */
-  const ADAPTACIONES_VARIANTS = [
-    { nombre: 'Flor', desc: '[PENDIENTE — sin contenido visible en la referencia]', img: 'assets/adaptaciones-flor.jpg' },
-    { nombre: 'Propágulo', desc: 'El propágulo es la plántula del mangle rojo. Germina mientras aún está unido al árbol madre y, al caer al agua, puede flotar y viajar hasta encontrar un lugar adecuado para enraizar.', img: 'assets/adaptaciones-propagulo.jpg' },
-    { nombre: 'Dispersión', desc: '[PENDIENTE — sin contenido visible en la referencia]', img: 'assets/adaptaciones-dispersion.jpg' },
-    { nombre: 'Enraizamiento', desc: '[PENDIENTE — sin contenido visible en la referencia]', img: 'assets/adaptaciones-enraizamiento.jpg' },
-  ];
-  document.querySelectorAll('#widgetAdaptaciones .dt-step').forEach((step) => {
-    step.addEventListener('click', () => {
-      const idx = Number(step.dataset.variant);
-      document.querySelectorAll('#widgetAdaptaciones .dt-step').forEach((s) => s.classList.toggle('dt-active', s === step));
-      const v = ADAPTACIONES_VARIANTS[idx];
-      document.getElementById('adaptacionesNombre').textContent = v.nombre;
-      document.getElementById('adaptacionesDesc').textContent = v.desc;
-      document.getElementById('adaptacionesImg').src = v.img;
-      runFitRoutine(document.querySelector('.dt-tab-panel[data-panel="adaptaciones"]'));
-    });
-  });
-
-  /* ===== DT — Boxes académicos (acordeón de apertura única) ===== */
-  function toggleAcademicBox(headerEl){
-    const box = headerEl.closest('.dt-academic-box');
-    const container = box.closest('.dt-academic-boxes');
-    const wasOpen = box.classList.contains('dt-open');
-    container.querySelectorAll('.dt-academic-box').forEach((b) => b.classList.remove('dt-open'));
-    if (!wasOpen) box.classList.add('dt-open');
-    // El cambio de box abierto NO re-dispara la rutina de fit (los estados
-    // cerrados ocupan siempre lo mismo) — spec explícita.
-  }
-
-  /* ===== Rutina de Checkeo (Pantalla_Detalle_Instrucciones.pdf) =====
-     Reduce, en orden estricto y deteniéndose apenas se resuelve el overflow:
-     gap → padding vertical → padding horizontal → altura de imágenes →
-     tipografía secundaria → tipografía primaria. Corre por tab, nunca global. */
-  const FIT_STEPS = ['gap', 'padV', 'padH', 'img', 'fontSec', 'fontPri'];
-  const FIT_MIN = { gap: 1.2, padV: 0.6, padH: 0.6, img: 0.90, fontSec: 0.85, fontPri: 0.85 };
-
-  function fitsWithoutOverflow(panel){
-    return panel.scrollHeight <= panel.clientHeight + 1;
-  }
-
-  function runFitRoutine(panel){
-    if (!panel) return;
-    // Reset a valores base antes de medir.
-    panel.style.gap = '2vh';
-    panel.querySelectorAll('.dt-widget-body, .dt-widget-selectors, .dt-text-block, .dt-academic-box-header')
-      .forEach((el) => { el.style.transform = ''; });
-    panel.style.setProperty('--fit-img-scale', '1');
-    panel.style.setProperty('--fit-font-sec', '1');
-    panel.style.setProperty('--fit-font-pri', '1');
-
-    // Solo mide en el próximo frame, cuando el layout ya se aplicó.
-    requestAnimationFrame(() => {
-      let scale = { gap: 1, padV: 1, padH: 1, img: 1, fontSec: 1, fontPri: 1 };
-      let step = 0;
-      const maxIterations = 24;
-      let iterations = 0;
-
-      while (!fitsWithoutOverflow(panel) && step < FIT_STEPS.length && iterations < maxIterations) {
-        iterations++;
-        const key = FIT_STEPS[step];
-        scale[key] = Math.max(FIT_MIN[key], scale[key] - 0.05);
-        applyFitScale(panel, scale);
-        if (scale[key] <= FIT_MIN[key]) step++;
-      }
-    });
-  }
-
-  function applyFitScale(panel, scale){
-    panel.style.gap = `${2 * scale.gap}vh`;
-    panel.style.setProperty('--fit-img-scale', String(scale.img));
-    panel.querySelectorAll('.dt-widget-image-wrap, .dt-hero-img').forEach((el) => {
-      el.style.transform = `scaleY(${scale.img})`;
-      el.style.transformOrigin = 'top center';
-    });
-    panel.querySelectorAll('.dt-widget-body').forEach((el) => {
-      el.style.padding = `${1.6 * scale.padV}vh ${4 * scale.padH}vw ${1.4 * scale.padV}vh ${4 * scale.padH}vw`;
-    });
-    panel.querySelectorAll('.dt-widget-desc, .dt-step-label, .dt-academic-box-text').forEach((el) => {
-      el.style.fontSize = '';
-      el.style.fontSize = `calc(${el.tagName === 'DIV' ? '1em' : '1em'} * ${scale.fontSec})`;
-    });
-  }
-
-  // Corre la rutina en el tab visible al cargar y en cada resize/orientación
-  // (debounced), nunca global — solo sobre el panel activo en cada momento.
-  let dtResizeTimer = 0;
-  function handleDtViewportChange(){
-    clearTimeout(dtResizeTimer);
-    dtResizeTimer = setTimeout(() => {
-      const activePanel = document.querySelector('.dt-tab-panel.dt-active');
-      if (activePanel) runFitRoutine(activePanel);
-    }, 150);
-  }
-  window.addEventListener('resize', handleDtViewportChange);
-  document.fonts?.ready?.then(() => {
-    const activePanel = document.querySelector('.dt-tab-panel.dt-active');
-    if (activePanel) runFitRoutine(activePanel);
-  });
-  // Corrida inicial sobre el tab activo por default (Anatomía).
-  runFitRoutine(document.querySelector('.dt-tab-panel[data-panel="anatomia"]'));
-</script>
-
-<script>
-  /* ===== Popups de Hotspots (D) — generados dinámicamente desde HOTSPOTS_3D ===== */
-  const HOTSPOTS_3D = [
-    { id: 'hotspot-1', azimuthDeg: 35,  heightFraction: 0.20, label: 'Raíces fúlcreas',
-      popupTitle: 'Raíces fúlcreas',
-      popupText: 'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.',
-      popupImage: 'assets/hotspot-1.jpg' },
-    { id: 'hotspot-2', azimuthDeg: 315, heightFraction: 0.70, label: 'Hojas opuestas',
-      popupTitle: 'Hojas opuestas',
-      popupText: '[PENDIENTE — solo el label es visible en la referencia]',
-      popupImage: 'assets/hotspot-2.jpg' },
-    { id: 'hotspot-3', azimuthDeg: 100, heightFraction: 0.69, label: 'Flor y propágulo',
-      popupTitle: 'Flor y propágulo',
-      popupText: '[PENDIENTE — mismo caso que Hotspot 2]',
-      popupImage: 'assets/hotspot-3.jpg' },
-  ];
-  // NOTA — posiciones estimadas preliminares (mismo criterio de la sesión
-  // anterior de análisis de vértices): a reverificar contra el GLB real una
-  // vez cargado en Blender (el .glb de esta pieza todavía no fue provisto).
-
-  const hotspotContainer = document.getElementById('hotspots3d');
-  const hotspotElements = {};
-  let modelBoxForHotspots = null;
-  let modelCenterForHotspots = null;
-
-  const hotspotSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  hotspotSvg.setAttribute('style', 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;');
-  hotspotContainer.appendChild(hotspotSvg);
-
-  function createHotspotPopups() {
-    const container = document.getElementById('hotspotPopupsContainer');
-    HOTSPOTS_3D.forEach((h) => {
-      const overlay = document.createElement('div');
-      overlay.className = 'info-overlay';
-      overlay.id = `popup-${h.id}`;
-      overlay.innerHTML = `
-        <div class="info-box">
-          <button class="info-close" type="button">&times;</button>
-          <div class="hotspot-popup-title"></div>
-          <img class="hotspot-popup-image" alt="">
-          <div class="hotspot-popup-image-placeholder" style="display:none;"></div>
-          <p></p>
-        </div>
-      `;
-      overlay.querySelector('.hotspot-popup-title').textContent = h.popupTitle || '';
-      overlay.querySelector('p').textContent = h.popupText || '';
-
-      const img = overlay.querySelector('.hotspot-popup-image');
-      const placeholder = overlay.querySelector('.hotspot-popup-image-placeholder');
-      img.style.display = 'none';
-      placeholder.style.display = 'flex';
-      placeholder.classList.add('shimmer');
-      img.onload = () => { placeholder.classList.remove('shimmer'); placeholder.style.display = 'none'; img.style.display = 'block'; };
-      img.onerror = () => { placeholder.classList.remove('shimmer'); placeholder.textContent = `[ imagen — ${h.id} ]`; };
-      img.src = h.popupImage || '';
-
-      overlay.querySelector('.info-close').addEventListener('click', () => overlay.classList.remove('open'));
-      overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
-      container.appendChild(overlay);
-    });
-  }
-  createHotspotPopups();
-
-  function createHotspotElements() {
-    HOTSPOTS_3D.forEach((h, idx) => {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('stroke', 'var(--gold-soft)');
-      line.setAttribute('stroke-width', '1.5');
-      hotspotSvg.appendChild(line);
-
-      const anchor = document.createElement('div');
-      anchor.className = 'hotspot-anchor';
-      hotspotContainer.appendChild(anchor);
-
-      const number = document.createElement('div');
-      number.className = 'hotspot-number';
-      number.textContent = String(idx + 1);
-      number.title = h.label;
-      number.addEventListener('click', () => {
-        const overlay = document.getElementById(`popup-${h.id}`);
-        if (overlay) overlay.classList.add('open');
-      });
-      hotspotContainer.appendChild(number);
-
-      hotspotElements[h.id] = { line, anchor, number };
-    });
-  }
-  createHotspotElements();
 </script>
 
 <script type="module">
@@ -977,7 +971,7 @@
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
-  // PENDIENTE: el cliente todavía no proveyó el .glb del mangle rojo.
+  // MODEL_URL de esta pieza (BT_Mangle_Rojo.pdf)
   const MODEL_URL = 'assets/mangle_model.glb';
 
   if (!MODEL_URL) {
@@ -987,6 +981,7 @@
 
   const mount = document.getElementById('viewer3d');
   const loadingMsg = document.getElementById('loadingMsg');
+
   const w = mount.clientWidth;
   const h = mount.clientHeight;
 
@@ -1048,6 +1043,7 @@
     const yThreshold = baseY + (box.max.y - baseY) * thresholdFraction;
     const bandX = [], bandZ = [];
     const v = new THREE.Vector3();
+
     model.updateMatrixWorld(true);
     model.traverse((node) => {
       if (!node.isMesh || !node.geometry) return;
@@ -1056,14 +1052,19 @@
       for (let i = 0; i < posAttr.count; i++) {
         v.fromBufferAttribute(posAttr, i);
         v.applyMatrix4(node.matrixWorld);
-        if (v.y <= yThreshold) { bandX.push(v.x); bandZ.push(v.z); }
+        if (v.y <= yThreshold) {
+          bandX.push(v.x);
+          bandZ.push(v.z);
+        }
       }
     });
+
     if (bandX.length === 0) {
       const c = box.getCenter(new THREE.Vector3());
       const s = box.getSize(new THREE.Vector3());
       return { x: c.x, z: c.z, radius: Math.max(s.x, s.z) / 2 };
     }
+
     let sumX = 0, sumZ = 0;
     for (let i = 0; i < bandX.length; i++) { sumX += bandX[i]; sumZ += bandZ[i]; }
     const cx = sumX / bandX.length;
@@ -1083,8 +1084,9 @@
     equilibrado: { widthFraction: 0.63, heightFraction: 0.78, ringFactor: 1.0 },
     horizontal:  { widthFraction: 0.58, heightFraction: 0.70, ringFactor: 1.1 },
   };
-  // El mangle rojo es un árbol (proporción vertical alta) — sin override:
-  // el clasificador automático debería resolver "vertical" apenas cargue el GLB real.
+  // BT Nota 9: un árbol con raíces por encima y por debajo de la línea de agua
+  // puede no tener base plana convencional — perfil automático por ahora;
+  // revisar override cuando llegue el .glb real (ver Nota 9 del BT).
   const COMPOSITION_PROFILE_OVERRIDE = '';
 
   function resolveCompositionProfile(size) {
@@ -1105,6 +1107,7 @@
   function applyFraming() {
     if (!loadedModel || !modelGeom) return;
     const { size, baseY, topY, footprint, profile } = modelGeom;
+
     const vFov = (camera.fov * Math.PI) / 180;
     const visibleHeight = 2 * Math.tan(vFov / 2) * CAMERA_DISTANCE;
     const visibleWidth = visibleHeight * camera.aspect;
@@ -1113,11 +1116,13 @@
     const scale = Math.min(scaleH, scaleV);
 
     loadedModel.scale.setScalar(scale);
+
     loadedModel.position.y = -baseY * scale;
     loadedModel.position.x = -footprint.x * scale;
     loadedModel.position.z = -footprint.z * scale;
 
     const modelHeight = (topY - baseY) * scale;
+
     camera.position.set(0, modelHeight / 2, CAMERA_DISTANCE);
     camera.lookAt(0, modelHeight / 2, 0);
 
@@ -1137,6 +1142,7 @@
 
   function positionGroundOverlays() {
     if (!modelGeom || currentScale <= 0) return;
+
     const rWorld = modelGeom.footprint.radius * currentScale;
     const leftPt = projectToScreen(new THREE.Vector3(-rWorld, 0, 0));
     const rightPt = projectToScreen(new THREE.Vector3(rWorld, 0, 0));
@@ -1149,7 +1155,7 @@
     const origin = projectToScreen(new THREE.Vector3(0, 0, 0));
     const topPx = origin.y - svgWidth * RING_CENTER_Y_FRACTION;
 
-    document.querySelectorAll('#screen-display .shadow-plane, #screen-display .rotate-arc-ring').forEach((el) => {
+    document.querySelectorAll('.shadow-plane, .rotate-arc-ring').forEach((el) => {
       el.style.width = `${svgWidth}px`;
       el.style.top = `${topPx}px`;
       el.style.visibility = 'visible';
@@ -1157,9 +1163,13 @@
   }
 
   const loader = new GLTFLoader();
+
+  // Decodificadores permanentes: DRACOLoader + KTX2Loader (Sketchfab / modelos
+  // optimizados externamente). Sin costo si el GLB no los usa.
   const dracoLoader = new DRACOLoader();
   dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/');
   loader.setDRACOLoader(dracoLoader);
+
   const ktx2Loader = new KTX2Loader();
   ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/');
   ktx2Loader.detectSupport(renderer);
@@ -1167,21 +1177,31 @@
   let loadResolved = false;
 
   const timeoutId = setTimeout(() => {
-    if (!loadResolved) showViewerError('El modelo está demorando demasiado o no responde.', MODEL_URL);
+    if (!loadResolved) {
+      showViewerError('El modelo está demorando demasiado o no responde.', MODEL_URL);
+    }
   }, 15000);
 
-  // Material — tabla 4.4 STD: Madera / orgánico. metalness 0, roughness 0.75 (BT).
-  const MATERIAL_CONFIG = { metalness: 0, roughness: 0.75 };
+  // Material — BT: Madera/orgánico, metalness 0, roughness 0.75 (tabla 4.4 STD).
+  const MATERIAL_CONFIG = {
+    metalness: 0,
+    roughness: 0.75,
+  };
 
   async function applySpecGlossTextureManually(gltf) {
     const json = gltf.parser.json;
-    if (!json.extensionsUsed || !json.extensionsUsed.includes('KHR_materials_pbrSpecularGlossiness')) return;
+    if (!json.extensionsUsed || !json.extensionsUsed.includes('KHR_materials_pbrSpecularGlossiness')) {
+      return;
+    }
+
     for (let matIndex = 0; matIndex < (json.materials || []).length; matIndex++) {
       const matDef = json.materials[matIndex];
       const specGloss = matDef.extensions && matDef.extensions.KHR_materials_pbrSpecularGlossiness;
       if (!specGloss || specGloss.diffuseTexture == null) continue;
+
       const diffuseTex = await gltf.parser.getDependency('texture', specGloss.diffuseTexture.index);
       diffuseTex.colorSpace = THREE.SRGBColorSpace;
+
       gltf.scene.traverse((node) => {
         if (node.isMesh && node.material) {
           const materials = Array.isArray(node.material) ? node.material : [node.material];
@@ -1199,6 +1219,107 @@
     }
   }
 
+  // ---------- HOTSPOTS ANCLADOS EN 3D (BT_Mangle_Rojo.pdf) ----------
+  // Posiciones estimadas contra el modelo real al producir (BT: "estimar
+  // contra el modelo 3D real al producir") — valores de partida razonables
+  // según la referencia visual (raíces=base, hojas=copa opuesta, flor/propágulo=copa).
+  // A ajustar con el .glb real una vez provisto por el cliente.
+  const HOTSPOTS_3D = [
+    { id: 'hotspot-1', azimuthDeg: 35, heightFraction: 0.20, label: 'Raíces fúlcreas',
+      popupTitle: 'Raíces fúlcreas',
+      popupText: 'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.',
+      popupImage: 'assets/hotspot-1.jpg' },
+    { id: 'hotspot-2', azimuthDeg: 315, heightFraction: 0.70, label: 'Hojas opuestas',
+      popupTitle: 'Hojas opuestas',
+      popupText: 'Contenido en preparación.',
+      popupImage: 'assets/hotspot-2.jpg' },
+    { id: 'hotspot-3', azimuthDeg: 100, heightFraction: 0.69, label: 'Flor y propágulo',
+      popupTitle: 'Flor y propágulo',
+      popupText: 'Contenido en preparación.',
+      popupImage: 'assets/hotspot-3.jpg' },
+  ];
+
+  const hotspotContainer = document.getElementById('hotspots3d');
+  const hotspotElements = {};
+  let modelBoxForHotspots = null;
+  let modelCenterForHotspots = null;
+
+  const hotspotSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  hotspotSvg.setAttribute('style', 'position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible;');
+  hotspotContainer.appendChild(hotspotSvg);
+
+  function createHotspotPopups() {
+    const container = document.getElementById('hotspotPopupsContainer');
+    HOTSPOTS_3D.forEach((h) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'info-overlay';
+      overlay.id = `popup-${h.id}`;
+
+      overlay.innerHTML = `
+        <div class="info-box">
+          <button class="info-close" type="button">&times;</button>
+          <div class="hotspot-popup-title"></div>
+          <img class="hotspot-popup-image" alt="">
+          <div class="hotspot-popup-image-placeholder" style="display:none;"></div>
+          <p></p>
+        </div>
+      `;
+
+      overlay.querySelector('.hotspot-popup-title').textContent = h.popupTitle || '';
+      overlay.querySelector('p').textContent = h.popupText || '';
+
+      const img = overlay.querySelector('.hotspot-popup-image');
+      const placeholder = overlay.querySelector('.hotspot-popup-image-placeholder');
+      img.style.display = 'none';
+      placeholder.style.display = 'flex';
+      placeholder.classList.add('shimmer');
+      img.onload = () => {
+        placeholder.classList.remove('shimmer');
+        placeholder.style.display = 'none';
+        img.style.display = 'block';
+      };
+      img.onerror = () => {
+        placeholder.classList.remove('shimmer');
+        placeholder.textContent = `[ imagen — ${h.id} ]`;
+      };
+      img.src = h.popupImage || '';
+
+      overlay.querySelector('.info-close').addEventListener('click', () => overlay.classList.remove('open'));
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+
+      container.appendChild(overlay);
+    });
+  }
+  createHotspotPopups();
+
+  function createHotspotElements() {
+    HOTSPOTS_3D.forEach((h, idx) => {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('stroke', 'var(--gold-soft)');
+      line.setAttribute('stroke-width', '1.5');
+      hotspotSvg.appendChild(line);
+
+      const anchor = document.createElement('div');
+      anchor.className = 'hotspot-anchor';
+      hotspotContainer.appendChild(anchor);
+
+      const number = document.createElement('div');
+      number.className = 'hotspot-number';
+      number.textContent = String(idx + 1);
+      number.title = h.label;
+      number.addEventListener('click', () => {
+        const overlay = document.getElementById(`popup-${h.id}`);
+        if (overlay) overlay.classList.add('open');
+      });
+      hotspotContainer.appendChild(number);
+
+      hotspotElements[h.id] = { line, anchor, number };
+    });
+  }
+  createHotspotElements();
+
   loader.load(
     MODEL_URL,
     async (gltf) => {
@@ -1210,20 +1331,26 @@
       const model = gltf.scene;
       const box = new THREE.Box3().setFromObject(model);
       const size = box.getSize(new THREE.Vector3());
+
       const baseY = computeRobustBaseY(model, box);
       const footprint = computeBaseFootprint(model, box, baseY);
 
       loadedModel = model;
       modelGeom = { size, baseY, topY: box.max.y, footprint, profile: resolveCompositionProfile(size) };
+
       modelGroup.add(model);
+
       applyFraming();
 
       modelBoxForHotspots = new THREE.Box3().setFromObject(model);
       modelCenterForHotspots = modelBoxForHotspots.getCenter(new THREE.Vector3());
       computeHotspotAnchors(model);
 
-      try { await applySpecGlossTextureManually(gltf); }
-      catch (e) { console.warn('No se pudo aplicar la textura manualmente:', e); }
+      try {
+        await applySpecGlossTextureManually(gltf);
+      } catch (e) {
+        console.warn('No se pudo aplicar la textura manualmente:', e);
+      }
     },
     (progress) => {
       if (progress.total) {
@@ -1242,6 +1369,7 @@
   let isDragging = false;
   let prevX = 0;
   let rotY = 0;
+
   function onDown(x) { isDragging = true; prevX = x; }
   function onMove(x) {
     if (!isDragging) return;
@@ -1251,11 +1379,17 @@
     prevX = x;
   }
   function onUp() { isDragging = false; }
+
   renderer.domElement.addEventListener('mousedown', (e) => onDown(e.clientX));
   window.addEventListener('mousemove', (e) => onMove(e.clientX));
   window.addEventListener('mouseup', onUp);
-  renderer.domElement.addEventListener('touchstart', (e) => { if (e.touches.length === 1) onDown(e.touches[0].clientX); }, { passive: true });
-  renderer.domElement.addEventListener('touchmove', (e) => { if (e.touches.length === 1) onMove(e.touches[0].clientX); }, { passive: true });
+
+  renderer.domElement.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) onDown(e.touches[0].clientX);
+  }, { passive: true });
+  renderer.domElement.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1) onMove(e.touches[0].clientX);
+  }, { passive: true });
   renderer.domElement.addEventListener('touchend', onUp);
 
   const HOTSPOT_LINE_LENGTH = 0.55;
@@ -1265,7 +1399,11 @@
     const halfW = mount.clientWidth / 2;
     const halfH = mount.clientHeight / 2;
     const p = vec3.clone().project(camera);
-    return { x: p.x * halfW + halfW, y: -p.y * halfH + halfH, behindCamera: p.z > 1 };
+    return {
+      x: p.x * halfW + halfW,
+      y: -p.y * halfH + halfH,
+      behindCamera: p.z > 1,
+    };
   }
 
   const hotspotAnchorsLocal = {};
@@ -1280,14 +1418,17 @@
     HOTSPOTS_3D.forEach((h) => {
       const azimuthRad = (h.azimuthDeg * Math.PI) / 180;
       const y = currentModelHeight * h.heightFraction;
+
       const origin = new THREE.Vector3(
         sphere.center.x + Math.sin(azimuthRad) * rayOriginDistance,
         y,
         sphere.center.z + Math.cos(azimuthRad) * rayOriginDistance
       );
       const direction = sphere.center.clone().sub(origin).normalize();
+
       anchorRaycaster.set(origin, direction);
       const intersects = anchorRaycaster.intersectObject(model, true);
+
       if (intersects.length > 0) {
         hotspotAnchorsLocal[h.id] = model.parent.worldToLocal(intersects[0].point.clone());
       } else {
@@ -1303,35 +1444,46 @@
   function updateHotspotPositions() {
     if (!modelCenterForHotspots) return;
     const center = modelCenterForHotspots;
+
     HOTSPOTS_3D.forEach((h) => {
       const localAnchor = hotspotAnchorsLocal[h.id];
       if (!localAnchor) return;
+
       const outwardDir = localAnchor.clone().sub(center).normalize();
       const localNumberPos = localAnchor.clone().add(outwardDir.multiplyScalar(HOTSPOT_LINE_LENGTH));
+
       const worldAnchor = localAnchor.clone().applyEuler(modelGroup.rotation);
       const worldNumber = localNumberPos.clone().applyEuler(modelGroup.rotation);
       const worldOutward = outwardDir.clone().applyEuler(modelGroup.rotation);
+
       const anchorScreen = projectToScreen(worldAnchor);
       const numberScreen = projectToScreen(worldNumber);
+
       const els = hotspotElements[h.id];
       if (!els) return;
+
       const w = mount.clientWidth;
       const hgt = mount.clientHeight;
       const clampedX = Math.max(SCREEN_CLAMP_MARGIN, Math.min(w - SCREEN_CLAMP_MARGIN, numberScreen.x));
       const clampedY = Math.max(SCREEN_CLAMP_MARGIN, Math.min(hgt - SCREEN_CLAMP_MARGIN, numberScreen.y));
+
       els.number.style.display = numberScreen.behindCamera ? 'none' : 'flex';
       els.number.style.left = `${clampedX}px`;
       els.number.style.top = `${clampedY}px`;
+
       const toCameraDir = camera.position.clone().sub(worldAnchor).normalize();
       const facingDot = worldOutward.dot(toCameraDir);
+
       const facing01 = (facingDot + 1) / 2;
       const opacity = numberScreen.behindCamera ? 0 : Math.max(0.25, Math.pow(facing01, 0.5));
       els.anchor.style.opacity = opacity;
       els.line.style.opacity = opacity * 0.8;
       els.number.style.opacity = Math.max(0.55, opacity);
+
       els.anchor.style.display = 'block';
       els.anchor.style.left = `${anchorScreen.x}px`;
       els.anchor.style.top = `${anchorScreen.y}px`;
+
       els.line.style.display = 'block';
       els.line.setAttribute('x1', anchorScreen.x);
       els.line.setAttribute('y1', anchorScreen.y);
@@ -1342,6 +1494,7 @@
 
   let lastHotspotUpdate = 0;
   const HOTSPOT_UPDATE_INTERVAL = 1000 / 30;
+
   function animate(timestamp) {
     requestAnimationFrame(animate);
     if (!lastHotspotUpdate || timestamp - lastHotspotUpdate >= HOTSPOT_UPDATE_INTERVAL) {
