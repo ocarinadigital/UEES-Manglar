@@ -719,11 +719,16 @@
   renderer.toneMappingExposure = 1.0;
   mount.appendChild(renderer.domElement);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 1.6));
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+  // Lever B — más contraste de luz: se baja el ambiente (antes 1.6) y se sube la
+  // key direccional (antes 1.8), subiendo la relación direccional/ambiente. Eso
+  // hunde las sombras entre hoja y hoja (de ahí sale la "definición" de Blender) y
+  // deja que se lean los normal maps, sin apagar las hojas iluminadas. El fill baja
+  // un poco (antes 0.9) para no rellenar de más las sombras que acabamos de crear.
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const dirLight = new THREE.DirectionalLight(0xffffff, 2.2);
   dirLight.position.set(3, 5, 4); // ángulo normal de 3/4 — ya no necesita ser cenital, no hay sombra que cuidar
   scene.add(dirLight);
-  const fillLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
   fillLight.position.set(-3, 1, -2);
   scene.add(fillLight);
 
@@ -1003,6 +1008,12 @@
         if (!mat.isMeshStandardMaterial) return;
         mat.metalness = MATERIAL_CONFIG.metalness;
         mat.roughness = MATERIAL_CONFIG.roughness;
+        // Baja la influencia del environment map (cúpula casi blanca generada por
+        // código). Con el default 1.0 ese entorno inunda el modelo con luz pareja y
+        // tapa las luces direccionales, aplanando el follaje y las raíces. A 0.4 la
+        // key direccional recupera el mando y aparecen las sombras que dan la
+        // "definición" tipo Blender, sin apagar las hojas iluminadas.
+        mat.envMapIntensity = 0.4;
         mat.needsUpdate = true;
       });
     });
