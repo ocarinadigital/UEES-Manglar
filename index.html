@@ -986,8 +986,27 @@
   // Material (BT sección 2): madera/orgánico — default de tabla STD, sin excepción.
   const MATERIAL_CONFIG = {
     metalness: 0,
-    roughness: 0.75,
+    roughness: 0.55, // hojas del mangle con algo de satén (antes 0.75, mate); ver applyMaterialConfigToStandard
   };
+
+  // Aplica el MATERIAL_CONFIG de la pieza a los materiales PBR ESTÁNDAR
+  // (metallicRoughness), que son los que NO pasan por applySpecGlossTextureManually.
+  // Sin esto, un GLB que no exporta roughnessFactor ni mapa de roughness (como el
+  // mangle) se queda con el default de three.js roughness=1.0 (mate total) y las
+  // hojas pierden todo el satén que sí se ve en Blender. Cierra el hueco por el que
+  // MATERIAL_CONFIG solo llegaba a los modelos spec/gloss.
+  function applyMaterialConfigToStandard(model) {
+    model.traverse((node) => {
+      if (!node.isMesh || !node.material) return;
+      const materials = Array.isArray(node.material) ? node.material : [node.material];
+      materials.forEach((mat) => {
+        if (!mat.isMeshStandardMaterial) return;
+        mat.metalness = MATERIAL_CONFIG.metalness;
+        mat.roughness = MATERIAL_CONFIG.roughness;
+        mat.needsUpdate = true;
+      });
+    });
+  }
 
   // GLTFLoader (a partir de cierta versión de three.js) dejó de soportar la extensión
   // KHR_materials_pbrSpecularGlossiness: carga la geometría perfecto, pero ignora la
@@ -1205,6 +1224,11 @@
       modelBoxForHotspots = new THREE.Box3().setFromObject(model);
       modelCenterForHotspots = modelBoxForHotspots.getCenter(new THREE.Vector3());
       computeHotspotAnchors(model);
+
+      // Lever A: aplicar el acabado (roughness/metalness) a los materiales estándar
+      // del mangle antes del posible parche de spec/gloss (que, si corriera, usa el
+      // mismo MATERIAL_CONFIG y no genera conflicto).
+      applyMaterialConfigToStandard(model);
 
       try {
         await applySpecGlossTextureManually(gltf);
