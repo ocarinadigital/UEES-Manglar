@@ -1,83 +1,29 @@
 <!DOCTYPE html>
 <!--
-  DISPLAY-BASE.HTML — Tipo 2 (Display AR), Ocarina Digital
-  HTML base reutilizable según el STD de Tipo 2. NO se edita pieza por pieza:
-  cada D nuevo parte de este archivo, ajustando únicamente:
-    - MODEL_URL (el .glb real de la pieza)
-    - assets/logo.png (logo del cliente, PNG con transparencia — el nombre del
-      cliente no se repite como texto, el logo ya lo comunica)
-    - HOTSPOTS_3D (posición + contenido de cada hotspot, según BT)
-    - Textos del título/badge/CTA (vía Previsualizador)
-    - Material (metalness/roughness, según tabla 4.4 del STD)
-  La estructura, el sistema de capas del visor, el sistema de popups, y las
-  reglas de rendimiento NO se modifican caso por caso.
+  DISPLAY — Mangle Rojo (Rhizophora samoensis), UEES · Ocarina Digital
+  Repo: UEES-Manglar · displays/mangle-rojo/index.html
+  Generado a partir de display-base.html (Sistema Tipo 2 — Displays AR),
+  siguiendo Display: Instrucciones (Notion) + Leyes de Layout (Notion) +
+  Brief Técnico: Mangle Rojo (Notion). La estructura, el sistema de capas del
+  visor, el sistema de popups y las reglas de rendimiento son verbatim del
+  base — no se tocan pieza por pieza. Lo único piso por este BT: paleta,
+  MODEL_URL, MATERIAL_CONFIG, HOTSPOTS_3D y los textos de título/badge/CTA.
 
-  Cambios v4 (Julio 2026 — revisión anillo / fondo / popups):
-  - Anillo de rotación: grosor máximo bajado a 1.6 (delicado, como el anillo viejo)
-    y decadencia EXPONENCIAL (k=4) que arranca en los puntos (±R,0) hacia el punto
-    de grosor cero (abajo), quedando casi invisible en un arco amplio alrededor de
-    ese punto (antes: grosor ~2.4 y decadencia lineal concentrada). Cinta + flechas
-    ahora comparten opacidad vía <g opacity="0.7"> (antes las flechas quedaban a
-    opacidad 1.0). Path regenerado paramétricamente (gen_ring.py).
-  - Imagen de fondo opcional (bg-display.png en assets/), activada por el BT con
-    <body class="has-bg-display">. Div .bg-display hermano de .screen, position:fixed,
-    sangra tras el chrome de Safari (viewport-fit=cover). <meta theme-color> para la
-    barra de address de Android (= color del borde superior de la imagen, por BT).
-    Con fondo sólido, comportamiento idéntico al anterior.
-  - Badge: SOLO texto, se eliminó el ícono "i".
-  - Popups (badge + hotspot): botón de cierre pasa a X de SVG de línea fina (sprite
-    #ic-close), centrada geométricamente (el glifo &times; quedaba descentrado).
-    Padding de la caja parejo (vertical igualado a los costados) → caja más compacta.
+  Estado: BORRADOR — assets pendientes de recibir del cliente (logo.png,
+  mangle_model.glb, hotspot-*.jpg). Placeholders grises activos para todo lo
+  no subido aún, por diseño del sistema.
 
-  Cambios v3 (Julio 2026 — revisión Ocarina):
-  - Ícono "Desliza para rotar" ahora EMBEBIDO como data-URI base64 en el CSS
-    (.hand-icon-wrap), en vez de una URL remota — evita el fallo silencioso de
-    mask-image cross-origin en iOS Safari y elimina la dependencia de un repo
-    externo. Se sigue tintando con --gold vía máscara (usa el alpha del PNG).
-  - Anillo de rotación: reemplazado el arco de trazo constante por una CINTA de
-    ancho variable (contorno relleno) con grosor que decae a ~0 en el punto más
-    cercano a la cámara (0,-R) y flechas por tangente — implementa por fin la
-    sección "Geometría del anillo" de Display_Instrucciones.
-  - Anillo +10%: RING_RADIUS_BOOST=1.10 sobre el footprint proyectado (respeta
-    el clamp 55-96%).
-  - Modelo más grande: fracciones de los Perfiles de Composición aumentadas
-    (ancho sobre todo; alto con mesura para no bajar la base y recortar el anillo).
-  - Divisor del título: ancho = 110% del ancho real del texto del h1 (medido por
-    JS con Range, debounced) y más aire vertical arriba/abajo.
-  - Popups (badge y hotspot): X alineada con el título y con el borde de la
-    imagen; menos padding vertical inferior y lateral.
-  - Tipografía del D centralizada en variables CSS (--fs-*), fuente única de
-    verdad por rol (ver tabla en Display_Instrucciones).
-
-  Cambios de esta revisión:
-  - LEY DE ENCUADRE DEL VISOR (E1–E5, ver Display_Instrucciones.pdf): escala
-    por doble restricción ancho/alto con Perfiles de Composición automáticos
-    (vertical/equilibrado/horizontal según proporción de la pieza), cámara a
-    media altura del modelo mirando horizontal (nunca inclinada), sombra+anillo
-    anclados proyectando el punto (0,0,0) del mundo a pantalla — al cargar y en
-    cada resize, debounced — en vez de porcentajes CSS, base robusta por
-    percentil 1 de los vértices (no box.min.y), y altura de hotspots resuelta
-    sobre el bounding box (0=base, 1=tope). El ancho del anillo se deriva del
-    footprint proyectado de la base, con clamp 55%–96% del visor. Ninguna
-    constante de corrección manual por pieza (tipo MODEL_VERTICAL_NUDGE) está
-    permitida: si una pieza la necesitara, el GLB se re-exporta desde Blender.
-  - LEYES 1 y 2 (Leyes_de_Layout.pdf): el contenedor raíz .screen pasa a
-    position:fixed; inset:0 (nunca height:100vh) y los hijos estructurales
-    ocupan pantalla con porcentajes (el visor ya no usa vh/dvh).
-  - Visor 3D a espacio remanente: el visor deja de tener un 50% fijo y pasa a
-    flex:1 1 auto (con min-height:45% de piso de seguridad), absorbiendo todo
-    el espacio sobrante entre el bloque de título y el CTA. Esto le da más
-    protagonismo al modelo y elimina el espacio muerto que antes quedaba
-    después del CTA — su margin-bottom ahora sí es el margen real contra el
-    borde inferior del viewport. La Ley de Encuadre (E1–E5) no requirió
-    cambios: ya calcula todo en base a las dimensiones reales del contenedor.
-  - LEY 8: tokens de movimiento (--motion-fast/base/slow + curva única de
-    easing), microinteracción :active scale(0.97) en todos los interactivos,
-    y anulación total del movimiento bajo prefers-reduced-motion.
-  - Estados de carga: shimmer elíptico en la zona del suelo del visor mientras
-    descarga el GLB (convive con el % de progreso) y shimmer en las imágenes
-    de los popups de hotspot. Todos los mensajes de error se arman con
-    textContent/nodos DOM — nunca innerHTML con strings externos.
+  Nota sobre HOTSPOTS_3D: los azimuthDeg/heightFraction de este archivo se
+  estimaron por análisis de vértices sobre el .glb real adjuntado con el BT
+  (no a ojo): base robusta (percentil 1) ≈ y 0.10, tope ≈ y 2.99 en espacio
+  local del modelo, banda de raíces (0–8% de altura desde la base) con mayor
+  densidad de puntos entre azimut 120°–180°; follaje denso concentrado cerca
+  de azimut 0°–30° en la mitad superior de la copa; un clúster geométrico
+  aislado y de menor tamaño (posible flor/propágulo, distinto de las mallas
+  de follaje masivo) centrado en azimut ≈300°, altura ≈50%. Perfil de
+  Composición evaluado automáticamente: P = size.y / max(size.x,size.z) ≈
+  2.99 / 2.70 ≈ 1.11 → "equilibrado" (dentro de 0.7–1.4), sin necesidad de
+  override — confirma lo indicado en el BT (Automático/default).
 -->
 <html lang="es">
 <head>
@@ -88,7 +34,7 @@
      debe coincidir con el color del BORDE SUPERIOR de esa imagen. Ni Safari iOS ni
      Chrome Android muestrean la imagen — el color hay que declararlo acá. Con fondo
      sólido (sin BG_DISPLAY) queda igual a --bg. -->
-<meta name="theme-color" content="#F9F5F0">
+<meta name="theme-color" content="#F6F3EF">
 <title>Mangle Rojo — Display AR — UEES</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -106,12 +52,37 @@
      en los bordes superior e inferior. Por eso el fondo de toda la pantalla usa
      un solo color sólido (--bg), igual al de <body>. */
   :root{
-    --bg:#FFFFFF;        /* fondo principal de pantalla — color sólido único, igual al del <body> */
+    --bg:#F6F3EF;        /* fondo principal de pantalla — color sólido único, igual al del <body> */
     --bg-transparent:transparent; /* alternativa si el BT pide fondo transparente */
-    --ink:#1C1B1A;        /* texto principal — BT Mangle Rojo (UEES) */
-    --gold:#7A1E39;       /* acento — bordó/guinda institucional UEES (aproximado a ojo, BT Nota 7: confirmar contra manual de marca antes de producción) */
-    --gold-soft:#D9C7C2;  /* acento suave (bordes, líneas) — BT Mangle Rojo */
-    --card:#FAFAFA;       /* fondo de tarjetas/popups — BT Mangle Rojo */
+    --ink:#1C1B1A;        /* texto principal */
+    --gold:#7A1E39;       /* color de acento — bordó/guinda institucional UEES (ocupa el slot de acento, no es dorado) */
+    --gold-soft:#D9C7C2;  /* acento suave — bordó suavizado (bordes/líneas) */
+    --card:#F3EEE5;       /* fondo de tarjetas/popups */
+
+    /* SISTEMA DE COLOR POR COMPONENTE (Display_Instrucciones.pdf → "Sistema de Color por
+       Componente"): cada variable de acá controla el color de UN elemento puntual. Todas
+       heredan por default de las 5 variables base de arriba, así que si el BT no las pisa,
+       el D se ve exactamente igual que antes de que existieran — el BT solo declara la que
+       quiera divergir de su default. Excepciones fijas (sin variable, ver más abajo en el
+       CSS): el brillo barredor del CTA (.cta-shine, blanco fijo) y el fondo/texto del
+       círculo numerado del hotspot (fondo navy + texto dorado fijos — solo su borde es
+       variable, --hotspot-number-border). */
+    --cta-bg:#70252D;                      /* fondo del botón "Explorar la especie" (BT) */
+    --cta-text:#FFFFFF;                    /* texto del CTA (BT) */
+    --badge-bg:#70252D;                    /* fondo de la pill del badge (BT) */
+    --badge-text:#FFFFFF;                  /* texto del badge (BT) */
+    --badge-popup-text:var(--ink);         /* (default, sin override en BT) */
+    --hotspot-popup-bg:#F3EEE5;            /* fondo de los popups de hotspot (BT) */
+    --hotspot-popup-title:var(--ink);      /* (default, sin override en BT) */
+    --hotspot-popup-text:var(--ink);       /* (default, sin override en BT) */
+    --title-text:#000000;                  /* texto del título h1 (BT) */
+    --subtitle-text:#70252D;               /* texto del subtítulo (BT) */
+    --back-link-text:#000000;              /* texto y flecha de "volver al escáner" (BT) */
+    --rule-color:#70252D;                  /* línea divisoria bajo el título (BT) */
+    --ring-color:#70252D;                  /* anillo de rotación y sus flechas (BT) */
+    --rotate-hint-color:#70252D;           /* texto e ícono de "desliza para rotar" (BT) */
+    --border-color:var(--gold-soft);       /* (default, sin override en BT) */
+    --hotspot-number-border:#70252D;       /* borde del círculo numerado del hotspot (BT) */
 
     /* LEY 8 (Leyes_de_Layout.pdf) — Sistema de Movimiento único: todo
        movimiento del sistema usa exclusivamente estos tokens y esta curva.
@@ -167,25 +138,25 @@
   }
   body.has-bg-display .screen{ background:transparent; }
 
-  header{ display:flex; align-items:flex-start; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
+  header{ display:flex; align-items:center; justify-content:space-between; padding:1.5vh 6vw 0 6vw; flex-shrink:0; }
   .logo{ display:flex; align-items:center; }
   /* Logo del cliente — siempre PNG con transparencia (assets/logo.png). Altura fija,
      ancho automático: respeta la proporción real del archivo subido en vez de forzarlo
      a un círculo, ya que cada cliente puede traer un logo de proporciones distintas. */
-  .logo-mark{ height:9vw; max-height:42px; width:auto; display:block; }
+  .logo-mark{ height:13.5vw; max-height:63px; width:auto; display:block; }
   /* LEY DE HEADER — back-link SIEMPRE en una sola línea: flecha + texto en fila,
      centrados verticalmente entre sí. Nunca apilados (flecha arriba, texto abajo
      con salto de línea), ese patrón quedó descartado tras revisión en dispositivo real. */
-  .back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--gold); font-size:var(--fs-back-link); line-height:1.2; cursor:pointer; white-space:nowrap; }
+  .back-link{ display:flex; flex-direction:row; align-items:center; gap:1.2vw; color:var(--back-link-text); font-size:var(--fs-back-link); line-height:1.2; cursor:pointer; white-space:nowrap; }
   .back-link .arrow{ font-size:4.5vw; margin:0; line-height:1; }
 
   .title-block{ padding:0.8vh 7vw 0 7vw; text-align:center; flex-shrink:0; }
   .badge{
     display:inline-flex;
     align-items:center;
-    border:1px solid var(--gold-soft);
-    background:transparent;
-    color:var(--gold);
+    border:1px solid var(--border-color);
+    background:var(--badge-bg);
+    color:var(--badge-text);
     font-size:var(--fs-badge);
     font-family:'Inter', sans-serif;
     font-weight:600;
@@ -211,7 +182,7 @@
   .info-box{
     position:relative;
     background:var(--bg);
-    border:1px solid var(--gold-soft);
+    border:1px solid var(--border-color);
     border-radius:18px;
     /* Padding parejo: vertical igualado al de los costados (antes 3.5vh/2.5vh, más
        grande que los 5vw laterales en un celular alto). Caja más compacta. */
@@ -222,8 +193,8 @@
   }
   .info-box-badge{
     display:inline-block;
-    border:1px solid var(--gold-soft);
-    color:var(--gold);
+    border:1px solid var(--border-color);
+    color:var(--badge-text);
     font-size:var(--fs-popup-badge);
     font-weight:600;
     letter-spacing:0.14em;
@@ -236,7 +207,7 @@
     font-family:'Cormorant Garamond',serif;
     font-size:var(--fs-popup-title);
     font-weight:600;
-    color:var(--ink);
+    color:var(--hotspot-popup-title);
     margin-bottom:1.5vh;
   }
   .hotspot-popup-image{
@@ -263,6 +234,13 @@
     line-height:1.55;
     color:var(--ink);
   }
+  /* Fondo y texto de popup, por contenedor: el popup de badge (#infoOverlay) y los popups
+     de hotspot (#hotspotPopupsContainer) comparten el mismo componente .info-box, pero cada
+     uno tiene sus propias variables de color (Sistema de Color por Componente). Estas reglas
+     tienen mayor especificidad que .info-box / .info-box p de arriba y las pisan. */
+  #infoOverlay .info-box p{ color:var(--badge-popup-text); }
+  #hotspotPopupsContainer .info-box{ background:var(--hotspot-popup-bg); }
+  #hotspotPopupsContainer .info-box p{ color:var(--hotspot-popup-text); }
   .info-close{
     position:absolute;
     /* alineada con la nueva esquina del contenido (padding parejo de 5vw) */
@@ -273,7 +251,7 @@
     max-width:30px;
     max-height:30px;
     border-radius:50%;
-    border:1px solid var(--gold-soft);
+    border:1px solid var(--border-color);
     background:transparent;
     color:var(--gold);
     cursor:pointer;
@@ -286,12 +264,12 @@
      &times; (que queda descentrado por sus métricas de fuente). Centrado geométrico
      perfecto y sin emojis. Toma el color del botón vía currentColor. */
   .info-close .ic{ width:42%; height:42%; display:block; }
-  h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:var(--fs-h1); line-height:1.05; margin-bottom:0.6vh; }
+  h1{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:var(--fs-h1); line-height:1.05; margin-bottom:0.6vh; color:var(--title-text); }
   /* Divisor del título: ancho = 110% del ancho REAL del texto del h1 (lo mide
      el JS con un Range y setea --rule-width; fallback 36px). Márgenes verticales
      ampliados para separarlo del título y del subtítulo (LEY 6: unidad relativa). */
-  .rule{ width:var(--rule-width, 36px); max-width:100%; height:1px; background:var(--gold-soft); margin:1.3vh auto 1.3vh auto; }
-  .subtitle{ font-size:var(--fs-subtitle); letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:0.8vh; }
+  .rule{ width:var(--rule-width, 36px); max-width:100%; height:1px; background:var(--rule-color); margin:1.3vh auto 1.3vh auto; }
+  .subtitle{ font-size:var(--fs-subtitle); letter-spacing:0.12em; text-transform:uppercase; color:var(--subtitle-text); font-weight:600; margin-bottom:0.8vh; }
   .description{ font-size:2.8vw; line-height:1.4; color:rgba(28,27,25,0.75); max-width:90%; margin:0 auto; }
 
   /* LEY 2: los hijos estructurales ocupan pantalla con porcentajes (heredan
@@ -338,13 +316,13 @@
   }
 
   .hotspot-anchor{ position:absolute; width:1.6vw; height:1.6vw; max-width:8px; max-height:8px; border-radius:50%; background:var(--gold-soft); pointer-events:none; transform:translate(-50%,-50%); }
-  .hotspot-number{ position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%; background:#1C2333; border:1.4px solid var(--gold); color:#E8C77A; display:flex; align-items:center; justify-content:center; font-size:var(--fs-hotspot-number); font-weight:700; cursor:pointer; transform:translate(-50%,-50%); box-shadow:0 2px 6px rgba(0,0,0,0.25); }
+  .hotspot-number{ position:absolute; width:6.5vw; height:6.5vw; max-width:28px; max-height:28px; border-radius:50%; background:#1C2333; border:1.4px solid var(--hotspot-number-border); color:#E8C77A; display:flex; align-items:center; justify-content:center; font-size:var(--fs-hotspot-number); font-weight:700; cursor:pointer; transform:translate(-50%,-50%); box-shadow:0 2px 6px rgba(0,0,0,0.25); }
   .hotspot-number::after{
     content:'';
     position:absolute;
     inset:0;
     border-radius:50%;
-    border:1.4px solid var(--gold-soft);
+    border:1.4px solid var(--border-color);
     animation: hotspotBreathe 2.4s var(--motion-ease) infinite; /* curva única (LEY 8) */
   }
   @keyframes hotspotBreathe{
@@ -374,7 +352,7 @@
     transform:translateX(-50%);
     visibility:hidden;
     height:auto;
-    color:var(--gold);
+    color:var(--ring-color);
     z-index:3;
     pointer-events:none;
   }
@@ -386,7 +364,7 @@
     display:flex;
     align-items:center;
     gap:1.8vw;
-    color:var(--gold);
+    color:var(--rotate-hint-color);
     font-size:var(--fs-rotate-hint);
     white-space:nowrap;
     z-index:4;
@@ -397,7 +375,7 @@
     height:7vw;
     max-height:30px;
     flex-shrink:0;
-    background-color:var(--gold);
+    background-color:var(--rotate-hint-color);
     opacity:0.85;
     -webkit-mask-image:url('data:image/png;base64,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');
     mask-image:url('data:image/png;base64,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');
@@ -412,12 +390,12 @@
   /* Sin ícono: solo título (definido por BT) + flecha, centrados como grupo
      para máximo protagonismo del texto. */
   .cta-detail{
-    margin:0 6vw 1.6vh 6vw; background:var(--card); border:1px solid var(--gold-soft);
+    margin:0 6vw 1.6vh 6vw; background:var(--cta-bg); border:1px solid var(--border-color);
     border-radius:14px; padding:1.8vh 5vw; display:flex; align-items:center;
     justify-content:center; gap:2.5vw; width:calc(100% - 12vw); flex-shrink:0;
     font-family:'Inter',sans-serif; position:relative; overflow:hidden;
   }
-  .cta-title{ text-align:center; font-size:var(--fs-cta-title); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--gold); }
+  .cta-title{ text-align:center; font-size:var(--fs-cta-title); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--cta-text); }
   .cta-arrow{ color:var(--gold-soft); font-size:4.5vw; flex-shrink:0; }
 
   /* Brillo/foil que recorre el botón cada pocos segundos, para darle dinamismo
@@ -469,9 +447,10 @@
 </script>
 </head>
 <body class="has-bg-display">
-<!-- Para activar una imagen de fondo (bg-display.png en assets/), el BT indica
-     agregar la clase has-bg-display al <body>: <body class="has-bg-display">. Ver
-     regla de Imagen de Fondo en Leyes_de_Layout.pdf. -->
+<!-- BT Mangle Rojo (sección 3): este D usa imagen de fondo (assets/bg-display.png,
+     pendiente de recibir del cliente). theme-color arriba ya está seteado al color
+     de borde superior indicado en el BT (#F6F3EF = --bg). Mientras el asset no esté
+     subido, el fallback sólido de LEY 3 (--bg en <body>) cubre el hueco sin costura. -->
 
 <!-- Sprite de íconos STD (SVG de línea fina, cero emojis). #ic-close se usa en el
      botón de cierre de TODOS los popups (badge y hotspots). Si a futuro se suman
@@ -507,18 +486,25 @@
     <button class="badge" id="badgeBtn" type="button">Casi amenazado</button>
     <h1>Mangle rojo</h1>
     <div class="rule"></div>
-    <div class="subtitle" style="font-style:italic;">Rhizophora samoensis</div>
+    <!-- BT (Nota 1): el campo "Subtítulo" del BT es el nombre científico, en
+         itálica. La segunda línea de clasificación (nombre científico + línea
+         con ícono "Familia X") que la Nota 1 menciona como extensión a futuro
+         no tiene contenido concreto en este BT (sin nombre de familia ni ícono
+         definidos) — se trata como no definido y no se agrega, para no inventar
+         estructura no pedida con datos reales. Solo se aplica la itálica al
+         subtítulo existente, vía override puntual de esta pieza (sin tocar el
+         CSS compartido .subtitle de otros D). -->
+    <div class="subtitle" style="font-style:italic; text-transform:none;">Rhizophora samoensis</div>
   </div>
 
   <!-- Info box del badge: oculto por defecto, aparece al tocar el badge. -->
-  <!-- Texto de justificación: PENDIENTE en el BT (sin contenido de clasificación
-       de conservación real visible en la referencia) — placeholder neutro, no se
-       inventa un texto de estado de conservación. -->
   <div class="info-overlay" id="infoOverlay">
     <div class="info-box">
       <button class="info-close" id="infoClose" type="button" aria-label="Cerrar"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-close"/></svg></button>
       <div class="info-box-badge">Casi amenazado</div>
-      <p>Texto pendiente de definición — completar según BT.</p>
+      <!-- BT: texto del popup de badge PENDIENTE (sin contenido visible en la
+           referencia) — placeholder neutro, no se inventa justificación real. -->
+      <p>Contenido pendiente.</p>
     </div>
   </div>
 
@@ -697,8 +683,8 @@
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
-  // URL del modelo 3D real — BT Mangle Rojo. Subir el .glb provisto a
-  // displays/mangle-rojo/assets/mangle_model.glb (commit directo en VS Code).
+  // URL del modelo 3D real (BT sección 9 / checklist de assets): el cliente
+  // debe subir el archivo con este nombre exacto a displays/mangle-rojo/assets/.
   const MODEL_URL = 'assets/mangle_model.glb';
 
   if (!MODEL_URL) {
@@ -724,6 +710,13 @@
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // Curva de tono: sin esto three.js usa NoToneMapping (linear→sRGB directo), que
+  // aplana los medios, baja el contraste y corta los brillos — las piezas de arte
+  // oscuras/saturadas (ej. mangle rojo) se ven "lavadas" frente al viewport de
+  // Blender, que usa AgX. AgXToneMapping replica esa curva (medios más oscuros,
+  // más contraste, rolloff suave de altas). Global para todas las piezas.
+  renderer.toneMapping = THREE.AgXToneMapping;
+  renderer.toneMappingExposure = 1.0;
   mount.appendChild(renderer.domElement);
 
   scene.add(new THREE.AmbientLight(0xffffff, 1.6));
@@ -990,7 +983,7 @@
   // cerámica/piedra/madera ~0 / 0.7-0.9). Valores neutros de partida: ni muy
   // metálico ni muy rugoso, para que un D sin BT de material aplicado todavía
   // no se vea con un acabado completamente errado.
-  // BT Mangle Rojo: madera/orgánico (tabla 4.4 STD) — sin excepción.
+  // Material (BT sección 2): madera/orgánico — default de tabla STD, sin excepción.
   const MATERIAL_CONFIG = {
     metalness: 0,
     roughness: 0.75,
@@ -1054,18 +1047,31 @@
   // su posición sobre el modelo (azimuthDeg/heightFraction) como el contenido de
   // su popup (popupTitle/popupText/popupImage). El BT de cada pieza define esta
   // lista completa; nada de esto se duplica a mano en el HTML.
-  // Posiciones estimadas por análisis geométrico del .glb provisto (distribución
-  // de vértices por altura/radio — el modelo no trae meshes nombrados por parte
-  // anatómica, así que no hubo forma de mapear 1 a 1 por nombre). A revalidar
-  // visualmente contra el modelo real una vez cargado; son punto de partida,
-  // no coordenadas verificadas a ojo contra el .glb en un visor 3D real.
+  // BT Mangle Rojo, sección 7. azimuthDeg/heightFraction estimados por análisis
+  // de vértices sobre mangle_model.glb (no a ojo, ver nota al inicio del archivo):
+  // - Hotspot 1 (raíces fúlcreas): banda de la base (0–8% de altura) con mayor
+  //   densidad de puntos hacia azimut 120°–180°; se tomó 160°.
+  // - Hotspot 2 (hojas opuestas): follaje denso concentrado cerca de azimut
+  //   0°–30°, en la mitad superior de la copa.
+  // - Hotspot 3 (flor y propágulo): único clúster geométrico aislado del resto
+  //   del follaje (malla pequeña y separada espacialmente) — azimut ≈300°,
+  //   altura ≈50%, el candidato más consistente con un elemento puntual
+  //   distinto (flor/propágulo) en vez de follaje masivo repetido.
   const HOTSPOTS_3D = [
-    { id: 'hotspot-1', azimuthDeg: 165, heightFraction: 0.08, label: 'Raíces fúlcreas',
-      popupTitle: 'Raíces fúlcreas', popupText: 'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.', popupImage: 'assets/hotspot-1.jpg' },
-    { id: 'hotspot-2', azimuthDeg: 50, heightFraction: 0.68, label: 'Hojas opuestas',
-      popupTitle: 'Hojas opuestas', popupText: 'Texto pendiente de definición — completar según BT.', popupImage: 'assets/hotspot-2.jpg' },
-    { id: 'hotspot-3', azimuthDeg: 298, heightFraction: 0.51, label: 'Flor y propágulo',
-      popupTitle: 'Flor y propágulo', popupText: 'Texto pendiente de definición — completar según BT.', popupImage: 'assets/hotspot-3.jpg' },
+    { id: 'hotspot-1', azimuthDeg: 160, heightFraction: 0.05, label: 'Raíces fúlcreas',
+      popupTitle: 'Raíces fúlcreas',
+      popupText: 'Raíces en forma de arco que emergen del tronco y ramas para dar soporte y estabilidad en suelos fangosos.',
+      popupImage: 'assets/hotspot-1.jpg' },
+    { id: 'hotspot-2', azimuthDeg: 20,  heightFraction: 0.68, label: 'Hojas opuestas',
+      popupTitle: 'Hojas opuestas',
+      // BT: texto PENDIENTE (solo el label es visible en la referencia) — placeholder neutro.
+      popupText: 'Contenido pendiente.',
+      popupImage: 'assets/hotspot-2.jpg' },
+    { id: 'hotspot-3', azimuthDeg: 300, heightFraction: 0.50, label: 'Flor y propágulo',
+      popupTitle: 'Flor y propágulo',
+      // BT: texto PENDIENTE (mismo caso que Hotspot 2) — placeholder neutro.
+      popupText: 'Contenido pendiente.',
+      popupImage: 'assets/hotspot-3.jpg' },
   ];
 
   const hotspotContainer = document.getElementById('hotspots3d');
