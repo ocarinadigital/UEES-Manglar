@@ -709,7 +709,13 @@
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  // PRUEBA: DPR tope subido de 2 a 3 para dibujar a la resolución nativa de
+  // pantallas 3x (la mayoría de iPhones recientes) — antes se dibujaba a 2/3 de
+  // esa resolución y se estiraba, lo que ablandaba todo el follaje. Costo: dibujar
+  // a 3x son (3/2)²=2.25x más píxeles por cuadro que a 2x — más carga de GPU y
+  // batería. Ver el contador de FPS en pantalla (temporal, para esta prueba) para
+  // decidir si el celular lo banca fluido o si hay que volver a 2.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
   // Curva de tono: sin esto three.js usa NoToneMapping (linear→sRGB directo), que
   // aplana los medios, baja el contraste y corta los brillos — las piezas de arte
   // oscuras/saturadas (ej. mangle rojo) se ven "lavadas" frente al viewport de
@@ -1001,6 +1007,14 @@
   // hojas pierden todo el satén que sí se ve en Blender. Cierra el hueco por el que
   // MATERIAL_CONFIG solo llegaba a los modelos spec/gloss.
   function applyMaterialConfigToStandard(model) {
+    // Filtrado anisotrópico: sin esto, las texturas vistas en ángulo rasante
+    // (hojas casi de canto respecto de la cámara, muy frecuente en un follaje
+    // denso) se ven borrosas — el filtrado normal (trilinear) promedia de forma
+    // pareja en todas direcciones y pierde detalle cuando el ángulo es oblicuo.
+    // Costo: prácticamente nulo (es trabajo de la GPU de muestreo de textura,
+    // no de sombreado por píxel como el DPR) — por eso se aplica siempre, a
+    // diferencia del cambio de resolución que si se evalúa por costo/beneficio.
+    const maxAniso = renderer.capabilities.getMaxAnisotropy();
     model.traverse((node) => {
       if (!node.isMesh || !node.material) return;
       const materials = Array.isArray(node.material) ? node.material : [node.material];
@@ -1014,6 +1028,8 @@
         // key direccional recupera el mando y aparecen las sombras que dan la
         // "definición" tipo Blender, sin apagar las hojas iluminadas.
         mat.envMapIntensity = 0.4;
+        if (mat.map) mat.map.anisotropy = maxAniso;
+        if (mat.normalMap) mat.normalMap.anisotropy = maxAniso;
         mat.needsUpdate = true;
       });
     });
@@ -1466,6 +1482,16 @@
   let lastHotspotUpdate = 0;
   const HOTSPOT_UPDATE_INTERVAL = 1000 / 30; // ahora que no hay raycasting, el cálculo es barato — podemos subir a 30fps sin impacto real en batería
 
+  // CONTADOR DE FPS — SOLO PARA ESTA PRUEBA DE DPR, sacar antes de deployar en
+  // serio. Promedia los cuadros de la última medio segundo y los muestra en
+  // pantalla, para poder juzgar la fluidez con un número real en vez de "a ojo".
+  const fpsEl = document.createElement('div');
+  fpsEl.style.cssText = 'position:fixed;top:8px;right:8px;z-index:999;background:rgba(0,0,0,0.6);color:#0f0;font:12px monospace;padding:4px 8px;border-radius:4px;pointer-events:none;';
+  fpsEl.textContent = 'FPS: …';
+  document.body.appendChild(fpsEl);
+  let fpsFrameCount = 0;
+  let fpsWindowStart = 0;
+
   function animate(timestamp) {
     requestAnimationFrame(animate);
     if (!lastHotspotUpdate || timestamp - lastHotspotUpdate >= HOTSPOT_UPDATE_INTERVAL) {
@@ -1473,6 +1499,16 @@
       lastHotspotUpdate = timestamp;
     }
     renderer.render(scene, camera);
+
+    fpsFrameCount++;
+    if (!fpsWindowStart) fpsWindowStart = timestamp;
+    const elapsed = timestamp - fpsWindowStart;
+    if (elapsed >= 500) {
+      const fps = Math.round((fpsFrameCount / elapsed) * 1000);
+      fpsEl.textContent = 'FPS: ' + fps;
+      fpsFrameCount = 0;
+      fpsWindowStart = timestamp;
+    }
   }
   animate();
 
