@@ -680,6 +680,11 @@
   import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
   import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
   import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
+  // OPCIÓN C (PRUEBA AO) — post-procesado
+  import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+  import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+  import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+  import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
   document.getElementById('loadingMsg').textContent = 'Módulos cargados. Iniciando escena 3D…';
 
@@ -1484,13 +1489,50 @@
   let lastHotspotUpdate = 0;
   const HOTSPOT_UPDATE_INTERVAL = 1000 / 30; // ahora que no hay raycasting, el cálculo es barato — podemos subir a 30fps sin impacto real en batería
 
+  // ===== OPCIÓN C (PRUEBA) — Oclusión Ambiental por pantalla (SSAO) =====
+  // En vez de dibujar la escena directo a pantalla, se pasa por un EffectComposer
+  // con un pase de SSAO que oscurece los huecos/grietas entre hojas (el "contacto"
+  // que Blender calcula en modo Rendered). Esto cambia el motor de render y agrega
+  // varios pases por cuadro -> costo de GPU extra, que medimos con el contador de
+  // FPS. La transparencia del visor (fondo de agua) se preserva porque el clear se
+  // hace con alpha 0 y OutputPass respeta el canal alpha.
+  const composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera)); // render base "normal" — preserva la transparencia del árbol
+  const gtaoPass = new GTAOPass(scene, camera, w, h);
+  gtaoPass.output = GTAOPass.OUTPUT.Default; // beauty * AO
+  gtaoPass.blendIntensity = 1.0;
+  // Parámetros del AO subidos para que el efecto sea claramente visible en esta
+  // prueba (scale alto = AO más marcado). Si se adopta, se bajan a un valor sutil.
+  if (typeof gtaoPass.updateGtaoMaterial === 'function') {
+    gtaoPass.updateGtaoMaterial({ radius: 0.4, scale: 2.5, thickness: 1.0, samples: 16 });
+  }
+  composer.addPass(gtaoPass);
+  composer.addPass(new OutputPass());
+
+  // CONTADOR DE FPS — SOLO PARA ESTA PRUEBA, para cuantificar el costo del AO.
+  const fpsEl = document.createElement('div');
+  fpsEl.style.cssText = 'position:fixed;top:8px;right:8px;z-index:999;background:rgba(0,0,0,0.6);color:#0f0;font:12px monospace;padding:4px 8px;border-radius:4px;pointer-events:none;';
+  fpsEl.textContent = 'FPS: …';
+  document.body.appendChild(fpsEl);
+  let fpsFrameCount = 0;
+  let fpsWindowStart = 0;
+
   function animate(timestamp) {
     requestAnimationFrame(animate);
     if (!lastHotspotUpdate || timestamp - lastHotspotUpdate >= HOTSPOT_UPDATE_INTERVAL) {
       updateHotspotPositions();
       lastHotspotUpdate = timestamp;
     }
-    renderer.render(scene, camera);
+    composer.render();
+
+    fpsFrameCount++;
+    if (!fpsWindowStart) fpsWindowStart = timestamp;
+    const elapsed = timestamp - fpsWindowStart;
+    if (elapsed >= 500) {
+      fpsEl.textContent = 'FPS: ' + Math.round((fpsFrameCount / elapsed) * 1000);
+      fpsFrameCount = 0;
+      fpsWindowStart = timestamp;
+    }
   }
   animate();
 
@@ -1515,6 +1557,7 @@
       camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
       renderer.setSize(newW, newH);
+      composer.setSize(newW, newH); // OPCIÓN C: mantener los render targets del post-procesado en sync
       applyFraming();
     }, 150);
   }
