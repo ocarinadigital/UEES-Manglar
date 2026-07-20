@@ -709,19 +709,20 @@
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(w, h);
-  // PRUEBA: DPR tope subido de 2 a 3 para dibujar a la resolución nativa de
-  // pantallas 3x (la mayoría de iPhones recientes) — antes se dibujaba a 2/3 de
-  // esa resolución y se estiraba, lo que ablandaba todo el follaje. Costo: dibujar
-  // a 3x son (3/2)²=2.25x más píxeles por cuadro que a 2x — más carga de GPU y
-  // batería. Ver el contador de FPS en pantalla (temporal, para esta prueba) para
-  // decidir si el celular lo banca fluido o si hay que volver a 2.
+  // DPR tope subido de 2 a 3 para dibujar a la resolución nativa de pantallas 3x
+  // (la mayoría de iPhones recientes) — antes se dibujaba a 2/3 de esa resolución
+  // y se estiraba, lo que ablandaba todo el follaje. Costo medido: (3/2)²=2.25x
+  // más píxeles por cuadro que a 2x, probado en dispositivo real sin caída de
+  // fluidez (siempre 50+ FPS) ni calentamiento perceptible.
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 3));
   // Curva de tono: sin esto three.js usa NoToneMapping (linear→sRGB directo), que
   // aplana los medios, baja el contraste y corta los brillos — las piezas de arte
   // oscuras/saturadas (ej. mangle rojo) se ven "lavadas" frente al viewport de
-  // Blender, que usa AgX. AgXToneMapping replica esa curva (medios más oscuros,
-  // más contraste, rolloff suave de altas). Global para todas las piezas.
-  renderer.toneMapping = THREE.AgXToneMapping;
+  // Blender. ACESFilmicToneMapping (probado contra AgXToneMapping) da un resultado
+  // más saturado/punchy en los verdes, más cerca del "Rendered" de Blender que
+  // AgX solo — aunque ninguno de los dos replica la oclusión ambiental (AO) ni el
+  // rebote de luz (GI) que Blender calcula y el visor no.
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   mount.appendChild(renderer.domElement);
 
