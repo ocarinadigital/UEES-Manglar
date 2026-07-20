@@ -997,7 +997,8 @@
   // Material (BT sección 2): madera/orgánico — default de tabla STD, sin excepción.
   const MATERIAL_CONFIG = {
     metalness: 0,
-    roughness: 0.55, // hojas del mangle con algo de satén (antes 0.75, mate); ver applyMaterialConfigToStandard
+    roughness: 0.75, // dentro de tabla 4.4 STD (madera/orgánico 0.7-0.9); el satén de las
+    // hojas se recupera con la luz (envMapIntensity, contraste direccional), no con este valor
   };
 
   // Aplica el MATERIAL_CONFIG de la pieza a los materiales PBR ESTÁNDAR
@@ -1482,16 +1483,6 @@
   let lastHotspotUpdate = 0;
   const HOTSPOT_UPDATE_INTERVAL = 1000 / 30; // ahora que no hay raycasting, el cálculo es barato — podemos subir a 30fps sin impacto real en batería
 
-  // CONTADOR DE FPS — SOLO PARA ESTA PRUEBA DE DPR, sacar antes de deployar en
-  // serio. Promedia los cuadros de la última medio segundo y los muestra en
-  // pantalla, para poder juzgar la fluidez con un número real en vez de "a ojo".
-  const fpsEl = document.createElement('div');
-  fpsEl.style.cssText = 'position:fixed;top:8px;right:8px;z-index:999;background:rgba(0,0,0,0.6);color:#0f0;font:12px monospace;padding:4px 8px;border-radius:4px;pointer-events:none;';
-  fpsEl.textContent = 'FPS: …';
-  document.body.appendChild(fpsEl);
-  let fpsFrameCount = 0;
-  let fpsWindowStart = 0;
-
   function animate(timestamp) {
     requestAnimationFrame(animate);
     if (!lastHotspotUpdate || timestamp - lastHotspotUpdate >= HOTSPOT_UPDATE_INTERVAL) {
@@ -1499,16 +1490,6 @@
       lastHotspotUpdate = timestamp;
     }
     renderer.render(scene, camera);
-
-    fpsFrameCount++;
-    if (!fpsWindowStart) fpsWindowStart = timestamp;
-    const elapsed = timestamp - fpsWindowStart;
-    if (elapsed >= 500) {
-      const fps = Math.round((fpsFrameCount / elapsed) * 1000);
-      fpsEl.textContent = 'FPS: ' + fps;
-      fpsFrameCount = 0;
-      fpsWindowStart = timestamp;
-    }
   }
   animate();
 
