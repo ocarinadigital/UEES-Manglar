@@ -1494,14 +1494,24 @@
   // de GTAO que oscurece los huecos entre hojas (la profundidad del modo Rendered de
   // Blender) + OutputPass (tone mapping ACES + sRGB, respetando el alpha). Cambia el
   // motor de render y agrega pases por cuadro -> costo de GPU medido con el contador.
-  const composer = new EffectComposer(renderer);
+  // ARREGLO del artefacto hoja-tarjeta: se le da al render target del composer una
+  // textura de profundidad propia. El RenderPass, al dibujar el árbol con sus
+  // materiales REALES (que respetan el recorte alpha de las hojas), deja esa
+  // profundidad con la silueta real de cada hoja. Luego a GTAO se le pasa esa misma
+  // profundidad vía setGBuffer(): así el AO se calcula sobre la forma real de la
+  // hoja, no sobre su tarjeta rectangular. GTAO reconstruye las normales de esa
+  // profundidad (no usa su material de normales que ignoraba el alpha).
+  const depthTexture = new THREE.DepthTexture();
+  const composerRT = new THREE.WebGLRenderTarget(w, h, {
+    type: THREE.HalfFloatType,   // HDR lineal, para que ACES (OutputPass) no recorte brillos
+    depthTexture: depthTexture,
+  });
+  const composer = new EffectComposer(renderer, composerRT);
   composer.addPass(new RenderPass(scene, camera));
   const gtaoPass = new GTAOPass(scene, camera, w, h);
+  gtaoPass.setGBuffer(depthTexture); // usa la profundidad alpha-tested; reconstruye normales de ella
   gtaoPass.output = GTAOPass.OUTPUT.Default; // beauty * AO
   gtaoPass.blendIntensity = 1.0;
-  // Nivel sutil de producción: radio chico = el AO se queda pegado a los contactos
-  // reales y genera menos bandas angulares del artefacto hoja-tarjeta; scale bajo =
-  // sombras menos marcadas. Conserva la profundidad sin el exceso del test anterior.
   if (typeof gtaoPass.updateGtaoMaterial === 'function') {
     gtaoPass.updateGtaoMaterial({ radius: 0.18, scale: 1.3, thickness: 1.0, samples: 16 });
   }
